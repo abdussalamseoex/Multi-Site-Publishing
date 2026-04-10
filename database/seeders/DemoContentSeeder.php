@@ -76,8 +76,8 @@ class DemoContentSeeder extends Seeder
             $cat = $allCategories->random();
             $randomStr = Str::random(5);
             
-            // Random image from picsum
-            $imagePath = "https://picsum.photos/1200/800?random=" . ($index + 100);
+            // Random image from picsum, using SEED so the image never changes on reload
+            $imagePath = "https://picsum.photos/seed/demo-content-" . ($index + 100) . "/1200/800";
 
             $content = "<p>This is a randomly generated post intended to showcase the advanced layout of the News theme. It demonstrates how multiple paragraphs of text are rendered properly with the selected typography.</p><p>Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero.</p><p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu.</p>";
 
