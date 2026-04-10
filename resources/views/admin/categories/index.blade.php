@@ -24,6 +24,31 @@
                         <button type="submit" class="w-full bg-indigo-600 text-white rounded py-2 text-sm font-bold shadow hover:bg-indigo-700">Create Category</button>
                     </form>
                 </div>
+
+                <!-- Bulk Import Segment -->
+                <div class="bg-white shadow sm:rounded-lg p-6 mt-6" x-data="{ open: false }">
+                    <h3 class="text-lg font-bold mb-2 flex items-center justify-between">
+                        Quick Import Niches
+                        <button @click="open = !open" type="button" class="text-xs bg-indigo-50 text-indigo-600 px-2 py-1 rounded border border-indigo-100 hover:bg-indigo-100 transition">Toggle Form</button>
+                    </h3>
+                    <p class="text-xs text-gray-500 mb-4">Instantly generate high-demand guest posting categories without typing.</p>
+                    
+                    <form action="{{ route('admin.categories.bulk_import') }}" method="POST" x-show="open" style="display: none;" class="mt-2">
+                        @csrf
+                        <div class="h-56 overflow-y-auto border border-gray-200 rounded p-3 mb-4 space-y-2 text-sm bg-gray-50">
+                            @php
+                            $niches = ['Technology & IT', 'Software Development', 'Health & Fitness', 'Business & Finance', 'Digital Marketing', 'Real Estate', 'Home Improvement', 'Travel & Tourism', 'Lifestyle & Culture', 'Fashion & Beauty', 'Education & Learning', 'Gaming & Esports', 'Cryptocurrency & Web3', 'Law & Legal', 'Automotive', 'Sports', 'Entertainment & Pop Culture', 'Pets & Animals', 'Food & Recipes'];
+                            @endphp
+                            @foreach($niches as $niche)
+                            <label class="flex items-center gap-2 hover:bg-white p-1 rounded transition cursor-pointer">
+                                <input type="checkbox" name="categories[]" value="{{ $niche }}" class="rounded text-indigo-600 border-gray-300 shadow-sm focus:ring-indigo-500">
+                                <span class="text-gray-700">{{ $niche }}</span>
+                            </label>
+                            @endforeach
+                        </div>
+                        <button type="submit" class="w-full bg-green-600 text-white rounded py-2 text-sm font-bold shadow hover:bg-green-700 transition" onclick="return confirm('Import the selected categories?')">Import Selected Categories</button>
+                    </form>
+                </div>
             </div>
 
             <div class="w-full md:w-2/3">
