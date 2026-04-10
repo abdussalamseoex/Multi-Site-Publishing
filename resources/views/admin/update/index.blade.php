@@ -37,6 +37,24 @@
                                     This action will attempt to fetch and pull the latest code repository from your GitHub `main` branch. 
                                     It will also automatically flush the internal system cache and run any pending database migrations.
                                 </p>
+
+                                @if(isset($pendingCommits) && count($pendingCommits) > 0)
+                                    <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                                        <h4 class="text-sm font-bold text-blue-800 mb-2">Updates Available:</h4>
+                                        <ul class="text-sm text-blue-700 space-y-1 font-mono">
+                                            @foreach($pendingCommits as $commit)
+                                                <li>- {{ $commit }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @else
+                                    <div class="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-md">
+                                        <p class="text-sm text-gray-600 font-medium flex items-center gap-2">
+                                            <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                            Your system is currently up to date.
+                                        </p>
+                                    </div>
+                                @endif
                             </div>
 
                             <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r">

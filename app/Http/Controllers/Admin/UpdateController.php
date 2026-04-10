@@ -12,7 +12,26 @@ class UpdateController extends Controller
 {
     public function index()
     {
-        return view('admin.update.index');
+        $branch = 'main';
+        $pendingCommits = [];
+        
+        try {
+            $fetchProcess = Process::fromShellCommandline("git fetch origin 2>&1");
+            $fetchProcess->setWorkingDirectory(base_path());
+            $fetchProcess->setTimeout(60);
+            $fetchProcess->run();
+
+            $logProcess = Process::fromShellCommandline("git log HEAD..origin/{$branch} --oneline 2>&1");
+            $logProcess->setWorkingDirectory(base_path());
+            $logProcess->run();
+            
+            $output = trim($logProcess->getOutput());
+            if (!empty($output) && $logProcess->isSuccessful()) {
+                $pendingCommits = array_filter(explode("\n", $output));
+            }
+        } catch (\Exception $e) {}
+
+        return view('admin.update.index', compact('pendingCommits'));
     }
 
     public function process(Request $request)
