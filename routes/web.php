@@ -7,15 +7,6 @@ use App\Http\Controllers\FrontendController;
 
 Route::get('/', [FrontendController::class, 'index'])->name('home');
 
-Route::get('/fix-images', function() {
-    $posts = \App\Models\Post::where('featured_image', 'like', '%?random=%')->get();
-    foreach($posts as $p) {
-        $p->featured_image = 'https://picsum.photos/seed/demo-content-' . $p->id . '/1200/800';
-        $p->save();
-    }
-    return "Successfully fixed " . count($posts) . " images in the database! You can now go back to homepage.";
-});
-
 Route::get('/post/{slug}', [FrontendController::class, 'showPost'])->name('frontend.post');
 Route::get('/p/{slug}', [FrontendController::class, 'page'])->name('frontend.page');
 Route::get('/category/{slug}', [FrontendController::class, 'category'])->name('frontend.category');
