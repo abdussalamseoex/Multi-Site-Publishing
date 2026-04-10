@@ -90,10 +90,11 @@ class InstallController extends Controller
             \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'editor']);
             \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'author']);
 
-            $user = clone User::create([
+            $user = User::create([
                 'name' => $request->admin_name,
                 'email' => $request->admin_email,
                 'password' => Hash::make($request->admin_password),
+                'role' => 'admin',
             ]);
             
             $user->assignRole('admin');
