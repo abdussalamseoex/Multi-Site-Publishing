@@ -34,13 +34,18 @@
                                 <input type="text" name="site_tagline" id="site_tagline" value="{{ $settings['site_tagline'] ?? '' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
                             </div>
 
-                            <div class="grid grid-cols-2 gap-4">
+                            <div class="grid grid-cols-3 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Site Logo</label>
                                     @if(isset($settings['site_logo']))
                                         <img src="{{ url($settings['site_logo']) }}" class="h-8 mt-2 mb-2 border rounded">
                                     @endif
                                     <input type="file" name="site_logo" accept="image/*" class="mt-1 block w-full text-xs">
+                                </div>
+                                <div class="flex flex-col justify-end pb-1 pb-1">
+                                    <label class="block text-sm font-medium text-gray-700">Logo Height (px)</label>
+                                    <input type="number" name="logo_height" value="{{ $settings['logo_height'] ?? '40' }}" placeholder="40" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm h-9">
+                                    <span class="text-[10px] text-gray-500 mt-1">Adjust if logo is too small.</span>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Favicon</label>
