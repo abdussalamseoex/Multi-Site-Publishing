@@ -12,13 +12,26 @@ Route::get('/p/{slug}', [FrontendController::class, 'page'])->name('frontend.pag
 Route::get('/category/{slug}', [FrontendController::class, 'category'])->name('frontend.category');
 
 Route::get('/dashboard', function () {
-    $stats = [
-        'posts_count' => \App\Models\Post::count(),
-        'posts_views' => \App\Models\Post::sum('views'),
-        'users_count' => \App\Models\User::count(),
-        'categories_count' => \App\Models\Category::count()
-    ];
-    $recent_posts = \App\Models\Post::with('category')->latest()->take(5)->get();
+    $user = \Illuminate\Support\Facades\Auth::user();
+    
+    if ($user->role === 'admin') {
+        $stats = [
+            'posts_count' => \App\Models\Post::count(),
+            'posts_views' => \App\Models\Post::sum('views'),
+            'users_count' => \App\Models\User::count(),
+            'categories_count' => \App\Models\Category::count()
+        ];
+        $recent_posts = \App\Models\Post::with('category')->latest()->take(5)->get();
+    } else {
+        $stats = [
+            'posts_count' => \App\Models\Post::where('user_id', $user->id)->count(),
+            'posts_views' => \App\Models\Post::where('user_id', $user->id)->sum('views'),
+            'approved_posts' => \App\Models\Post::where('user_id', $user->id)->where('status', 'published')->count(),
+            'pending_posts' => \App\Models\Post::where('user_id', $user->id)->where('status', 'pending')->count()
+        ];
+        $recent_posts = \App\Models\Post::where('user_id', $user->id)->with('category')->latest()->take(5)->get();
+    }
+
     return view('dashboard', compact('stats', 'recent_posts'));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
