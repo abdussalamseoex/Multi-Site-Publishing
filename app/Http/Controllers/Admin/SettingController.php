@@ -36,4 +36,14 @@ class SettingController extends Controller
 
         return back()->with('status', 'Settings updated successfully.');
     }
+
+    public function importDemo()
+    {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\DemoContentSeeder']);
+            return back()->with('status', 'Demo content (categories and 30 posts) imported successfully!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Demo import failed: ' . $e->getMessage());
+        }
+    }
 }

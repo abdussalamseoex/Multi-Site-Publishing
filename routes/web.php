@@ -45,6 +45,7 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
     Route::post('/settings', [SettingController::class, 'store'])->name('settings.store');
+    Route::get('/demo-import', [SettingController::class, 'importDemo'])->name('demo.import');
 
     Route::get('/update', [\App\Http\Controllers\Admin\UpdateController::class, 'index'])->name('update.index');
     Route::post('/update', [\App\Http\Controllers\Admin\UpdateController::class, 'process'])->name('update.process');

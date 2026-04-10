@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" type="image/png" href="{{ \App\Models\Setting::get('site_favicon') ? url(\App\Models\Setting::get('site_favicon')) : asset('favicon.ico') }}">
     <meta charset="UTF-8">
     <title>{{ $post->meta_title ?? $post->title }}</title>
     <meta name="description" content="{{ $post->meta_description }}">
@@ -146,3 +147,4 @@
     @include('themes.components.footer')
 </body>
 </html>
+
