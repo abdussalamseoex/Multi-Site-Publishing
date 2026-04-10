@@ -17,7 +17,7 @@ Route::get('/dashboard', function () {
         'users_count' => \App\Models\User::count(),
         'categories_count' => \App\Models\Category::count()
     ];
-    $recent_posts = \App\Models\Post::latest()->take(5)->get();
+    $recent_posts = \App\Models\Post::with('category')->latest()->take(5)->get();
     return view('dashboard', compact('stats', 'recent_posts'));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
