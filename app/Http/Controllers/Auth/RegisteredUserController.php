@@ -18,8 +18,11 @@ class RegisteredUserController extends Controller
     /**
      * Display the registration view.
      */
-    public function create(): View
+    public function create()
     {
+        if (\App\Models\Setting::get('enable_registration', '1') !== '1') {
+            abort(404);
+        }
         return view('auth.register');
     }
 
@@ -30,16 +33,23 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        if (\App\Models\Setting::get('enable_registration', '1') !== '1') {
+            abort(403, 'Registration is currently disabled.');
+        }
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        $defaultRole = \App\Models\Setting::get('default_user_role', 'user');
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => $defaultRole,
         ]);
 
         event(new Registered($user));

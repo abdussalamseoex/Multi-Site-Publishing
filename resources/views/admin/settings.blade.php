@@ -148,6 +148,24 @@
                                 <label class="block text-sm font-medium text-gray-700">SMTP Username</label>
                                 <input type="text" name="smtp_user" value="{{ $settings['smtp_user'] ?? '' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
                             </div>
+
+                            <div class="mt-4 border-t pt-4">
+                                <h4 class="text-sm font-bold text-gray-900 mb-3">Registration & Auth</h4>
+                                
+                                <div class="flex items-center mb-4">
+                                    <input type="hidden" name="enable_registration" value="0">
+                                    <input type="checkbox" name="enable_registration" value="1" {{ ($settings['enable_registration'] ?? '1') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                    <span class="ml-2 text-sm text-gray-700">Enable User Registration (Allow public sign-ups)</span>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Default Role on Registration</label>
+                                    <select name="default_user_role" class="block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                                        <option value="user" {{ ($settings['default_user_role'] ?? 'user') == 'user' ? 'selected' : '' }}>Normal User</option>
+                                        <option value="author" {{ ($settings['default_user_role'] ?? '') == 'author' ? 'selected' : '' }}>Author (Can submit posts)</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
