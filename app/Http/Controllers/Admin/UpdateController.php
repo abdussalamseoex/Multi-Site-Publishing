@@ -23,6 +23,8 @@ class UpdateController extends Controller
     {
         $pendingCommits = [];
         $token = $this->getToken();
+        $githubStatus = 'unknown';
+        $githubMessage = '';
         
         try {
             $response = Http::withToken($token)
@@ -33,16 +35,21 @@ class UpdateController extends Controller
                 ]);
 
             if ($response->successful()) {
+                $githubStatus = 'connected';
                 $commits = $response->json();
                 foreach($commits as $commit) {
                     $pendingCommits[] = substr($commit['sha'], 0, 7) . ' - ' . $commit['commit']['message'];
                 }
+            } else {
+                $githubStatus = 'error';
+                $githubMessage = $response->json('message') ?? 'API access denied';
             }
         } catch (\Exception $e) {
-            // Silently ignore if API fails or rate limits
+            $githubStatus = 'error';
+            $githubMessage = $e->getMessage();
         }
 
-        return view('admin.update.index', compact('pendingCommits'));
+        return view('admin.update.index', compact('pendingCommits', 'githubStatus', 'githubMessage'));
     }
 
     public function process(Request $request)
