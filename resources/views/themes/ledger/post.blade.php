@@ -39,6 +39,7 @@
         .prose blockquote { border-left: 4px solid var(--primary); padding-left: 1.5rem; font-style: italic; color: #475569; font-size: 1.25rem; margin: 2rem 0; font-family: Georgia, serif; }
         .prose ul { list-style-type: square; margin-bottom: 1.5rem; padding-left: 1.5rem; color: #334155;}
     </style>
+    {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
 <body class="antialiased">
 
@@ -100,6 +101,8 @@
     <div class="bg-slate-900 border-t border-slate-700">
         @include('themes.components.footer')
     </div>
+    {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
+
 

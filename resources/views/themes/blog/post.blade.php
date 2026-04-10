@@ -9,6 +9,7 @@
     <link rel="canonical" href="{{ $post->canonical_url }}">
     @endif
     <script src="https://cdn.tailwindcss.com"></script>
+    {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
 <body class="bg-gray-100 text-gray-800">
 
@@ -31,6 +32,8 @@
     </div>
 
     @include('themes.components.footer')
+    {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
+
 

@@ -45,6 +45,7 @@
         .prose ul, .prose ol { color: #cbd5e1; margin-bottom: 1.5rem; padding-left: 1.5rem; font-size: 1.125rem;}
         .prose li { margin-bottom: 0.5rem; }
     </style>
+    {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
 <body class="antialiased selection:bg-indigo-500 selection:text-white pb-12">
 
@@ -104,6 +105,8 @@
     </div>
 
     @include('themes.components.footer')
+    {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
+
 

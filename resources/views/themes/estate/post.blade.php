@@ -40,6 +40,7 @@
         .prose ul { padding-left: 2rem; list-style-type: square; color: #44403c; margin-bottom: 2rem; }
         .prose li { margin-bottom: 0.5rem; }
     </style>
+    {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
 <body class="antialiased">
 
@@ -90,6 +91,8 @@
     </div>
 
     @include('themes.components.footer')
+    {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
+
 

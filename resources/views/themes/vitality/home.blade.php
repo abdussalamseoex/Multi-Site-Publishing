@@ -24,6 +24,7 @@
         .vitality-card { background: white; border-radius: 1.5rem; box-shadow: 0 10px 40px -10px rgba(16, 185, 129, 0.08); transition: all 0.3s ease; border: 1px solid #f1f5f9;}
         .vitality-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.2); }
     </style>
+    {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
 <body class="antialiased selection:bg-emerald-500 selection:text-white">
 
@@ -157,6 +158,8 @@
     </div>
 
     @include('themes.components.footer')
+    {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
+
 

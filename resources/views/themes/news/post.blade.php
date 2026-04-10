@@ -44,6 +44,7 @@
         .prose ul { padding-left: 1.5rem; list-style-type: square; margin-bottom: 1.5rem; }
         .prose li { margin-bottom: 0.5rem; }
     </style>
+    {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
 <body class="antialiased selection:bg-sky-500 selection:text-white">
 
@@ -169,6 +170,8 @@
     <div class="mt-8">
         @include('themes.components.footer')
     </div>
+    {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
+
 

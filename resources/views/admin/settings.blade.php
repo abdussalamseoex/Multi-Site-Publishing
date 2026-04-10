@@ -158,14 +158,14 @@
                     </div>
 
                     <!-- Advertisement Management -->
-                    <div class="bg-white shadow-sm sm:rounded-lg p-6 col-span-1 lg:col-span-2 border-l-4 border-yellow-400">
+                    <div class="bg-white shadow-sm sm:rounded-lg p-6 col-span-1 border-l-4 border-yellow-400">
                         <div class="flex items-center gap-2 mb-4">
                             <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg>
                             <h3 class="text-lg font-medium text-gray-900">Advertisement Management</h3>
                         </div>
                         <p class="text-sm text-gray-500 mb-6">Paste your Google AdSense, media.net, or custom HTML banner codes. These will securely replace the placeholders across all active frontend themes.</p>
                         
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="space-y-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Sidebar / Widget Area Ad (300x250 / 300x600)</label>
                                 <textarea name="ad_sidebar_code" rows="5" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs" placeholder="<script async src='...'></script>">{{ $settings['ad_sidebar_code'] ?? '' }}</textarea>
@@ -174,9 +174,29 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Header / Top Banner Ad (728x90)</label>
                                 <textarea name="ad_header_code" rows="5" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs" placeholder="<script async src='...'></script>">{{ $settings['ad_header_code'] ?? '' }}</textarea>
                             </div>
-                            <div class="lg:col-span-2">
+                            <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">In-Article / Bottom of Post Content Ad</label>
                                 <textarea name="ad_content_code" rows="4" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs" placeholder="<script async src='...'></script>">{{ $settings['ad_content_code'] ?? '' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Custom Scripts & Analytics -->
+                    <div class="bg-white shadow-sm sm:rounded-lg p-6 col-span-1 border-l-4 border-purple-400">
+                        <div class="flex items-center gap-2 mb-4">
+                            <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                            <h3 class="text-lg font-medium text-gray-900">Custom Scripts & Analytics</h3>
+                        </div>
+                        <p class="text-sm text-gray-500 mb-6">Add Google Analytics, Facebook Pixel, or any custom Javascript/CSS. These will be injected globally across the entire frontend.</p>
+                        
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Header Scripts (Inside <head>)</label>
+                                <textarea name="custom_header_scripts" rows="6" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs text-purple-800" placeholder="<!-- Google Analytics -->&#10;<script async src='https://www.googletagmanager.com/gtag/js?id=G-XXXX'></script>">{{ $settings['custom_header_scripts'] ?? '' }}</textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Footer Scripts (Before </body>)</label>
+                                <textarea name="custom_footer_scripts" rows="6" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs text-purple-800" placeholder="<script>...</script>">{{ $settings['custom_footer_scripts'] ?? '' }}</textarea>
                             </div>
                         </div>
                     </div>

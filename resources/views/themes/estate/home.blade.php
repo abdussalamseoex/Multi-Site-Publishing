@@ -23,6 +23,7 @@
         .gold-border { border-color: #d97706; }
         .bg-gold { background-color: #d97706; color: white; }
     </style>
+    {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
 <body class="antialiased">
 
@@ -161,6 +162,8 @@
     </div>
 
     @include('themes.components.footer')
+    {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
+
 

@@ -24,6 +24,7 @@
         .bg-ledger-dark { background-color: #0f172a; color: white; }
         .card-hover:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05); }
     </style>
+    {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
 <body class="antialiased">
     <!-- Ticker Tape (Static Example) -->
@@ -161,6 +162,8 @@
     <div class="bg-slate-900 border-t border-slate-700">
         @include('themes.components.footer')
     </div>
+    {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
+
 

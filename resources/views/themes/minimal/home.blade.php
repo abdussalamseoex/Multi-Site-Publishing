@@ -20,6 +20,7 @@
         .border-primary { border-color: var(--primary); }
         .hover\:text-primary:hover { color: var(--primary); }
     </style>
+    {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
 <body class="bg-white text-gray-800 antialiased selection:bg-gray-200">
 
@@ -103,6 +104,8 @@
     </main>
 
     @include('themes.components.footer')
+    {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
+
 

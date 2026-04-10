@@ -43,6 +43,7 @@
         .prose a:hover { border-bottom-color: var(--primary); }
         .prose blockquote { border-left: 4px solid var(--primary); padding-left: 1.5rem; font-style: italic; color: #64748b; font-size: 1.25rem; margin-top: 2rem; margin-bottom: 2rem; background-color: #f8fafc; padding: 1.5rem; border-radius: 0 0.5rem 0.5rem 0;}
     </style>
+    {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
 <body class="text-slate-900 antialiased">
     @include('themes.components.header')
@@ -145,6 +146,8 @@
     </div>
 
     @include('themes.components.footer')
+    {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
+
 

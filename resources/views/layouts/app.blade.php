@@ -15,7 +15,8 @@
         <!-- Scripts -->
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    </head>
+        {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
+</head>
     <body class="font-sans antialiased text-gray-900 bg-gray-50 overflow-hidden">
         <div class="flex h-screen" x-data="{ sidebarOpen: false }">
             
@@ -47,6 +48,8 @@
                 
             </div>
         </div>
-    </body>
+        {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
+</body>
 </html>
+
 

@@ -47,6 +47,7 @@
         .prose blockquote { border-left: 4px solid var(--primary); padding-left: 1rem; font-style: italic; color: #4b5563; }
         .prose img { border-radius: 0.5rem; margin: 2rem 0; width: 100%; height: auto; }
     </style>
+    {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
 <body class="bg-gray-50 text-gray-900 antialiased">
     @include('themes.components.header')
@@ -144,6 +145,8 @@
     </div>
     
     @include('themes.components.footer')
+    {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
+
 

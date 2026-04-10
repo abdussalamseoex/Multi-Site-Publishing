@@ -19,6 +19,7 @@
         .text-primary { color: var(--primary); }
         .bg-primary { background-color: var(--primary); }
     </style>
+    {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
 <body class="bg-[#faf9f6] text-[#333]">
 
@@ -85,6 +86,8 @@
     </div>
 
     @include('themes.components.footer')
+    {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
+
 

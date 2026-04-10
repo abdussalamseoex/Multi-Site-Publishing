@@ -18,6 +18,7 @@
         header .text-primary { color: var(--primary) !important; }
         header .bg-primary { background-color: var(--primary) !important; color: white !important; }
     </style>
+    {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
 <body class="antialiased">
 
@@ -78,6 +79,8 @@
     </div>
 
     @include('themes.components.footer')
+    {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
+
 

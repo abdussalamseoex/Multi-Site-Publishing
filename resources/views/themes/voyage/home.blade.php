@@ -23,6 +23,7 @@
         .voyage-shadow { box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1); }
         .text-shadow { text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
     </style>
+    {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
 <body class="antialiased selection:bg-pink-500 selection:text-white">
 
@@ -150,6 +151,8 @@
     </div>
 
     @include('themes.components.footer')
+    {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
+
 

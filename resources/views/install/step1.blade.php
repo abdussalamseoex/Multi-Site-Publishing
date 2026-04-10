@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Setup Wizard - Database Configuration</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
 <body class="bg-gray-50 flex items-center justify-center min-h-screen p-6">
 
@@ -78,6 +79,8 @@
             }
         }
     </script>
+    {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
+
 

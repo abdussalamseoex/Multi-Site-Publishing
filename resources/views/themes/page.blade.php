@@ -25,6 +25,7 @@
         .prose ul, .prose ol { margin-left: 1.5em; margin-bottom: 1.5em; }
         .prose a { color: var(--primary); text-decoration: underline; }
     </style>
+    {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
 <body class="text-gray-900 antialiased flex flex-col min-h-screen">
 
@@ -40,6 +41,8 @@
     </main>
 
     @include('themes.components.footer')
+    {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
+
 

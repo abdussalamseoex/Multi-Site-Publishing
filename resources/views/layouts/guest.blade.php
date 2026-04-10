@@ -15,7 +15,8 @@
         <!-- Scripts -->
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    </head>
+        {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
+</head>
     <body class="font-sans text-gray-900 antialiased">
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
             <div>
@@ -28,6 +29,8 @@
                 {{ $slot }}
             </div>
         </div>
-    </body>
+        {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
+</body>
 </html>
+
 

@@ -28,6 +28,7 @@
         
         .overlay-gradient { background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0) 100%); }
     </style>
+    {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
 <body class="antialiased selection:bg-sky-500 selection:text-white">
 
@@ -318,6 +319,8 @@
     <div class="mt-16">
         @include('themes.components.footer')
     </div>
+    {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
+
 

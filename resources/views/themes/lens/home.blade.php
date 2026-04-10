@@ -26,6 +26,7 @@
         .photo-overlay { opacity: 0; transition: opacity 0.4s ease; }
         .photo-card:hover .photo-overlay { opacity: 1; }
     </style>
+    {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
 <body class="antialiased selection:bg-gray-900 selection:text-white">
     @include('themes.components.header')
@@ -176,6 +177,8 @@
     </div>
 
     @include('themes.components.footer')
+    {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
+
 

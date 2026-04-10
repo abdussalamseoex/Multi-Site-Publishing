@@ -45,6 +45,7 @@
         .prose img { width: 100%; border-radius: 8px; margin-bottom: 2rem;}
         .prose h2, .prose h3 { font-family: '{{ $font }}', serif; font-weight: black; color: #000; margin-top: 2rem; margin-bottom: 1rem; }
     </style>
+    {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
 <body class="bg-[#faf9f6] text-[#333]">
 
@@ -130,6 +131,8 @@
     </div>
     
     @include('themes.components.footer')
+    {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
+
 

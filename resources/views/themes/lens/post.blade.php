@@ -30,6 +30,7 @@
         .prose-lens a { color: var(--primary); text-decoration: underline; text-underline-offset: 4px; }
         .prose-lens blockquote { border-left: 1px solid #d1d5db; padding-left: 2rem; font-size: 1.5rem; font-style: italic; margin: 3rem 0; color: #111827; }
     </style>
+    {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
 <body class="antialiased selection:bg-gray-900 selection:text-white">
     @include('themes.components.header')
@@ -139,6 +140,8 @@
     </main>
 
     @include('themes.components.footer')
+    {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
+
 
