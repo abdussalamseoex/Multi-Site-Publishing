@@ -1,0 +1,84 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Setting;
+use App\Models\Post;
+use Illuminate\Http\Request;
+
+class FrontendController extends Controller
+{
+    public function index()
+    {
+        // Fallback to 'minimal' if not set
+        $activeTheme = Setting::get('active_theme', 'minimal');
+        
+        $featuredPosts = Post::where('status', 'published')
+                             ->where('is_featured', true)
+                             ->latest()
+                             ->take(5)
+                             ->get();
+                             
+        $latestPosts = Post::where('status', 'published')
+                           ->latest()
+                           ->paginate(12);
+
+        $viewName = "themes.{$activeTheme}.home";
+
+        // Check if theme view exists, fallback to minimal if standard wasn't found
+        if (!view()->exists($viewName)) {
+            $viewName = "themes.minimal.home";
+        }
+
+        return view($viewName, compact('featuredPosts', 'latestPosts'));
+    }
+
+    public function showPost($slug)
+    {
+        $post = Post::where('slug', $slug)->where('status', 'published')->firstOrFail();
+        // Increment views
+        $post->increment('views');
+
+        $activeTheme = Setting::get('active_theme', 'minimal');
+        $viewName = "themes.{$activeTheme}.post";
+
+        if (!view()->exists($viewName)) {
+            $viewName = "themes.minimal.post";
+        }
+
+        return view($viewName, compact('post'));
+    }
+
+        public function category($slug)
+    {
+        $category = \App\Models\Category::where('slug', $slug)->firstOrFail();
+        $posts = Post::where('category_id', $category->id)
+                     ->where('status', 'published')
+                     ->latest()
+                     ->paginate(12);
+
+        $activeTheme = Setting::get('active_theme', 'minimal');
+        $viewName = "themes.{$activeTheme}.category";
+
+        if (view()->exists($viewName)) {
+            return view($viewName, compact('category', 'posts'));
+        }
+
+        // Re-use current active theme's home layout as the category page
+        $homeView = "themes.{$activeTheme}.home";
+        if (view()->exists($homeView)) {
+            $featuredPosts = collect(); 
+            $latestPosts = $posts;
+            $isCategory = true;
+            return view($homeView, compact('category', 'latestPosts', 'featuredPosts', 'isCategory'));
+        }
+
+        return view('themes.category', compact('category', 'posts'));
+    }
+
+    public function page($slug)
+    {
+        $page = \App\Models\Page::where('slug', $slug)->firstOrFail();
+        return view('themes.page', compact('page'));
+    }
+}
