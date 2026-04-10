@@ -88,10 +88,18 @@
                                 </select>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-4">
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Primary Color</label>
                                     <input type="color" name="primary_color" value="{{ $settings['primary_color'] ?? '#4f46e5' }}" class="h-10 w-full cursor-pointer">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Header Background</label>
+                                    <input type="color" name="header_bg_color" value="{{ $settings['header_bg_color'] ?? '#ffffff' }}" class="h-10 w-full cursor-pointer">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Header Text Color</label>
+                                    <input type="color" name="header_text_color" value="{{ $settings['header_text_color'] ?? '#1f2937' }}" class="h-10 w-full cursor-pointer">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Typography</label>

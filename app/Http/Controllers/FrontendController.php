@@ -16,11 +16,13 @@ class FrontendController extends Controller
         $featuredPosts = Post::where('status', 'published')
                              ->where('is_featured', true)
                              ->latest()
+                             ->orderBy('id', 'desc')
                              ->take(5)
                              ->get();
                              
         $latestPosts = Post::where('status', 'published')
                            ->latest()
+                           ->orderBy('id', 'desc')
                            ->paginate(12);
 
         $viewName = "themes.{$activeTheme}.home";
