@@ -31,16 +31,16 @@
                             <div>
                                 <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
                                     <svg class="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                                    Pull Latest Updates
+                                    Install Latest Updates
                                 </h3>
                                 <p class="mt-2 text-sm text-gray-500 leading-relaxed">
-                                    This action will attempt to fetch and pull the latest code repository from your GitHub `main` branch. 
-                                    It will also automatically flush the internal system cache and run any pending database migrations.
+                                    This action will automatically download the latest version of the system directly from the source repository.
+                                    It securely extracts the files over your current installation silently in the background.
                                 </p>
 
                                 @if(isset($pendingCommits) && count($pendingCommits) > 0)
                                     <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
-                                        <h4 class="text-sm font-bold text-blue-800 mb-2">Updates Available:</h4>
+                                        <h4 class="text-sm font-bold text-blue-800 mb-2">Recent Updates:</h4>
                                         <ul class="text-sm text-blue-700 space-y-1 font-mono">
                                             @foreach($pendingCommits as $commit)
                                                 <li>- {{ $commit }}</li>
@@ -51,7 +51,7 @@
                                     <div class="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-md">
                                         <p class="text-sm text-gray-600 font-medium flex items-center gap-2">
                                             <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                            Your system is currently up to date.
+                                            System configuration active.
                                         </p>
                                     </div>
                                 @endif
@@ -60,9 +60,8 @@
                             <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r">
                                 <h4 class="text-sm font-bold text-yellow-800">Deployment Requirements</h4>
                                 <ul class="mt-1 text-sm text-yellow-700 list-disc list-inside space-y-1">
-                                    <li>Your live server must have <code class="bg-white px-1 py-0.5 rounded text-xs">git</code> installed and available to the PHP process.</li>
-                                    <li>Your server must be authenticated with GitHub (via SSH keys) or configured for password-less pulls.</li>
-                                    <li>Running this will overwrite any uncommitted local file modifications.</li>
+                                    <li>If your source repository is Private, ensure you have set `GITHUB_UPDATE_TOKEN=` in your `.env` file containing your GitHub PAT.</li>
+                                    <li>Running this will overwrite any manually uncommitted core file modifications you have made directly on this server.</li>
                                 </ul>
                             </div>
 
@@ -71,8 +70,8 @@
                                 <button type="submit" :disabled="loading" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition">
                                     <svg x-show="!loading" class="w-5 h-5 mr-3 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                                     <svg x-show="loading" style="display: none;" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                    <span x-show="!loading">Execute Git Pull & Update System</span>
-                                    <span x-show="loading" style="display:none;">Updating Framework...</span>
+                                    <span x-show="!loading">Execute 1-Click Server Update</span>
+                                    <span x-show="loading" style="display:none;">Downloading ZIP framework...</span>
                                 </button>
                             </form>
                         </div>

@@ -5,31 +5,42 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
-use Symfony\Component\Process\Exception\ProcessFailedException;
-use Symfony\Component\Process\Process;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\File;
+use ZipArchive;
 
 class UpdateController extends Controller
 {
+    private $githubRepo = "abdussalamseoex/Multi-Site-Publishing";
+    private $branch = "main";
+    
+    // Change this to your GitHub Personal Access Token string, or leave it as env() variable!
+    private function getToken() {
+        return env('GITHUB_UPDATE_TOKEN', '');
+    }
+
     public function index()
     {
-        $branch = 'main';
         $pendingCommits = [];
+        $token = $this->getToken();
         
         try {
-            $fetchProcess = Process::fromShellCommandline("git fetch origin 2>&1");
-            $fetchProcess->setWorkingDirectory(base_path());
-            $fetchProcess->setTimeout(60);
-            $fetchProcess->run();
+            $response = Http::withToken($token)
+                ->withHeaders(['User-Agent' => 'Laravel-Updater'])
+                ->get("https://api.github.com/repos/{$this->githubRepo}/commits", [
+                    'sha' => $this->branch,
+                    'per_page' => 5 // Just show the latest 5 commits as a preview
+                ]);
 
-            $logProcess = Process::fromShellCommandline("git log HEAD..origin/{$branch} --oneline 2>&1");
-            $logProcess->setWorkingDirectory(base_path());
-            $logProcess->run();
-            
-            $output = trim($logProcess->getOutput());
-            if (!empty($output) && $logProcess->isSuccessful()) {
-                $pendingCommits = array_filter(explode("\n", $output));
+            if ($response->successful()) {
+                $commits = $response->json();
+                foreach($commits as $commit) {
+                    $pendingCommits[] = substr($commit['sha'], 0, 7) . ' - ' . $commit['commit']['message'];
+                }
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+            // Silently ignore if API fails or rate limits
+        }
 
         return view('admin.update.index', compact('pendingCommits'));
     }
@@ -37,46 +48,96 @@ class UpdateController extends Controller
     public function process(Request $request)
     {
         $log = [];
+        $token = $this->getToken();
 
-        // Determine branch, fallback to main
-        $branch = 'main';
-
-        // 1. Git Fetch & Pull
         try {
-            $gitPullProcess = Process::fromShellCommandline("git fetch origin && git pull origin {$branch} 2>&1");
-            $gitPullProcess->setWorkingDirectory(base_path());
-            $gitPullProcess->setTimeout(120);
-            $gitPullProcess->run();
-            $log[] = "==== GIT PULL LOG ====";
-            $log[] = $gitPullProcess->getOutput();
+            $log[] = "==== FETCHING UPDATE ====";
+            
+            $url = "https://api.github.com/repos/{$this->githubRepo}/zipball/{$this->branch}";
+            $response = Http::withToken($token)
+                ->withHeaders(['User-Agent' => 'Laravel-Updater'])
+                ->withOptions(['stream' => true])
+                ->get($url);
+
+            if ($response->failed()) {
+                throw new \Exception("Failed to download update from GitHub. Status: " . $response->status() . ". Ensure your GITHUB_UPDATE_TOKEN is valid for private repositories.");
+            }
+
+            $zipPath = storage_path('app/system_update.zip');
+            File::put($zipPath, $response->body());
+            
+            $log[] = "Downloaded update archive successfully.";
+
+            $zip = new ZipArchive;
+            if ($zip->open($zipPath) === TRUE) {
+                $extractPath = storage_path('app/update-temp');
+                
+                // Clear any old temp folder
+                if (File::exists($extractPath)) {
+                    File::deleteDirectory($extractPath);
+                }
+                
+                $zip->extractTo($extractPath);
+                $zip->close();
+                
+                $log[] = "Extracted archive. Applying files...";
+
+                // GitHub zips contain a root folder like 'abdussalamseoex-Multi-Site-Publishing-abc1234'
+                $directories = File::directories($extractPath);
+                if (!empty($directories)) {
+                    $sourceDir = $directories[0];
+                    
+                    // Copy specific directories to overwrite application files safely
+                    // We avoid blindly copying everything to prevent overwriting vendor/ or storage/ local data if they accidentally get pushed
+                    $foldersToUpdate = ['app', 'bootstrap', 'config', 'database', 'public', 'resources', 'routes', 'tests'];
+                    
+                    foreach ($foldersToUpdate as $folder) {
+                        if (File::exists("{$sourceDir}/{$folder}")) {
+                            File::copyDirectory("{$sourceDir}/{$folder}", base_path($folder));
+                        }
+                    }
+                    
+                    // Copy standalone files
+                    $filesToUpdate = ['composer.json', 'package.json', 'tailwind.config.js', 'vite.config.js'];
+                    foreach ($filesToUpdate as $file) {
+                        if (File::exists("{$sourceDir}/{$file}")) {
+                            File::copy("{$sourceDir}/{$file}", base_path($file));
+                        }
+                    }
+                }
+
+                // Cleanup
+                File::deleteDirectory($extractPath);
+                File::delete($zipPath);
+                
+                $log[] = "Files applied successfully.";
+            } else {
+                throw new \Exception("Failed to extract the ZIP archive.");
+            }
+
         } catch (\Exception $e) {
-            $log[] = "==== GIT ERROR ====";
+            $log[] = "==== UPDATE ERROR ====";
             $log[] = $e->getMessage();
+            $finalLog = implode("\n\n", array_filter($log));
+            return back()->with('update_log', $finalLog)->with('error', 'Update Failed! Check the log below.');
         }
 
-        // 2. Clear Caches
+        // Run optimizations
         try {
+            $log[] = "==== SYSTEM CLEANUP ====";
             Artisan::call('optimize:clear');
-            $log[] = "==== SYSTEM CACHE ====";
             $log[] = Artisan::output();
-        } catch (\Exception $e) {
-            $log[] = "==== CACHE ERROR ====";
-            $log[] = $e->getMessage();
-        }
+        } catch (\Exception $e) { }
 
-        // 3. Database Migrations
+        // Run migrations
         try {
+            $log[] = "==== DATABASE MIGRATE ====";
             Artisan::call('migrate', ['--force' => true]);
-            $log[] = "==== DATABASE MIGRATION ====";
             $log[] = Artisan::output();
-        } catch (\Exception $e) {
-            $log[] = "==== MIGRATION ERROR ====";
-            $log[] = $e->getMessage();
-        }
+        } catch (\Exception $e) { }
 
-        // Output formatting
         $finalLog = implode("\n\n", array_filter($log));
 
-        return back()->with('update_log', $finalLog)->with('status', 'Update process completed! Please check the logs below.');
+        return back()->with('update_log', $finalLog)->with('status', 'Update process completed via Zip Extraction!');
     }
 }
