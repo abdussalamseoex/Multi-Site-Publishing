@@ -49,7 +49,7 @@ class PostController extends Controller
             'content' => $request->input('content'),
             'category_id' => $request->input('category_id'),
             'featured_image' => $featuredImagePath,
-            'status' => 'pending', 
+            'status' => \App\Models\Setting::get('default_post_status', 'pending'), 
             'meta_title' => $request->input('meta_title') ?? $request->input('title'),
             'meta_description' => $request->input('meta_description') ?? substr(strip_tags($request->input('content')), 0, 150),
             'canonical_url' => $request->input('canonical_url'),

@@ -50,6 +50,15 @@
                                     <input type="file" name="site_favicon" accept="image/*" class="mt-1 block w-full text-xs">
                                 </div>
                             </div>
+                            
+                            <div class="mt-2 border-t pt-4">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Default Post Publishing Rule</label>
+                                <select name="default_post_status" class="block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                                    <option value="pending" {{ ($settings['default_post_status'] ?? 'pending') == 'pending' ? 'selected' : '' }}>Pending Review (Drafts)</option>
+                                    <option value="published" {{ ($settings['default_post_status'] ?? '') == 'published' ? 'selected' : '' }}>Auto-Publish (Live immediately)</option>
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Controls what happens when regular users/authors submit a post.</p>
+                            </div>
                         </div>
                     </div>
 

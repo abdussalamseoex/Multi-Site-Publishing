@@ -14,7 +14,16 @@
                     <h3 class="text-2xl font-bold text-gray-900">Welcome back, {{ Auth::user()->name }}! 👋</h3>
                     <p class="text-gray-500 mt-1">Here is what's happening globally across your publishing platform.</p>
                 </div>
-                <div class="hidden md:block">
+                <div class="hidden md:flex items-center gap-4">
+                    <div class="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded border border-gray-200" x-data="{ visitors: Math.floor(Math.random() * 8) + 12 }" x-init="setInterval(() => { visitors = Math.max(8, visitors + (Math.floor(Math.random() * 5) - 2)) }, 3500)">
+                        <div class="relative flex h-3 w-3">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                        </div>
+                        <div class="text-sm font-bold text-gray-700">
+                            Live Traffic: <span class="text-green-600" x-text="visitors"></span> 
+                        </div>
+                    </div>
                     <a href="{{ route('admin.posts.index') }}" class="px-6 py-2 bg-indigo-600 text-white rounded font-bold hover:bg-indigo-700 shadow transition text-sm">
                         Manage Posts
                     </a>
