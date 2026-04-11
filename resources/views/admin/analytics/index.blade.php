@@ -21,31 +21,44 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Stats -->
                 <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
                     <div>
-                        <div class="text-sm border-b pb-2 mb-2 text-gray-500 font-bold uppercase tracking-wider">
+                        <div class="text-xs border-b pb-2 mb-2 text-indigo-500 font-bold uppercase tracking-wider flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                            Live Traffic (Realtime)
+                        </div>
+                        <div class="text-3xl font-black text-indigo-700">{{ number_format($liveUsers) }}</div>
+                    </div>
+                    <div class="p-4 bg-indigo-50 text-indigo-600 rounded-lg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs border-b pb-2 mb-2 text-gray-500 font-bold uppercase tracking-wider">
                             Traffic 
                             @if($filter === 'all_time') (All Time)
                             @elseif($filter === 'today') (Today)
-                            @else (Selected Period)
+                            @else (Filtered)
                             @endif
                         </div>
                         <div class="text-3xl font-black text-gray-900">{{ number_format($filteredTotal) }}</div>
                     </div>
-                    <div class="p-4 bg-indigo-50 text-indigo-600 rounded-lg">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <div class="p-4 bg-gray-50 text-gray-600 rounded-lg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                     </div>
                 </div>
                 
                 <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
                     <div>
-                        <div class="text-sm border-b pb-2 mb-2 text-gray-500 font-bold uppercase tracking-wider">Traffic Today</div>
+                        <div class="text-xs border-b pb-2 mb-2 text-gray-500 font-bold uppercase tracking-wider">Traffic Today</div>
                         <div class="text-3xl font-black text-green-600">{{ number_format($visitsToday) }}</div>
                     </div>
                     <div class="p-4 bg-green-50 text-green-600 rounded-lg">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
                     </div>
                 </div>
             </div>
@@ -60,7 +73,12 @@
                         <ul class="space-y-3">
                             @foreach($topCountries as $country)
                             <li class="flex justify-between items-center bg-gray-50 p-3 rounded border border-gray-100">
-                                <span class="font-bold text-gray-700">{{ $country->country }}</span>
+                                <div class="flex items-center gap-3">
+                                    @if($country->country_code)
+                                    <img src="https://flagcdn.com/w40/{{ $country->country_code }}.png" alt="{{ $country->country }}" class="w-6 rounded-sm shadow-sm">
+                                    @endif
+                                    <span class="font-bold text-gray-700">{{ $country->country }}</span>
+                                </div>
                                 <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold">{{ number_format($country->count) }} Views</span>
                             </li>
                             @endforeach
@@ -106,8 +124,13 @@
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $v->created_at->diffForHumans() }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-bold text-gray-900">{{ $v->country }}</div>
-                                <div class="text-xs text-gray-500">{{ $v->ip_address }}</div>
+                                <div class="flex items-center gap-2 mb-1">
+                                    @if($v->country_code)
+                                    <img src="https://flagcdn.com/w20/{{ $v->country_code }}.png" alt="{{ $v->country }}" class="w-4 rounded-sm shadow-sm inline-block">
+                                    @endif
+                                    <span class="text-sm font-bold text-gray-900">{{ $v->country }}</span>
+                                </div>
+                                <div class="text-xs text-gray-500 font-mono">{{ $v->ip_address }}</div>
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-500 max-w-sm truncate">
                                 <a href="{{ $v->url }}" target="_blank" class="text-indigo-600 hover:underline">{{ Str::limit($v->url, 50) }}</a>

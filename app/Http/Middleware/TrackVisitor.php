@@ -20,20 +20,33 @@ class TrackVisitor
             return $next($request);
         }
 
+        // Don't track logged-in admins on the frontend
+        if (\Illuminate\Support\Facades\Auth::check() && \Illuminate\Support\Facades\Auth::user()->role === 'admin') {
+            return $next($request);
+        }
+
         try {
             $ip = $request->ip();
             $country = 'Unknown';
+            $countryCode = null;
 
             if ($ip && $ip !== '127.0.0.1' && $ip !== '::1') {
-                $country = \Illuminate\Support\Facades\Cache::remember("ip_country_{$ip}", 86400, function () use ($ip) {
+                $locationData = \Illuminate\Support\Facades\Cache::remember("ip_location_{$ip}", 86400, function () use ($ip) {
                     $response = \Illuminate\Support\Facades\Http::timeout(3)->get("http://ip-api.com/json/{$ip}");
                     if ($response->successful() && $response->json('status') === 'success') {
-                        return $response->json('country');
+                        return [
+                            'country' => $response->json('country'),
+                            'countryCode' => strtolower($response->json('countryCode'))
+                        ];
                     }
-                    return 'Unknown';
+                    return ['country' => 'Unknown', 'countryCode' => null];
                 });
+
+                $country = $locationData['country'];
+                $countryCode = $locationData['countryCode'];
             } else {
                 $country = 'Localhost';
+                $countryCode = 'us'; // Fallback flag for localhost
             }
 
             \App\Models\Visit::create([
@@ -42,6 +55,7 @@ class TrackVisitor
                 'referrer' => $request->headers->get('referer'),
                 'user_agent' => substr($request->userAgent(), 0, 255),
                 'country' => $country,
+                'country_code' => $countryCode,
             ]);
         } catch (\Exception $e) {
             // Fail silently to never break the application if tracking fails

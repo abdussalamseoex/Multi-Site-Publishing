@@ -20,6 +20,7 @@ Route::get('/dashboard', function () {
             'users_count' => \App\Models\User::count(),
             'categories_count' => \App\Models\Category::count(),
             'visits_today' => \App\Models\Visit::whereDate('created_at', today())->count(),
+            'live_visitors' => \App\Models\Visit::where('created_at', '>=', now()->subMinutes(5))->distinct('ip_address')->count('ip_address'),
             'total_visits' => \App\Models\Visit::count()
         ];
         $recent_posts = \App\Models\Post::with('category')->latest()->take(5)->get();

@@ -12,5 +12,6 @@ class Visit extends Model
         'referrer',
         'user_agent',
         'country',
+        'country_code',
     ];
 }

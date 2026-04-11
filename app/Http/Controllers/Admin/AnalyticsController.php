@@ -28,9 +28,10 @@ class AnalyticsController extends Controller
         $filteredTotal = (clone $query)->count();
         $totalVisits = \App\Models\Visit::count();
         $visitsToday = \App\Models\Visit::whereDate('created_at', today())->count();
+        $liveUsers = \App\Models\Visit::where('created_at', '>=', now()->subMinutes(5))->distinct('ip_address')->count('ip_address');
         
-        $topCountries = (clone $query)->selectRaw('country, count(*) as count')
-            ->groupBy('country')
+        $topCountries = (clone $query)->selectRaw('country, country_code, count(*) as count')
+            ->groupBy('country', 'country_code')
             ->orderByDesc('count')
             ->take(10)
             ->get();
@@ -44,6 +45,6 @@ class AnalyticsController extends Controller
             
         $recentVisits = (clone $query)->latest()->take(50)->get();
 
-        return view('admin.analytics.index', compact('totalVisits', 'visitsToday', 'filteredTotal', 'topCountries', 'topReferrers', 'recentVisits', 'filter'));
+        return view('admin.analytics.index', compact('totalVisits', 'visitsToday', 'filteredTotal', 'topCountries', 'topReferrers', 'recentVisits', 'filter', 'liveUsers'));
     }
 }
