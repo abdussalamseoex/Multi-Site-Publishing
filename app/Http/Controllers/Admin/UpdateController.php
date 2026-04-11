@@ -134,6 +134,12 @@ class UpdateController extends Controller
             $log[] = "==== SYSTEM CLEANUP ====";
             Artisan::call('optimize:clear');
             $log[] = Artisan::output();
+            
+            // Cleanup any static robots.txt so dynamic SeoController route can work
+            if (File::exists(public_path('robots.txt'))) {
+                File::delete(public_path('robots.txt'));
+                $log[] = "Cleaned up static robots.txt wrapper constraint.";
+            }
         } catch (\Exception $e) { }
 
         // Run migrations
