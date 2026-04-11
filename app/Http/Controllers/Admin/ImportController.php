@@ -114,6 +114,12 @@ class ImportController extends Controller
                                 $title = (string) $xml->title;
                                 $content = (string) ($xml->children('content', true)->encoded ?? $xml->description ?? $xml->content ?? '');
                                 
+                                // Extract Exact Original Slug
+                                $originalSlug = (string) $wp->post_name;
+                                if (empty($originalSlug)) {
+                                    $originalSlug = Str::slug($title ?: 'untitled') . '-' . uniqid();
+                                }
+                                
                                 $categoryName = 'Uncategorized';
                                 foreach ($xml->category as $cat) {
                                     $domain = (string) $cat['domain'];
@@ -133,7 +139,7 @@ class ImportController extends Controller
                                     'user_id' => $userId,
                                     'category_id' => $categoriesMap[$catKey],
                                     'title' => $title ?: 'Untitled',
-                                    'slug' => Str::slug($title ?: 'untitled') . '-' . uniqid(),
+                                    'slug' => $originalSlug,
                                     'content' => $content,
                                     'status' => $status === 'publish' ? 'published' : 'draft',
                                     'meta_title' => Str::limit(strip_tags($title), 60),
@@ -156,13 +162,13 @@ class ImportController extends Controller
             if (is_array($data)) {
                 $chunk = array_slice($data, $offset, $chunkSize);
                 foreach ($chunk as $item) {
-                    // Handle generic WP JSON formats
                     $title = $item['title'] ?? $item['post_title'] ?? 'Untitled';
                     $content = $item['body'] ?? $item['post_content'] ?? $item['content'] ?? '';
                     $categoryName = $item['category'] ?? $item['post_category'] ?? 'Uncategorized';
+                    $originalSlug = $item['slug'] ?? $item['post_name'] ?? Str::slug($title) . '-' . uniqid();
                     
                     if (is_array($categoryName)) {
-                        $categoryName = $categoryName[0] ?? 'Uncategorized'; // take first
+                        $categoryName = $categoryName[0] ?? 'Uncategorized';
                     }
 
                     $catKey = strtolower($categoryName);
@@ -175,7 +181,7 @@ class ImportController extends Controller
                         'user_id' => $userId,
                         'category_id' => $categoriesMap[$catKey],
                         'title' => $title,
-                        'slug' => Str::slug($title) . '-' . uniqid(),
+                        'slug' => $originalSlug,
                         'content' => $content,
                         'status' => 'published',
                         'meta_title' => Str::limit(strip_tags($title), 60),
@@ -198,6 +204,7 @@ class ImportController extends Controller
                         $title = $item['title'] ?? $item['post_title'] ?? $item['Title'] ?? 'Untitled';
                         $content = $item['body'] ?? $item['post_content'] ?? $item['content'] ?? $item['Body'] ?? '';
                         $categoryName = $item['category'] ?? $item['post_category'] ?? $item['Category'] ?? 'Uncategorized';
+                        $originalSlug = $item['slug'] ?? $item['post_name'] ?? $item['Slug'] ?? Str::slug($title) . '-' . uniqid();
 
                         $catKey = strtolower($categoryName);
                         if (!isset($categoriesMap[$catKey])) {
@@ -209,7 +216,7 @@ class ImportController extends Controller
                             'user_id' => $userId,
                             'category_id' => $categoriesMap[$catKey],
                             'title' => $title,
-                            'slug' => Str::slug($title) . '-' . uniqid(),
+                            'slug' => $originalSlug,
                             'content' => $content,
                             'status' => 'published',
                             'meta_title' => Str::limit(strip_tags($title), 60),
