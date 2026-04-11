@@ -14,12 +14,33 @@
                     <form action="{{ route('admin.categories.store') }}" method="POST">
                         @csrf
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">Name</label>
+                            <label class="block text-sm font-medium text-gray-700">Category Name <span class="text-red-500">*</span></label>
                             <input type="text" name="name" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
                         </div>
                         <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Custom Slug (Optional)</label>
+                            <input type="text" name="slug" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="e.g. tech-news">
+                        </div>
+                        <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700">Description</label>
-                            <textarea name="description" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm"></textarea>
+                            <textarea name="description" rows="2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm"></textarea>
+                        </div>
+                        <div class="mb-4 pt-2 border-t border-gray-200">
+                            <h4 class="text-xs font-bold text-gray-600 uppercase mb-2">SEO Options</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700">Meta Title</label>
+                                    <input type="text" name="meta_title" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="Leave blank to use Name">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700">Meta Keywords</label>
+                                    <input type="text" name="meta_keywords" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="Comma-separated">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700">Meta Description</label>
+                                    <textarea name="meta_description" rows="2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm"></textarea>
+                                </div>
+                            </div>
                         </div>
                         <button type="submit" class="w-full bg-indigo-600 text-white rounded py-2 text-sm font-bold shadow hover:bg-indigo-700">Create Category</button>
                     </form>

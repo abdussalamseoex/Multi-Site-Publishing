@@ -39,15 +39,17 @@ class PageController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255',
             'content' => 'required',
         ]);
 
         Page::create([
             'title' => $request->input('title'),
-            'slug' => Str::slug($request->input('title')),
+            'slug' => $request->input('slug') ? Str::slug($request->input('slug')) : Str::slug($request->input('title')) . '-' . uniqid(),
             'content' => $request->input('content'),
             'meta_title' => $request->input('meta_title') ?? $request->input('title'),
             'meta_description' => $request->input('meta_description'),
+            'meta_keywords' => $request->input('meta_keywords'),
         ]);
 
         return redirect()->route('admin.pages.index')->with('status', 'Page created successfully.');
@@ -62,15 +64,17 @@ class PageController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255',
             'content' => 'required',
         ]);
 
         $page->update([
             'title' => $request->input('title'),
-            'slug' => Str::slug($request->input('title')),
+            'slug' => $request->input('slug') ? Str::slug($request->input('slug')) : $page->slug,
             'content' => $request->input('content'),
             'meta_title' => $request->input('meta_title') ?? $request->input('title'),
             'meta_description' => $request->input('meta_description'),
+            'meta_keywords' => $request->input('meta_keywords'),
         ]);
 
         return redirect()->route('admin.pages.index')->with('status', 'Page updated successfully.');

@@ -12,5 +12,6 @@ class Page extends Model
         'content',
         'meta_title',
         'meta_description',
+        'meta_keywords',
     ];
 }

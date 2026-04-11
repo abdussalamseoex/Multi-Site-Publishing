@@ -34,13 +34,17 @@ class CategoryController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255',
             'description' => 'nullable|string',
         ]);
 
         Category::create([
             'name' => $request->name,
-            'slug' => Str::slug($request->name),
+            'slug' => $request->slug ? Str::slug($request->slug) : Str::slug($request->name),
             'description' => $request->description,
+            'meta_title' => $request->meta_title ?? $request->name,
+            'meta_keywords' => $request->meta_keywords,
+            'meta_description' => $request->meta_description,
         ]);
 
         return back()->with('status', 'Category created successfully.');

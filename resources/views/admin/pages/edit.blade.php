@@ -15,14 +15,19 @@
                     @csrf
                     @method('PUT')
                     
-                    <div class="mb-6">
+                    <div class="mb-6 border-b pb-4">
                         <label class="block text-lg font-bold text-gray-700 mb-2">Page Title</label>
-                        <input type="text" name="title" value="{{ $page->title }}" required class="block w-full border-gray-300 rounded-md shadow-sm sm:text-lg px-4 py-3">
+                        <input type="text" name="title" value="{{ old('title', $page->title) }}" required class="block w-full border-gray-300 rounded-md shadow-sm sm:text-lg px-4 py-3">
+                    </div>
+
+                    <div class="mb-6 border-b pb-4">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Custom URL Slug (Optional)</label>
+                        <input type="text" name="slug" value="{{ old('slug', $page->slug) }}" class="block w-full border-gray-300 rounded-md shadow-sm sm:text-sm px-4 py-2">
                     </div>
 
                     <div class="mb-6">
                         <label class="block text-sm font-bold text-gray-700 mb-2">Page Content</label>
-                        <div id="editor-container" class="h-64 bg-white">{!! $page->content !!}</div>
+                        <div id="editor-container" class="h-64 bg-white">{!! old('content', $page->content) !!}</div>
                         <input type="hidden" name="content" id="content">
                     </div>
 
@@ -30,12 +35,16 @@
                         <h4 class="font-bold mb-2">SEO Settings (Optional)</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm text-gray-700">Meta Title</label>
-                                <input type="text" name="meta_title" value="{{ $page->meta_title }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                                <label class="block text-sm text-gray-700 mb-1">Meta Title</label>
+                                <input type="text" name="meta_title" value="{{ old('meta_title', $page->meta_title) }}" class="block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
                             </div>
                             <div>
-                                <label class="block text-sm text-gray-700">Meta Description</label>
-                                <textarea name="meta_description" rows="2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">{{ $page->meta_description }}</textarea>
+                                <label class="block text-sm text-gray-700 mb-1">Meta Keywords</label>
+                                <input type="text" name="meta_keywords" value="{{ old('meta_keywords', $page->meta_keywords) }}" class="block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm text-gray-700 mb-1">Meta Description</label>
+                                <textarea name="meta_description" rows="2" class="block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">{{ old('meta_description', $page->meta_description) }}</textarea>
                             </div>
                         </div>
                     </div>
