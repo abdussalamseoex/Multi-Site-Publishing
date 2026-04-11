@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             \App\Http\Middleware\CheckInstallation::class,
+            \App\Http\Middleware\TrackVisitor::class,
         ]);
         
         $middleware->alias([

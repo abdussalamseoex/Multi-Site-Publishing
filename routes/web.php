@@ -18,7 +18,9 @@ Route::get('/dashboard', function () {
             'posts_count' => \App\Models\Post::count(),
             'posts_views' => \App\Models\Post::sum('views'),
             'users_count' => \App\Models\User::count(),
-            'categories_count' => \App\Models\Category::count()
+            'categories_count' => \App\Models\Category::count(),
+            'visits_today' => \App\Models\Visit::whereDate('created_at', today())->count(),
+            'total_visits' => \App\Models\Visit::count()
         ];
         $recent_posts = \App\Models\Post::with('category')->latest()->take(5)->get();
     } else {
@@ -61,6 +63,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     
     Route::get('/seo', [SettingController::class, 'seoIndex'])->name('seo.index');
     Route::post('/seo', [SettingController::class, 'store'])->name('seo.store');
+
+    Route::get('/analytics', [\App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('analytics.index');
 
     Route::get('/demo-import', [SettingController::class, 'importDemo'])->name('demo.import');
     

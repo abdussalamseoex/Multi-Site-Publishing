@@ -65,6 +65,21 @@
                             <div class="text-3xl font-black text-gray-900">{{ number_format($stats['categories_count']) }}</div>
                         </div>
                     </div>
+
+                    <!-- Live Analytics Card (Admin) -->
+                    <a href="{{ route('admin.analytics.index') }}" class="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-lg shadow-md flex items-center justify-between hover:shadow-lg transition">
+                        <div>
+                            <div class="text-sm font-bold uppercase tracking-wider text-indigo-100 flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                                Live Traffic Today
+                            </div>
+                            <div class="text-3xl font-black text-white mt-1">{{ number_format($stats['visits_today']) }}</div>
+                            <div class="text-xs text-indigo-200 mt-2">Total all-time visits: {{ number_format($stats['total_visits']) }}</div>
+                        </div>
+                        <div class="p-3 bg-white bg-opacity-20 rounded-full text-white">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        </div>
+                    </a>
                 @else
                     <!-- Stat Card 3 (Author) -->
                     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center gap-4">
