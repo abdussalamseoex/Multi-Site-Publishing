@@ -37,9 +37,17 @@ class FrontendController extends Controller
 
     public function showPost($slug)
     {
-        $post = Post::where('slug', $slug)->where('status', 'published')->firstOrFail();
-        // Increment views
-        $post->increment('views');
+        $post = Post::where('slug', $slug)->firstOrFail();
+        
+        if ($post->status !== 'published') {
+            // Allow admin or the author to preview
+            if (!auth()->check() || (auth()->user()->role !== 'admin' && auth()->id() !== $post->user_id)) {
+                abort(404);
+            }
+        } else {
+            // Only increment views for actual public visits
+            $post->increment('views');
+        }
 
         $activeTheme = Setting::get('active_theme', 'minimal');
         $viewName = "themes.{$activeTheme}.post";
