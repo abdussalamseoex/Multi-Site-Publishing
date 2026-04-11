@@ -8,9 +8,31 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with('roles')->paginate(20);
+        $query = User::with('roles');
+
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('email', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        if ($request->filled('role')) {
+            $query->whereHas('roles', function($q) use ($request) {
+                $q->where('name', $request->role);
+            });
+        }
+
+        $sort = $request->input('sort', 'latest');
+        if ($sort == 'latest') {
+            $query->latest();
+        } elseif ($sort == 'oldest') {
+            $query->oldest();
+        }
+
+        $users = $query->paginate(20)->withQueryString();
         return view('admin.users.index', compact('users'));
     }
 

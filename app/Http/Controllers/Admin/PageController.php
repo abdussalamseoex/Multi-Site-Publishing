@@ -9,9 +9,24 @@ use Illuminate\Support\Str;
 
 class PageController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $pages = Page::paginate(15);
+        $query = Page::query();
+
+        if ($request->filled('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%');
+        }
+
+        $sort = $request->input('sort', 'latest');
+        if ($sort == 'latest') {
+            $query->latest();
+        } elseif ($sort == 'oldest') {
+            $query->oldest();
+        } elseif ($sort == 'title_asc') {
+            $query->orderBy('title', 'asc');
+        }
+
+        $pages = $query->paginate(15)->withQueryString();
         return view('admin.pages.index', compact('pages'));
     }
 

@@ -19,6 +19,27 @@
                 </div>
             @endif
 
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6 p-4">
+                <form method="GET" action="{{ route('admin.pages.index') }}" class="flex flex-col md:flex-row gap-4 items-end">
+                    <div class="w-full md:w-1/2">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Search Pages</label>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by title..." class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div class="w-full md:w-1/3">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Sort By</label>
+                        <select name="sort" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Latest First</option>
+                            <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Oldest First</option>
+                            <option value="title_asc" {{ request('sort') == 'title_asc' ? 'selected' : '' }}>Title (A-Z)</option>
+                        </select>
+                    </div>
+                    <div class="flex space-x-2 w-full md:w-auto">
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white shadow-sm rounded-md text-sm font-medium hover:bg-indigo-700 transition">Filter</button>
+                        <a href="{{ route('admin.pages.index') }}" class="px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-200 transition">Reset</a>
+                    </div>
+                </form>
+            </div>
+
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">

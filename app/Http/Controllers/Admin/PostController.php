@@ -8,10 +8,35 @@ use Illuminate\Http\Request;
 
 class PostController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $posts = Post::with('user', 'category')->latest()->paginate(20);
-        return view('admin.posts.index', compact('posts'));
+        $query = Post::with('user', 'category');
+
+        if ($request->filled('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $sort = $request->input('sort', 'latest');
+        if ($sort == 'latest') {
+            $query->latest();
+        } elseif ($sort == 'oldest') {
+            $query->oldest();
+        } elseif ($sort == 'views_desc') {
+            $query->orderBy('views', 'desc');
+        }
+
+        $posts = $query->paginate(20)->withQueryString();
+        $categories = \App\Models\Category::all();
+
+        return view('admin.posts.index', compact('posts', 'categories'));
     }
 
     public function create()
