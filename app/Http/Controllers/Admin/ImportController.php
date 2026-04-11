@@ -19,35 +19,54 @@ class ImportController extends Controller
     public function upload(Request $request)
     {
         $request->validate([
-            'xml_file' => 'required|file|mimes:xml,txt',
+            'upload_file' => 'required|file',
         ]);
 
-        $file = $request->file('xml_file');
+        $file = $request->file('upload_file');
+        $extension = strtolower($file->getClientOriginalExtension());
         
-        // Save the file temporarily in storage
-        $filename = 'wp_import_' . time() . '.xml';
-        $path = $file->storeAs('imports', $filename);
+        if (!in_array($extension, ['xml', 'json', 'csv', 'txt'])) {
+            return response()->json(['error' => 'Invalid file format. Only XML, JSON, or CSV are allowed.'], 422);
+        }
 
-        // Analyze the file to quickly count total items using XMLReader
+        // Save the file temporarily in storage
+        $filename = 'wp_import_' . time() . '.' . $extension;
+        $path = $file->storeAs('imports', $filename);
         $filePath = storage_path('app/' . $path);
         
         $totalItems = 0;
-        $reader = new \XMLReader();
-        if ($reader->open($filePath)) {
-            while ($reader->read()) {
-                if ($reader->nodeType == \XMLReader::ELEMENT && $reader->name === 'item') {
-                    // Check if it's a post
+        
+        // Analyze the file to quickly count total items
+        if ($extension === 'xml' || $extension === 'txt') {
+            $reader = new \XMLReader();
+            if ($reader->open($filePath)) {
+                while ($reader->read()) {
+                    if ($reader->nodeType == \XMLReader::ELEMENT && $reader->name === 'item') {
+                        $totalItems++;
+                    }
+                }
+                $reader->close();
+            }
+        } elseif ($extension === 'json') {
+            $data = json_decode(file_get_contents($filePath), true);
+            if (is_array($data)) {
+                $totalItems = count($data);
+            }
+        } elseif ($extension === 'csv') {
+            if (($handle = fopen($filePath, "r")) !== FALSE) {
+                while (fgetcsv($handle) !== FALSE) {
                     $totalItems++;
                 }
+                fclose($handle);
+                // remove header row from count
+                if ($totalItems > 0) $totalItems--;
             }
-            $reader->close();
-        } else {
-            return response()->json(['error' => 'Unable to read the uploaded XML file.'], 500);
         }
 
         return response()->json([
             'success' => true,
             'file_path' => $path,
+            'file_type' => $extension === 'txt' ? 'xml' : $extension,
             'total_items' => $totalItems
         ]);
     }
@@ -55,20 +74,15 @@ class ImportController extends Controller
     public function processChunk(Request $request)
     {
         $path = $request->input('file_path');
+        $fileType = $request->input('file_type', 'xml');
         $offset = (int) $request->input('offset', 0);
         $chunkSize = 500;
         
         $filePath = storage_path('app/' . $path);
         if (!file_exists($filePath)) {
-            return response()->json(['error' => 'File not found.'], 404);
+            return response()->json(['error' => 'File not found on server.'], 404);
         }
 
-        $reader = new \XMLReader();
-        $reader->open($filePath);
-        
-        $currentIndex = 0;
-        $itemsProcessed = 0;
-        
         $postsData = [];
         $categoriesMap = Category::pluck('id', 'name')->mapWithKeys(function ($item, $key) {
             return [strtolower($key) => $item];
@@ -76,97 +90,156 @@ class ImportController extends Controller
         
         $userId = auth()->id();
         $now = now();
+        $itemsProcessed = 0;
 
-        while ($reader->read()) {
-            if ($reader->nodeType == \XMLReader::ELEMENT && $reader->name === 'item') {
-                if ($currentIndex >= $offset) {
-                    $nodeXml = $reader->readOuterXML();
-                    $xml = @simplexml_load_string($nodeXml, 'SimpleXMLElement', LIBXML_NOCDATA);
-                    
-                    if ($xml) {
-                        $namespaces = $xml->getNamespaces(true);
-                        $wp = $xml->children($namespaces['wp'] ?? 'http://wordpress.org/export/1.2/');
+        if ($fileType === 'xml') {
+            $reader = new \XMLReader();
+            $reader->open($filePath);
+            $currentIndex = 0;
+            
+            while ($reader->read()) {
+                if ($reader->nodeType == \XMLReader::ELEMENT && $reader->name === 'item') {
+                    if ($currentIndex >= $offset) {
+                        $nodeXml = $reader->readOuterXML();
+                        $xml = @simplexml_load_string($nodeXml, 'SimpleXMLElement', LIBXML_NOCDATA);
                         
-                        $postType = (string) $wp->post_type;
-                        $status = (string) $wp->status;
-                        
-                        // We only want published posts (or draft), but strictly 'post' type, not page/attachment
-                        if ($postType === 'post') {
-                            $title = (string) $xml->title;
-                            $content = (string) ($xml->children('content', true)->encoded ?? $xml->description ?? '');
+                        if ($xml) {
+                            $namespaces = $xml->getNamespaces(true);
+                            $wp = $xml->children($namespaces['wp'] ?? 'http://wordpress.org/export/1.2/');
                             
-                            if (empty($content)) {
-                                // Fallback standard content tag
-                                $content = (string) $xml->content;
-                            }
+                            $postType = (string) $wp->post_type;
+                            $status = (string) $wp->status;
                             
-                            $categoryName = 'Uncategorized';
-                            foreach ($xml->category as $cat) {
-                                $domain = (string) $cat['domain'];
-                                if ($domain === 'category') {
-                                    $categoryName = (string) $cat;
-                                    break;
+                            if ($postType === 'post') {
+                                $title = (string) $xml->title;
+                                $content = (string) ($xml->children('content', true)->encoded ?? $xml->description ?? $xml->content ?? '');
+                                
+                                $categoryName = 'Uncategorized';
+                                foreach ($xml->category as $cat) {
+                                    $domain = (string) $cat['domain'];
+                                    if ($domain === 'category') {
+                                        $categoryName = (string) $cat;
+                                        break;
+                                    }
                                 }
+                                
+                                $catKey = strtolower($categoryName);
+                                if (!isset($categoriesMap[$catKey])) {
+                                    $newCat = Category::create(['name' => $categoryName, 'slug' => Str::slug($categoryName) . '-' . uniqid()]);
+                                    $categoriesMap[$catKey] = $newCat->id;
+                                }
+                                
+                                $postsData[] = [
+                                    'user_id' => $userId,
+                                    'category_id' => $categoriesMap[$catKey],
+                                    'title' => $title ?: 'Untitled',
+                                    'slug' => Str::slug($title ?: 'untitled') . '-' . uniqid(),
+                                    'content' => $content,
+                                    'status' => $status === 'publish' ? 'published' : 'draft',
+                                    'meta_title' => Str::limit(strip_tags($title), 60),
+                                    'meta_description' => Str::limit(strip_tags($content), 150),
+                                    'created_at' => (string) $wp->post_date !== '0000-00-00 00:00:00' ? (string) $wp->post_date : $now,
+                                    'updated_at' => $now,
+                                ];
                             }
-                            
-                            // Get or Create Category
-                            $catKey = strtolower($categoryName);
-                            if (!isset($categoriesMap[$catKey])) {
-                                $newCat = Category::create([
-                                    'name' => $categoryName,
-                                    'slug' => Str::slug($categoryName) . '-' . uniqid(),
-                                    'description' => 'Imported category from WordPress.'
-                                ]);
-                                $categoriesMap[$catKey] = $newCat->id;
-                            }
-                            
-                            $categoryId = $categoriesMap[$catKey];
-                            
-                            $postsData[] = [
-                                'user_id' => $userId,
-                                'category_id' => $categoryId,
-                                'title' => $title ?: 'Untitled Post',
-                                'slug' => Str::slug($title ?: 'untitled-post') . '-' . uniqid(),
-                                'content' => $content,
-                                'status' => $status === 'publish' ? 'published' : 'draft',
-                                'meta_title' => Str::limit(strip_tags($title), 60),
-                                'meta_description' => Str::limit(strip_tags($content), 150),
-                                'created_at' => (string) $wp->post_date !== '0000-00-00 00:00:00' ? (string) $wp->post_date : $now,
-                                'updated_at' => $now,
-                            ];
                         }
+                        $itemsProcessed++;
+                        if ($itemsProcessed >= $chunkSize) break;
                     }
-                    
-                    $itemsProcessed++;
-                    
-                    // Stop parsing once we hit our chunk size
-                    if ($itemsProcessed >= $chunkSize) {
-                        break;
-                    }
+                    $currentIndex++;
                 }
+            }
+            $reader->close();
+            
+        } elseif ($fileType === 'json') {
+            $data = json_decode(file_get_contents($filePath), true);
+            if (is_array($data)) {
+                $chunk = array_slice($data, $offset, $chunkSize);
+                foreach ($chunk as $item) {
+                    // Handle generic WP JSON formats
+                    $title = $item['title'] ?? $item['post_title'] ?? 'Untitled';
+                    $content = $item['body'] ?? $item['post_content'] ?? $item['content'] ?? '';
+                    $categoryName = $item['category'] ?? $item['post_category'] ?? 'Uncategorized';
+                    
+                    if (is_array($categoryName)) {
+                        $categoryName = $categoryName[0] ?? 'Uncategorized'; // take first
+                    }
+
+                    $catKey = strtolower($categoryName);
+                    if (!isset($categoriesMap[$catKey])) {
+                        $newCat = Category::create(['name' => $categoryName, 'slug' => Str::slug($categoryName) . '-' . uniqid()]);
+                        $categoriesMap[$catKey] = $newCat->id;
+                    }
+
+                    $postsData[] = [
+                        'user_id' => $userId,
+                        'category_id' => $categoriesMap[$catKey],
+                        'title' => $title,
+                        'slug' => Str::slug($title) . '-' . uniqid(),
+                        'content' => $content,
+                        'status' => 'published',
+                        'meta_title' => Str::limit(strip_tags($title), 60),
+                        'meta_description' => Str::limit(strip_tags($content), 150),
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                    $itemsProcessed++;
+                }
+            }
+        } elseif ($fileType === 'csv') {
+            if (($handle = fopen($filePath, "r")) !== FALSE) {
+                $headers = fgetcsv($handle);
+                $currentIndex = 0;
                 
-                $currentIndex++;
+                while (($row = fgetcsv($handle)) !== FALSE) {
+                    if ($currentIndex >= $offset) {
+                        $item = array_combine($headers, array_pad($row, count($headers), ''));
+                        
+                        $title = $item['title'] ?? $item['post_title'] ?? $item['Title'] ?? 'Untitled';
+                        $content = $item['body'] ?? $item['post_content'] ?? $item['content'] ?? $item['Body'] ?? '';
+                        $categoryName = $item['category'] ?? $item['post_category'] ?? $item['Category'] ?? 'Uncategorized';
+
+                        $catKey = strtolower($categoryName);
+                        if (!isset($categoriesMap[$catKey])) {
+                            $newCat = Category::create(['name' => $categoryName, 'slug' => Str::slug($categoryName) . '-' . uniqid()]);
+                            $categoriesMap[$catKey] = $newCat->id;
+                        }
+
+                        $postsData[] = [
+                            'user_id' => $userId,
+                            'category_id' => $categoriesMap[$catKey],
+                            'title' => $title,
+                            'slug' => Str::slug($title) . '-' . uniqid(),
+                            'content' => $content,
+                            'status' => 'published',
+                            'meta_title' => Str::limit(strip_tags($title), 60),
+                            'meta_description' => Str::limit(strip_tags($content), 150),
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ];
+                        $itemsProcessed++;
+                        if ($itemsProcessed >= $chunkSize) break;
+                    }
+                    $currentIndex++;
+                }
+                fclose($handle);
             }
         }
-        
-        $reader->close();
         
         // Batch Insert
         if (!empty($postsData)) {
             Post::insert($postsData);
         }
         
-        // Determine if we are completely done
         $isFinished = ($itemsProcessed < $chunkSize);
         if ($isFinished) {
-            // Cleanup file
             @unlink($filePath);
         }
 
         return response()->json([
             'success' => true,
-            'processed' => count($postsData), // actual valid posts inserted
-            'items_read' => $itemsProcessed, // raw items parsed
+            'processed' => count($postsData),
+            'items_read' => $itemsProcessed,
             'is_finished' => $isFinished,
             'next_offset' => $offset + $itemsProcessed
         ]);

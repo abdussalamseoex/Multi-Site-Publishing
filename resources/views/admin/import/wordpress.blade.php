@@ -29,8 +29,8 @@
                     <!-- Upload Form -->
                     <form id="uploadForm" enctype="multipart/form-data">
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">WordPress WXR File (.xml)</label>
-                            <input type="file" name="xml_file" id="xml_file" accept=".xml" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 border border-gray-300 rounded-md p-2">
+                            <label class="block text-sm font-medium text-gray-700">Exported File (.csv, .json, .xml)</label>
+                            <input type="file" name="upload_file" id="upload_file" accept=".xml,.csv,.json,.txt" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 border border-gray-300 rounded-md p-2">
                         </div>
                         <button type="submit" id="startImportBtn" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             Start Secure Import
@@ -57,7 +57,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const uploadForm = document.getElementById('uploadForm');
-            const fileInput = document.getElementById('xml_file');
+            const fileInput = document.getElementById('upload_file');
             const startBtn = document.getElementById('startImportBtn');
             const progressSection = document.getElementById('progressSection');
             const progressBar = document.getElementById('progressBar');
@@ -69,6 +69,7 @@
             let totalItems = 0;
             let currentOffset = 0;
             let filePath = '';
+            let fileType = '';
             let totalProcessed = 0;
 
             function showAlert(message, type = 'blue') {
@@ -83,7 +84,7 @@
                 alertBox.classList.add('hidden');
 
                 if (!fileInput.files.length) {
-                    showAlert('Please select an XML file to import.', 'red');
+                    showAlert('Please select a file to import.', 'red');
                     return;
                 }
 
@@ -91,7 +92,7 @@
                 startBtn.innerText = 'Uploading...';
                 
                 let formData = new FormData();
-                formData.append('xml_file', fileInput.files[0]);
+                formData.append('upload_file', fileInput.files[0]);
                 formData.append('_token', '{{ csrf_token() }}');
 
                 // Step 1: Upload and Analyze
@@ -109,10 +110,11 @@
                     }
                     
                     filePath = data.file_path;
+                    fileType = data.file_type;
                     totalItems = data.total_items;
                     
                     if (totalItems === 0) {
-                        throw new Error('No valid WordPress posts found in the uploaded file. Ensure it is a valid WXR Export.');
+                        throw new Error('No valid items found in the uploaded file.');
                     }
                     
                     progressSection.classList.remove('hidden');
@@ -134,6 +136,7 @@
             function processNextChunk() {
                 let chunkData = new FormData();
                 chunkData.append('file_path', filePath);
+                chunkData.append('file_type', fileType);
                 chunkData.append('offset', currentOffset);
                 chunkData.append('_token', '{{ csrf_token() }}');
 
