@@ -29,8 +29,12 @@
                         
                         <div class="space-y-6">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Article Title</label>
+                                <label class="block text-sm font-medium text-gray-700">Article Title <span class="text-red-500">*</span></label>
                                 <input type="text" name="title" required value="{{ old('title', $post->title) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-lg px-4 py-3" placeholder="Enter an engaging title...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Custom URL Slug <span class="text-gray-400 font-normal">(Optional)</span></label>
+                                <input type="text" name="slug" value="{{ old('slug', $post->slug) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g. {{ $post->slug }}">
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -84,8 +88,9 @@
                                         <textarea name="meta_description" rows="2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="Leave blank to auto-generate from content">{{ old('meta_description', $post->meta_description) }}</textarea>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700">Canonical URL</label>
-                                        <input type="url" name="canonical_url" value="{{ old('canonical_url', $post->canonical_url) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="https://original-source.com/article">
+                                        <label class="block text-sm font-medium text-gray-700">Meta Keywords</label>
+                                        <input type="text" name="meta_keywords" value="{{ old('meta_keywords', $post->meta_keywords) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="e.g. news, technology, software">
+                                        <p class="mt-1 text-xs text-gray-500">Comma-separated SEO keywords.</p>
                                     </div>
                                 </div>
                             </div>

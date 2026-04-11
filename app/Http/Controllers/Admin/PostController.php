@@ -49,6 +49,7 @@ class PostController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255',
             'content' => 'required',
             'category_id' => 'required|exists:categories,id',
             'status' => 'required|in:draft,pending,published,rejected',
@@ -65,14 +66,14 @@ class PostController extends Controller
         Post::create([
             'user_id' => auth()->id(),
             'title' => $request->title,
-            'slug' => \Illuminate\Support\Str::slug($request->title) . '-' . uniqid(),
+            'slug' => $request->slug ? \Illuminate\Support\Str::slug($request->slug) : \Illuminate\Support\Str::slug($request->title) . '-' . uniqid(),
             'content' => $request->content,
             'category_id' => $request->category_id,
             'featured_image' => $featuredImagePath,
             'status' => $request->status,
             'meta_title' => $request->meta_title ?? $request->title,
             'meta_description' => $request->meta_description ?? substr(strip_tags($request->content), 0, 150),
-            'canonical_url' => $request->canonical_url,
+            'meta_keywords' => $request->meta_keywords,
         ]);
 
         return redirect()->route('admin.posts.index')->with('status', 'Post created successfully.');
@@ -88,6 +89,7 @@ class PostController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255',
             'content' => 'required',
             'category_id' => 'required|exists:categories,id',
             'status' => 'required|in:draft,pending,published,rejected',
@@ -102,12 +104,13 @@ class PostController extends Controller
 
         $post->update([
             'title' => $request->title,
+            'slug' => $request->slug ? \Illuminate\Support\Str::slug($request->slug) : $post->slug,
             'content' => $request->content,
             'category_id' => $request->category_id,
             'status' => $request->status,
             'meta_title' => $request->meta_title ?? $request->title,
             'meta_description' => $request->meta_description ?? substr(strip_tags($request->content), 0, 150),
-            'canonical_url' => $request->canonical_url,
+            'meta_keywords' => $request->meta_keywords,
         ]);
 
         return redirect()->route('admin.posts.index')->with('status', 'Post updated successfully.');

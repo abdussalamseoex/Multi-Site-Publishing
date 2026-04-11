@@ -7,7 +7,6 @@ use App\Http\Controllers\FrontendController;
 
 Route::get('/', [FrontendController::class, 'index'])->name('home');
 
-Route::get('/post/{slug}', [FrontendController::class, 'showPost'])->name('frontend.post');
 Route::get('/p/{slug}', [FrontendController::class, 'page'])->name('frontend.page');
 Route::get('/category/{slug}', [FrontendController::class, 'category'])->name('frontend.category');
 
@@ -101,3 +100,6 @@ Route::get('/install', [InstallController::class, 'index'])->name('install.index
 Route::post('/install/database', [InstallController::class, 'processDatabase'])->name('install.processDatabase');
 Route::get('/install/step2', [InstallController::class, 'step2'])->name('install.step2');
 Route::post('/install/process', [InstallController::class, 'processInstallation'])->name('install.processInstallation');
+
+// Catch-all route for Posts (Must remain at the absolute bottom)
+Route::get('/{slug}', [FrontendController::class, 'showPost'])->name('frontend.post');

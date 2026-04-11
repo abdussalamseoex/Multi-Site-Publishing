@@ -65,20 +65,21 @@
                             </div>
 
                             <!-- SEO Settings Box -->
-                            <div class="border rounded-lg p-5 bg-gray-50 mt-6">
-                                <h3 class="text-md font-semibold text-gray-700 mb-4">SEO Override (Optional)</h3>
-                                <div class="space-y-4">
+                            <div class="mb-6 bg-gray-50 p-4 rounded-md border border-gray-200">
+                                <h3 class="text-sm font-semibold text-gray-800 uppercase tracking-widest mb-4">SEO & Metadata</h3>
+                                <div class="grid grid-cols-1 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700">Meta Title</label>
-                                        <input type="text" name="meta_title" value="{{ old('meta_title') }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="Leave blank to use Article Title">
+                                        <input type="text" name="meta_title" value="{{ old('meta_title') }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="Leave blank to use post title">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Meta Keywords</label>
+                                        <input type="text" name="meta_keywords" value="{{ old('meta_keywords') }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="e.g. news, technology, software">
+                                        <p class="mt-1 text-xs text-gray-500">Comma-separated SEO keywords.</p>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700">Meta Description</label>
-                                        <textarea name="meta_description" rows="2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="Leave blank to auto-generate from content">{{ old('meta_description') }}</textarea>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Canonical URL</label>
-                                        <input type="url" name="canonical_url" value="{{ old('canonical_url') }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="https://original-source.com/article">
+                                        <textarea name="meta_description" rows="2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="Leave blank to auto-generate from content...">{{ old('meta_description') }}</textarea>
                                     </div>
                                 </div>
                             </div>

@@ -32,6 +32,7 @@ class PostController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255',
             'content' => 'required',
             'category_id' => 'required|exists:categories,id',
             'featured_image' => 'nullable|image|max:10240',
@@ -47,14 +48,14 @@ class PostController extends Controller
         $post = Post::create([
             'user_id' => Auth::id(),
             'title' => $request->input('title'),
-            'slug' => \Illuminate\Support\Str::slug($request->input('title')) . '-' . uniqid(),
+            'slug' => $request->input('slug') ? \Illuminate\Support\Str::slug($request->input('slug')) : \Illuminate\Support\Str::slug($request->input('title')) . '-' . uniqid(),
             'content' => $request->input('content'),
             'category_id' => $request->input('category_id'),
             'featured_image' => $featuredImagePath,
             'status' => \App\Models\Setting::get('default_post_status', 'pending'), 
             'meta_title' => $request->input('meta_title') ?? $request->input('title'),
             'meta_description' => $request->input('meta_description') ?? substr(strip_tags($request->input('content')), 0, 150),
-            'canonical_url' => $request->input('canonical_url'),
+            'meta_keywords' => $request->input('meta_keywords'),
         ]);
 
         return redirect()->route('orders.checkout', $post->id);

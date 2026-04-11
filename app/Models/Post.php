@@ -12,7 +12,7 @@ class Post extends Model
     protected $fillable = [
         'user_id', 'category_id', 'title', 'slug', 'summary', 'content', 
         'featured_image', 'status', 'is_featured', 'meta_title', 
-        'meta_description', 'canonical_url', 'views'
+        'meta_description', 'meta_keywords', 'canonical_url', 'views'
     ];
 
     public function user()

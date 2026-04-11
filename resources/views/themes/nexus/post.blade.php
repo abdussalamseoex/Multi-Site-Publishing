@@ -5,9 +5,11 @@
     <meta charset="UTF-8">
     <title>{{ $post->meta_title ?? $post->title }}</title>
     <meta name="description" content="{{ $post->meta_description }}">
-    @if($post->canonical_url)
-    <link rel="canonical" href="{{ $post->canonical_url }}">
+    @if($post->meta_keywords)
+    <meta name="keywords" content="{{ $post->meta_keywords }}">
     @endif
+    <link rel="canonical" href="{{ url()->current() }}">
+
     
     <!-- Open Graph & SEO -->
     <meta property="og:title" content="{{ $post->meta_title ?? $post->title }}">
@@ -108,5 +110,6 @@
     {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
+
 
 
