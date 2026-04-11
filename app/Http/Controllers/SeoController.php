@@ -28,6 +28,12 @@ class SeoController extends Controller
             $xml .= '</url>';
         }
 
+        // Custom XML Injections
+        $customXml = \App\Models\Setting::get('custom_sitemap_xml', '');
+        if ($customXml) {
+            $xml .= "\n" . $customXml . "\n";
+        }
+
         $xml .= '</urlset>';
 
         return response($xml, 200)->header('Content-Type', 'text/xml');
@@ -35,11 +41,8 @@ class SeoController extends Controller
 
     public function robots()
     {
-        $txt = "User-agent: *\n";
-        $txt .= "Disallow: /admin/\n";
-        $txt .= "Disallow: /checkout/\n";
-        $txt .= "Allow: /\n\n";
-        $txt .= "Sitemap: " . url('/sitemap.xml');
+        $defaultTxt = "User-agent: *\nDisallow: /admin/\nDisallow: /checkout/\nAllow: /\n\nSitemap: " . url('/sitemap.xml');
+        $txt = \App\Models\Setting::get('custom_robots_txt', $defaultTxt);
 
         return response($txt, 200)->header('Content-Type', 'text/plain');
     }

@@ -14,6 +14,12 @@ class SettingController extends Controller
         return view('admin.settings', compact('settings'));
     }
 
+    public function seoIndex()
+    {
+        $settings = Setting::all()->pluck('value', 'key')->toArray();
+        return view('admin.seo', compact('settings'));
+    }
+
     public function store(Request $request)
     {
         $data = $request->except(['_token', 'site_logo', 'site_favicon']);
