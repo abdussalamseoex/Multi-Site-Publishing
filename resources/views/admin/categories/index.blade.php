@@ -76,6 +76,7 @@
                                     <td class="px-6 py-4 text-sm text-gray-500">{{ Str::limit($cat->description, 50) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $cat->posts_count }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                        <a href="{{ route('frontend.category', $cat->slug) }}" target="_blank" class="text-indigo-600 hover:text-indigo-900 font-bold">View</a>
                                         <form action="{{ route('admin.categories.destroy', $cat->id) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
