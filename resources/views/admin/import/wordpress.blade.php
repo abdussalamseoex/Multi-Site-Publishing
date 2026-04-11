@@ -28,10 +28,30 @@
 
                     <!-- Upload Form -->
                     <form id="uploadForm" enctype="multipart/form-data">
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">Exported File (.csv, .json, .xml)</label>
-                            <input type="file" name="upload_file" id="upload_file" accept=".xml,.csv,.json,.txt" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 border border-gray-300 rounded-md p-2">
+                        
+                        <div class="mb-5">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Select Import Format</label>
+                            <div class="flex space-x-6">
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="file_format" value="xml" class="form-radio text-indigo-600" checked onchange="updateFileAccept('.xml,.txt')">
+                                    <span class="ml-2 text-sm text-gray-700">Default WP XML (WXR)</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="file_format" value="csv" class="form-radio text-indigo-600" onchange="updateFileAccept('.csv')">
+                                    <span class="ml-2 text-sm text-gray-700">CSV (WP Data Exporter)</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="file_format" value="json" class="form-radio text-indigo-600" onchange="updateFileAccept('.json')">
+                                    <span class="ml-2 text-sm text-gray-700">JSON (WP Data Exporter)</span>
+                                </label>
+                            </div>
                         </div>
+
+                        <div class="mb-5">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Select File</label>
+                            <input type="file" name="upload_file" id="upload_file" accept=".xml,.txt" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 border border-gray-300 rounded-md p-2">
+                        </div>
+                        
                         <button type="submit" id="startImportBtn" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             Start Secure Import
                         </button>
@@ -55,6 +75,10 @@
 
     <!-- AJAX Script -->
     <script>
+        function updateFileAccept(acceptValues) {
+            document.getElementById('upload_file').accept = acceptValues;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const uploadForm = document.getElementById('uploadForm');
             const fileInput = document.getElementById('upload_file');
