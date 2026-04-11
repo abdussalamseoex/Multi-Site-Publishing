@@ -117,8 +117,10 @@ class ImportController extends Controller
                                 // Extract Exact Original Slug
                                 $originalSlug = (string) $wp->post_name;
                                 if (empty($originalSlug)) {
-                                    $originalSlug = Str::slug($title ?: 'untitled') . '-' . uniqid();
+                                    $originalSlug = Str::slug($title ?: 'untitled');
                                 }
+                                
+                                $finalSlug = \App\Models\Setting::get('seo_post_slug_code') === 'on' ? $originalSlug . '-' . uniqid() : $originalSlug;
                                 
                                 $categoryName = 'Uncategorized';
                                 foreach ($xml->category as $cat) {
@@ -139,7 +141,8 @@ class ImportController extends Controller
                                     'user_id' => $userId,
                                     'category_id' => $categoriesMap[$catKey],
                                     'title' => $title ?: 'Untitled',
-                                    'slug' => $originalSlug,
+                                    'slug' => $finalSlug,
+                                    'original_slug' => $originalSlug,
                                     'content' => $content,
                                     'status' => $status === 'publish' ? 'published' : 'draft',
                                     'meta_title' => Str::limit(strip_tags($title), 60),
@@ -165,7 +168,7 @@ class ImportController extends Controller
                     $title = $item['title'] ?? $item['post_title'] ?? 'Untitled';
                     $content = $item['body'] ?? $item['post_content'] ?? $item['content'] ?? '';
                     $categoryName = $item['category'] ?? $item['post_category'] ?? 'Uncategorized';
-                    $originalSlug = $item['slug'] ?? $item['post_name'] ?? Str::slug($title) . '-' . uniqid();
+                    $originalSlug = $item['slug'] ?? $item['post_name'] ?? Str::slug($title);
                     
                     if (is_array($categoryName)) {
                         $categoryName = $categoryName[0] ?? 'Uncategorized';
@@ -177,11 +180,14 @@ class ImportController extends Controller
                         $categoriesMap[$catKey] = $newCat->id;
                     }
 
+                    $finalSlug = \App\Models\Setting::get('seo_post_slug_code') === 'on' ? $originalSlug . '-' . uniqid() : $originalSlug;
+
                     $postsData[] = [
                         'user_id' => $userId,
                         'category_id' => $categoriesMap[$catKey],
                         'title' => $title,
-                        'slug' => $originalSlug,
+                        'slug' => $finalSlug,
+                        'original_slug' => $originalSlug,
                         'content' => $content,
                         'status' => 'published',
                         'meta_title' => Str::limit(strip_tags($title), 60),
@@ -204,7 +210,7 @@ class ImportController extends Controller
                         $title = $item['title'] ?? $item['post_title'] ?? $item['Title'] ?? 'Untitled';
                         $content = $item['body'] ?? $item['post_content'] ?? $item['content'] ?? $item['Body'] ?? '';
                         $categoryName = $item['category'] ?? $item['post_category'] ?? $item['Category'] ?? 'Uncategorized';
-                        $originalSlug = $item['slug'] ?? $item['post_name'] ?? $item['Slug'] ?? Str::slug($title) . '-' . uniqid();
+                        $originalSlug = $item['slug'] ?? $item['post_name'] ?? $item['Slug'] ?? Str::slug($title);
 
                         $catKey = strtolower($categoryName);
                         if (!isset($categoriesMap[$catKey])) {
@@ -212,11 +218,14 @@ class ImportController extends Controller
                             $categoriesMap[$catKey] = $newCat->id;
                         }
 
+                        $finalSlug = \App\Models\Setting::get('seo_post_slug_code') === 'on' ? $originalSlug . '-' . uniqid() : $originalSlug;
+
                         $postsData[] = [
                             'user_id' => $userId,
                             'category_id' => $categoriesMap[$catKey],
                             'title' => $title,
-                            'slug' => $originalSlug,
+                            'slug' => $finalSlug,
+                            'original_slug' => $originalSlug,
                             'content' => $content,
                             'status' => 'published',
                             'meta_title' => Str::limit(strip_tags($title), 60),

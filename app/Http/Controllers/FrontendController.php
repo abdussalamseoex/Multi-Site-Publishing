@@ -37,7 +37,13 @@ class FrontendController extends Controller
 
     public function showPost($slug)
     {
-        $post = Post::where('slug', $slug)->firstOrFail();
+        $post = Post::where('slug', $slug)->first();
+        
+        if (!$post) {
+            // Check legacy imported original_slug
+            $post = Post::where('original_slug', $slug)->firstOrFail();
+            return redirect()->route('frontend.post', $post->slug, 301);
+        }
         
         if ($post->status !== 'published') {
             // Allow admin or the author to preview

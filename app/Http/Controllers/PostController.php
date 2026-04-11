@@ -45,10 +45,24 @@ class PostController extends Controller
             $featuredImagePath = '/uploads/posts/' . $filename;
         }
 
+        $baseSlug = $request->input('slug') ? \Illuminate\Support\Str::slug($request->input('slug')) : \Illuminate\Support\Str::slug($request->input('title'));
+        $finalSlug = \App\Models\Setting::get('seo_post_slug_code') === 'on' ? $baseSlug . '-' . uniqid() : $baseSlug;
+        
+        // Ensure uniqueness if code is off
+        if (\App\Models\Setting::get('seo_post_slug_code') !== 'on') {
+            $originalFinal = $finalSlug;
+            $counter = 1;
+            while (Post::where('slug', $finalSlug)->exists()) {
+                $finalSlug = $originalFinal . '-' . $counter;
+                $counter++;
+            }
+        }
+
         $post = Post::create([
             'user_id' => Auth::id(),
             'title' => $request->input('title'),
-            'slug' => $request->input('slug') ? \Illuminate\Support\Str::slug($request->input('slug')) : \Illuminate\Support\Str::slug($request->input('title')) . '-' . uniqid(),
+            'slug' => $finalSlug,
+            'original_slug' => $baseSlug,
             'content' => $request->input('content'),
             'category_id' => $request->input('category_id'),
             'featured_image' => $featuredImagePath,

@@ -63,10 +63,24 @@ class PostController extends Controller
             $featuredImagePath = '/uploads/posts/' . $filename;
         }
 
+        $baseSlug = $request->slug ? \Illuminate\Support\Str::slug($request->slug) : \Illuminate\Support\Str::slug($request->title);
+        $finalSlug = \App\Models\Setting::get('seo_post_slug_code') === 'on' ? $baseSlug . '-' . uniqid() : $baseSlug;
+        
+        // Ensure uniqueness if code is off
+        if (\App\Models\Setting::get('seo_post_slug_code') !== 'on') {
+            $originalFinal = $finalSlug;
+            $counter = 1;
+            while (Post::where('slug', $finalSlug)->exists()) {
+                $finalSlug = $originalFinal . '-' . $counter;
+                $counter++;
+            }
+        }
+
         Post::create([
             'user_id' => auth()->id(),
             'title' => $request->title,
-            'slug' => $request->slug ? \Illuminate\Support\Str::slug($request->slug) : \Illuminate\Support\Str::slug($request->title) . '-' . uniqid(),
+            'slug' => $finalSlug,
+            'original_slug' => $baseSlug,
             'content' => $request->content,
             'category_id' => $request->category_id,
             'featured_image' => $featuredImagePath,
@@ -102,9 +116,22 @@ class PostController extends Controller
             $post->featured_image = '/uploads/posts/' . $filename;
         }
 
+        $baseSlug = $request->slug ? \Illuminate\Support\Str::slug($request->slug) : \Illuminate\Support\Str::slug($request->title);
+        $finalSlug = \App\Models\Setting::get('seo_post_slug_code') === 'on' ? $baseSlug . '-' . uniqid() : $baseSlug;
+        
+        // Ensure uniqueness if code is off
+        if (\App\Models\Setting::get('seo_post_slug_code') !== 'on') {
+            $originalFinal = $finalSlug;
+            $counter = 1;
+            while (Post::where('slug', $finalSlug)->where('id', '!=', $post->id)->exists()) {
+                $finalSlug = $originalFinal . '-' . $counter;
+                $counter++;
+            }
+        }
+
         $post->update([
             'title' => $request->title,
-            'slug' => $request->slug ? \Illuminate\Support\Str::slug($request->slug) : $post->slug,
+            'slug' => $finalSlug,
             'content' => $request->content,
             'category_id' => $request->category_id,
             'status' => $request->status,

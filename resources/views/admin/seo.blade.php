@@ -63,6 +63,34 @@
                     </div>
                 </div>
 
+                <!-- Automated URL & Redirect Rules -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6 border border-gray-200">
+                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800">URL Architecture & Routing</h3>
+                            <p class="text-xs text-gray-500 mt-1">Configure global slug structuring and automated redirections for legacy imports</p>
+                        </div>
+                        <div class="text-sm text-gray-400">
+                            <i class="fas fa-link text-2xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6 text-gray-900 space-y-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <label class="text-sm font-bold text-gray-700">Append Unique Code to Post Slugs</label>
+                                <p class="text-xs text-gray-500 mt-1">If enabled, a unique identifier (e.g. <code>-64ab21fc</code>) will be appended to newly generated post URLs to guarantee uniqueness over time.</p>
+                            </div>
+                            <div>
+                                <select name="seo_post_slug_code" class="mt-1 block w-40 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm font-bold">
+                                    <option value="off" {{ (isset($settings['seo_post_slug_code']) && $settings['seo_post_slug_code'] === 'off') || !isset($settings['seo_post_slug_code']) ? 'selected' : '' }}>Disabled</option>
+                                    <option value="on" {{ (isset($settings['seo_post_slug_code']) && $settings['seo_post_slug_code'] === 'on') ? 'selected' : '' }}>Enabled</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex justify-end mb-12">
                     <button type="submit" class="px-8 py-3 bg-indigo-600 text-white rounded-md shadow uppercase font-bold tracking-wider hover:bg-indigo-700 transition transform hover:-translate-y-0.5">Save SEO Configurations</button>
                 </div>
