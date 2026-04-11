@@ -64,6 +64,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/seo', [SettingController::class, 'store'])->name('seo.store');
 
     Route::get('/demo-import', [SettingController::class, 'importDemo'])->name('demo.import');
+    
+    Route::get('/import/wordpress', [\App\Http\Controllers\Admin\ImportController::class, 'index'])->name('import.wordpress.index');
+    Route::post('/import/wordpress/upload', [\App\Http\Controllers\Admin\ImportController::class, 'upload'])->name('import.wordpress.upload');
+    Route::post('/import/wordpress/process', [\App\Http\Controllers\Admin\ImportController::class, 'processChunk'])->name('import.wordpress.process');
 
     Route::get('/update', [\App\Http\Controllers\Admin\UpdateController::class, 'index'])->name('update.index');
     Route::post('/update', [\App\Http\Controllers\Admin\UpdateController::class, 'process'])->name('update.process');
