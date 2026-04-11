@@ -7,26 +7,43 @@ use Illuminate\Http\Request;
 
 class AnalyticsController extends Controller
 {
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
+        $filter = $request->input('date_filter', 'all_time');
+        
+        $query = \App\Models\Visit::query();
+        
+        if ($filter === 'today') {
+            $query->whereDate('created_at', today());
+        } elseif ($filter === 'yesterday') {
+            $query->whereDate('created_at', today()->subDay());
+        } elseif ($filter === 'last_7_days') {
+            $query->where('created_at', '>=', today()->subDays(7));
+        } elseif ($filter === 'last_30_days') {
+            $query->where('created_at', '>=', today()->subDays(30));
+        } elseif ($filter === 'this_month') {
+            $query->whereMonth('created_at', today()->month)->whereYear('created_at', today()->year);
+        }
+
+        $filteredTotal = (clone $query)->count();
         $totalVisits = \App\Models\Visit::count();
         $visitsToday = \App\Models\Visit::whereDate('created_at', today())->count();
         
-        $topCountries = \App\Models\Visit::selectRaw('country, count(*) as count')
+        $topCountries = (clone $query)->selectRaw('country, count(*) as count')
             ->groupBy('country')
             ->orderByDesc('count')
             ->take(10)
             ->get();
             
-        $topReferrers = \App\Models\Visit::selectRaw("referrer, count(*) as count")
+        $topReferrers = (clone $query)->selectRaw("referrer, count(*) as count")
             ->whereNotNull('referrer')
             ->groupBy('referrer')
             ->orderByDesc('count')
             ->take(10)
             ->get();
             
-        $recentVisits = \App\Models\Visit::latest()->take(50)->get();
+        $recentVisits = (clone $query)->latest()->take(50)->get();
 
-        return view('admin.analytics.index', compact('totalVisits', 'visitsToday', 'topCountries', 'topReferrers', 'recentVisits'));
+        return view('admin.analytics.index', compact('totalVisits', 'visitsToday', 'filteredTotal', 'topCountries', 'topReferrers', 'recentVisits', 'filter'));
     }
 }

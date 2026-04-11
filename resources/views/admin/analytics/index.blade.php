@@ -1,8 +1,21 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Live Traffic & Analytics') }}
-        </h2>
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                {{ __('Live Traffic & Analytics') }}
+            </h2>
+            <form method="GET" action="{{ route('admin.analytics.index') }}" class="flex items-center gap-3 bg-white p-1 rounded-md shadow-sm border border-gray-200">
+                <span class="text-xs font-bold text-gray-500 uppercase ml-2">Filter By:</span>
+                <select name="date_filter" onchange="this.form.submit()" class="text-sm border-none focus:ring-0 text-indigo-700 font-bold bg-transparent cursor-pointer py-1 pr-8">
+                    <option value="today" {{ $filter === 'today' ? 'selected' : '' }}>Today</option>
+                    <option value="yesterday" {{ $filter === 'yesterday' ? 'selected' : '' }}>Yesterday</option>
+                    <option value="last_7_days" {{ $filter === 'last_7_days' ? 'selected' : '' }}>Last 7 Days</option>
+                    <option value="last_30_days" {{ $filter === 'last_30_days' ? 'selected' : '' }}>Last 30 Days</option>
+                    <option value="this_month" {{ $filter === 'this_month' ? 'selected' : '' }}>This Month</option>
+                    <option value="all_time" {{ $filter === 'all_time' ? 'selected' : '' }}>All Time</option>
+                </select>
+            </form>
+        </div>
     </x-slot>
 
     <div class="py-12">
@@ -12,8 +25,14 @@
                 <!-- Stats -->
                 <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
                     <div>
-                        <div class="text-sm border-b pb-2 mb-2 text-gray-500 font-bold uppercase tracking-wider">Total Traffic (All Time)</div>
-                        <div class="text-3xl font-black text-gray-900">{{ number_format($totalVisits) }}</div>
+                        <div class="text-sm border-b pb-2 mb-2 text-gray-500 font-bold uppercase tracking-wider">
+                            Traffic 
+                            @if($filter === 'all_time') (All Time)
+                            @elseif($filter === 'today') (Today)
+                            @else (Selected Period)
+                            @endif
+                        </div>
+                        <div class="text-3xl font-black text-gray-900">{{ number_format($filteredTotal) }}</div>
                     </div>
                     <div class="p-4 bg-indigo-50 text-indigo-600 rounded-lg">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
