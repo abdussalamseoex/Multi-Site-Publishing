@@ -39,7 +39,9 @@ class PostController extends Controller
 
         $featuredImagePath = null;
         if ($request->hasFile('featured_image')) {
-            $featuredImagePath = '/storage/' . $request->file('featured_image')->store('featured_images', 'public');
+            $filename = time() . '_' . uniqid() . '.' . $request->file('featured_image')->getClientOriginalExtension();
+            $request->file('featured_image')->move(public_path('uploads/posts'), $filename);
+            $featuredImagePath = '/uploads/posts/' . $filename;
         }
 
         $post = Post::create([
