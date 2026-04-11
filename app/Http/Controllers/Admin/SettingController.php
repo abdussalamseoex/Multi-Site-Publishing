@@ -28,6 +28,21 @@ class SettingController extends Controller
             Setting::set($key, $value);
         }
 
+        // FORCE DELETE any physical robots.txt to prevent Nginx/Apache overriding the dynamic route
+        $targets = [
+            public_path('robots.txt'),
+            base_path('robots.txt'),
+            isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'].'/robots.txt' : null,
+        ];
+        
+        foreach ($targets as $target) {
+            if ($target && \Illuminate\Support\Facades\File::exists($target)) {
+                try {
+                    \Illuminate\Support\Facades\File::delete($target);
+                } catch (\Exception $e) {}
+            }
+        }
+
         if ($request->hasFile('site_logo')) {
             $filename = 'logo_' . time() . '.' . $request->file('site_logo')->extension();
             $request->file('site_logo')->move(public_path('uploads/logos'), $filename);
