@@ -28,17 +28,24 @@ class SettingController extends Controller
             Setting::set($key, $value);
         }
 
-        // FORCE DELETE any physical robots.txt to prevent Nginx/Apache overriding the dynamic route
+        // FORCE WRITE the physical robots.txt to overcome shared hosting proxy blockades
+        $robotsContent = "User-agent: *\nDisallow: /admin/\nDisallow: /checkout/\nAllow: /\n\nSitemap: " . url('/sitemap.xml');
+        if (isset($data['custom_robots_txt'])) {
+            $robotsContent = $data['custom_robots_txt'];
+        }
+        
         $targets = [
             public_path('robots.txt'),
             base_path('robots.txt'),
-            isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'].'/robots.txt' : null,
+            isset($_SERVER['DOCUMENT_ROOT']) ? rtrim($_SERVER['DOCUMENT_ROOT'], '/') . '/robots.txt' : null,
         ];
         
+        $written = false;
         foreach ($targets as $target) {
-            if ($target && \Illuminate\Support\Facades\File::exists($target)) {
+            if ($target) {
                 try {
-                    \Illuminate\Support\Facades\File::delete($target);
+                    \Illuminate\Support\Facades\File::put($target, $robotsContent);
+                    $written = true;
                 } catch (\Exception $e) {}
             }
         }
