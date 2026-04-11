@@ -27,12 +27,15 @@ class UpdateController extends Controller
         $githubMessage = '';
         
         try {
-            $response = Http::withToken($token)
-                ->withHeaders(['User-Agent' => 'Laravel-Updater'])
-                ->get("https://api.github.com/repos/{$this->githubRepo}/commits", [
-                    'sha' => $this->branch,
-                    'per_page' => 5 // Just show the latest 5 commits as a preview
-                ]);
+            $requestHttp = Http::withHeaders(['User-Agent' => 'Laravel-Updater']);
+            if (!empty($token)) {
+                $requestHttp = $requestHttp->withToken($token);
+            }
+            
+            $response = $requestHttp->get("https://api.github.com/repos/{$this->githubRepo}/commits", [
+                'sha' => $this->branch,
+                'per_page' => 5 // Just show the latest 5 commits as a preview
+            ]);
 
             if ($response->successful()) {
                 $githubStatus = 'connected';
@@ -61,10 +64,12 @@ class UpdateController extends Controller
             $log[] = "==== FETCHING UPDATE ====";
             
             $url = "https://api.github.com/repos/{$this->githubRepo}/zipball/{$this->branch}";
-            $response = Http::withToken($token)
-                ->withHeaders(['User-Agent' => 'Laravel-Updater'])
-                ->withOptions(['stream' => true])
-                ->get($url);
+            $requestHttp = Http::withHeaders(['User-Agent' => 'Laravel-Updater'])->withOptions(['stream' => true]);
+            if (!empty($token)) {
+                $requestHttp = $requestHttp->withToken($token);
+            }
+            
+            $response = $requestHttp->get($url);
 
             if ($response->failed()) {
                 throw new \Exception("Failed to download update from GitHub. Status: " . $response->status() . ". Ensure your GITHUB_UPDATE_TOKEN is valid for private repositories.");
