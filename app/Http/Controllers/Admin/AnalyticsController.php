@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Jenssegers\Agent\Agent;
 
 class AnalyticsController extends Controller
 {
@@ -78,9 +77,8 @@ class AnalyticsController extends Controller
             }
         }
 
-        // Use Agent package for Devices, Browsers, and Bots
+        // Native PHP approach for Devices, Browsers, and Bots (zero external dependencies)
         $allUserAgents = (clone $query)->pluck('user_agent');
-        $agent = new Agent();
         
         $devices = ['Desktop' => 0, 'Mobile' => 0, 'Tablet' => 0];
         $browsers = [];
@@ -90,33 +88,42 @@ class AnalyticsController extends Controller
         foreach ($allUserAgents as $ua) {
             if (empty($ua)) continue;
             
-            $agent->setUserAgent($ua);
-            
-            if ($agent->isRobot()) {
+            // Bot Detection
+            if (preg_match('/(bot|crawl|slurp|spider|mediapartners|inspection|google|bing|yandex|baidu)/i', $ua, $matches)) {
                 $botCount++;
-                $robotName = $agent->robot();
-                if ($robotName) {
-                    $bots[$robotName] = ($bots[$robotName] ?? 0) + 1;
-                } else {
-                    $bots['Unknown Bot'] = ($bots['Unknown Bot'] ?? 0) + 1;
-                }
+                $robotName = ucfirst(strtolower($matches[1])) . ' Bot';
+                $bots[$robotName] = ($bots[$robotName] ?? 0) + 1;
+                continue; // Skip device/browser for bots
+            }
+            
+            // Device Detection
+            if (preg_match('/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i', $ua)) {
+                $devices['Tablet']++;
+            } elseif (preg_match('/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|NetFront|Silk-Accelerated|(hpw|web)OS|Fennec|Minimo|Opera M(obi|ini)|Blazer|Dolfin|Dolphin|Skyfire|Zune/i', $ua)) {
+                $devices['Mobile']++;
             } else {
-                // Devices
-                if ($agent->isDesktop()) {
-                    $devices['Desktop']++;
-                } elseif ($agent->isTablet()) {
-                    $devices['Tablet']++;
-                } elseif ($agent->isMobile()) {
-                    $devices['Mobile']++;
-                } else {
-                    $devices['Desktop']++; // Default fallback
-                }
+                $devices['Desktop']++;
+            }
 
-                // Browsers
-                $browser = $agent->browser();
-                if ($browser) {
-                    $browsers[$browser] = ($browsers[$browser] ?? 0) + 1;
-                }
+            // Browser Detection
+            if (preg_match('/Edg/i', $ua)) {
+                $browser = 'Edge';
+            } elseif (preg_match('/OPR/i', $ua) || preg_match('/Opera/i', $ua)) {
+                $browser = 'Opera';
+            } elseif (preg_match('/Chrome/i', $ua)) {
+                $browser = 'Chrome';
+            } elseif (preg_match('/Safari/i', $ua)) {
+                $browser = 'Safari';
+            } elseif (preg_match('/Firefox/i', $ua)) {
+                $browser = 'Firefox';
+            } elseif (preg_match('/MSIE/i', $ua) || preg_match('/Trident/i', $ua)) {
+                $browser = 'Internet Explorer';
+            } else {
+                $browser = 'Other';
+            }
+            
+            if ($browser !== 'Other') {
+                $browsers[$browser] = ($browsers[$browser] ?? 0) + 1;
             }
         }
 
