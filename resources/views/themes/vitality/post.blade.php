@@ -51,7 +51,7 @@
     <div class="bg-white border-b border-slate-200">
         <div class="max-w-4xl mx-auto px-4 py-16 text-center">
             <a href="{{ isset($post->category) ? route('frontend.category', $post->category->slug) : '#' }}" class="hover:opacity-80 transition"><span class="bg-emerald-50 text-emerald-600 border border-emerald-100 px-4 py-1.5 text-xs font-bold uppercase tracking-widest rounded-full mb-6 inline-block">{{ $post->category->name ?? 'Lifestyle' }}</span></a>
-            <h1 class="text-4xl md:text-5xl lg:text-6xl font-wellness font-bold leading-tight mb-8 text-slate-800 line-clamp-2">{{ $post->title }}</h1>
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-wellness font-bold leading-tight mb-8 text-slate-800">{{ $post->title }}</h1>
             
             <div class="flex items-center justify-center gap-4 text-slate-500 text-sm font-medium">
                 <div class="flex items-center gap-2">

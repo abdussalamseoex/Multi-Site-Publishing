@@ -60,7 +60,7 @@
             <div class="lg:col-span-2">
                 <header class="mb-6">
                     <a href="{{ isset($post->category) ? route('frontend.category', $post->category->slug) : '#' }}" class="hover:opacity-80 transition"><span class="bg-black text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 mb-4 inline-block hover:bg-sky-600 transition cursor-pointer">{{ $post->category->name ?? 'News' }}</span></a>
-                    <h1 class="text-3xl md:text-5xl font-bold leading-[1.15] text-[#111] mb-5 tracking-tight line-clamp-2">{{ $post->title }}</h1>
+                    <h1 class="text-3xl md:text-5xl font-bold leading-[1.15] text-[#111] mb-5 tracking-tight">{{ $post->title }}</h1>
                     
                     <div class="flex items-center text-xs font-ui text-gray-500 border-b border-gray-200 pb-4 mb-6">
                         <span class="font-bold text-black uppercase tracking-wider">{{ $post->user->name ?? 'Admin' }}</span>

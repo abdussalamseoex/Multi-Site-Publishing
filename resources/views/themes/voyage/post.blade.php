@@ -58,7 +58,7 @@
         
         <div class="relative z-10 text-center px-4 max-w-4xl mt-16">
             <a href="{{ isset($post->category) ? route('frontend.category', $post->category->slug) : '#' }}" class="hover:opacity-80 transition"><span class="bg-white/20 backdrop-blur text-white px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-full mb-6 inline-block shadow-sm">{{ $post->category->name ?? 'Story' }}</span></a>
-            <h1 class="text-4xl md:text-6xl lg:text-7xl font-travel font-black text-white leading-tight mb-8 line-clamp-2">{{ $post->title }}</h1>
+            <h1 class="text-4xl md:text-6xl lg:text-7xl font-travel font-black text-white leading-tight mb-8">{{ $post->title }}</h1>
         </div>
     </div>
 

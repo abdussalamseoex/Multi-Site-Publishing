@@ -60,7 +60,7 @@
         <div class="absolute inset-0 bg-gradient-to-t from-slate-900 to-slate-900/40"></div>
         <div class="max-w-4xl mx-auto px-6 relative z-10 text-center">
             <a href="{{ isset($post->category) ? route('frontend.category', $post->category->slug) : '#' }}" class="hover:opacity-80 transition"><span class="bg-primary text-white px-4 py-1 text-xs font-black uppercase tracking-widest rounded shadow-xl border border-white/20 mb-6 inline-block">{{ $post->category->name ?? 'Article' }}</span></a>
-            <h1 class="text-4xl md:text-6xl font-gaming font-bold text-white leading-tight mb-8 line-clamp-2">{{ $post->title }}</h1>
+            <h1 class="text-4xl md:text-6xl font-gaming font-bold text-white leading-tight mb-8">{{ $post->title }}</h1>
             <div class="flex items-center justify-center gap-6 text-slate-300 text-sm font-bold uppercase tracking-wider font-sans bg-slate-800/50 inline-flex px-6 py-2 rounded-full border border-slate-700">
                 <span class="flex items-center gap-3">
                     <div class="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white text-[10px]">{{ substr($post->user->name ?? 'A', 0, 1) }}</div>

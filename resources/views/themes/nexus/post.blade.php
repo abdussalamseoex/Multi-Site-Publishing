@@ -56,7 +56,7 @@
     <div class="max-w-4xl mx-auto px-4 py-16">
         <div class="text-center mb-12">
             <a href="{{ isset($post->category) ? route('frontend.category', $post->category->slug) : '#' }}" class="hover:opacity-80 transition"><span class="text-indigo-400 font-tech tracking-widest text-[10px] uppercase border border-indigo-500/30 px-3 py-1 rounded-full bg-indigo-500/10 mb-6 inline-block">{{ $post->category->name ?? 'Technology' }}</span></a>
-            <h1 class="text-4xl md:text-5xl lg:text-6xl font-tech font-bold leading-tight mb-8 line-clamp-2">{{ $post->title }}</h1>
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-tech font-bold leading-tight mb-8">{{ $post->title }}</h1>
             
             <div class="flex items-center justify-center gap-6 text-slate-400 text-xs font-tech tracking-wide border-y border-slate-800 py-4">
                 <span class="flex items-center gap-2">
