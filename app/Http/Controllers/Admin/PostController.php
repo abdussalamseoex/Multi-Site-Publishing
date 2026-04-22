@@ -157,6 +157,23 @@ class PostController extends Controller
         return back()->with('status', 'Post status updated to ' . $request->status);
     }
 
+    public function bulkAction(Request $request)
+    {
+        $request->validate([
+            'action' => 'required|in:published,pending,draft,rejected,delete',
+            'ids' => 'required|array',
+            'ids.*' => 'exists:posts,id'
+        ]);
+
+        if ($request->action === 'delete') {
+            Post::whereIn('id', $request->ids)->delete();
+            return back()->with('status', 'Selected posts have been permanently deleted.');
+        }
+
+        Post::whereIn('id', $request->ids)->update(['status' => $request->action]);
+        return back()->with('status', 'Status of selected posts has been updated.');
+    }
+
     public function destroy($id)
     {
         $post = Post::findOrFail($id);

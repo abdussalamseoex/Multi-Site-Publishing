@@ -79,6 +79,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/update', [\App\Http\Controllers\Admin\UpdateController::class, 'index'])->name('update.index');
     Route::post('/update', [\App\Http\Controllers\Admin\UpdateController::class, 'process'])->name('update.process');
 
+    Route::post('/posts/bulk-action', [AdminPostController::class, 'bulkAction'])->name('posts.bulk-action');
     Route::resource('/posts', AdminPostController::class)->except(['show']);
     Route::post('/posts/{post}/status', [AdminPostController::class, 'updateStatus'])->name('posts.status');
 
