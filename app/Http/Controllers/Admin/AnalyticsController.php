@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\BlockedIp;
 
 class AnalyticsController extends Controller
 {
@@ -35,6 +36,9 @@ class AnalyticsController extends Controller
         $visitsToday = \App\Models\Visit::whereDate('created_at', today())->count();
         $liveUsers = \App\Models\Visit::where('created_at', '>=', now()->subMinutes(5))->distinct('ip_address')->count('ip_address');
         
+        // Unique Users metric
+        $uniqueUsers = (clone $query)->distinct('ip_address')->count('ip_address');
+        
         $topCountries = (clone $query)->selectRaw('country, country_code, count(*) as count')
             ->whereNotNull('country_code')
             ->groupBy('country', 'country_code')
@@ -59,8 +63,6 @@ class AnalyticsController extends Controller
         $recentVisits = (clone $query)->latest()->take(50)->get();
 
         // Bounce Rate Calculation
-        // Sessions = unique IP addresses in the period
-        // Bounces = IPs that appear only once in the period
         $bounceRate = 0;
         if ($filteredTotal > 0) {
             $ipCounts = (clone $query)->selectRaw('ip_address, count(*) as total_visits')
@@ -82,17 +84,23 @@ class AnalyticsController extends Controller
         
         $devices = ['Desktop' => 0, 'Mobile' => 0, 'Tablet' => 0];
         $browsers = [];
-        $bots = [];
-        $botCount = 0;
+        $goodBots = [];
+        $badBots = [];
+
+        $goodBotRegex = '/(google|bing|yandex|baidu|duckduck|slurp)/i';
+        $badBotRegex = '/(bot|crawl|spider|mediapartners|inspection|scraper)/i';
 
         foreach ($allUserAgents as $ua) {
             if (empty($ua)) continue;
             
             // Bot Detection
-            if (preg_match('/(bot|crawl|slurp|spider|mediapartners|inspection|google|bing|yandex|baidu)/i', $ua, $matches)) {
-                $botCount++;
+            if (preg_match($goodBotRegex, $ua, $matches)) {
                 $robotName = ucfirst(strtolower($matches[1])) . ' Bot';
-                $bots[$robotName] = ($bots[$robotName] ?? 0) + 1;
+                $goodBots[$robotName] = ($goodBots[$robotName] ?? 0) + 1;
+                continue; // Skip device/browser for bots
+            } elseif (preg_match($badBotRegex, $ua, $matches)) {
+                $robotName = ucfirst(strtolower($matches[1])) . ' Bot (Spam)';
+                $badBots[$robotName] = ($badBots[$robotName] ?? 0) + 1;
                 continue; // Skip device/browser for bots
             }
             
@@ -128,16 +136,48 @@ class AnalyticsController extends Controller
         }
 
         arsort($browsers);
-        arsort($bots);
+        arsort($goodBots);
+        arsort($badBots);
         $browsers = array_slice($browsers, 0, 5);
-        $bots = array_slice($bots, 0, 5);
+        $goodBots = array_slice($goodBots, 0, 5);
+        $badBots = array_slice($badBots, 0, 5);
+
+        $blockedIps = BlockedIp::latest()->get();
+        $blockedIpList = $blockedIps->pluck('ip_address')->toArray();
 
         return view('admin.analytics.index', compact(
-            'totalVisits', 'visitsToday', 'filteredTotal', 
+            'totalVisits', 'visitsToday', 'filteredTotal', 'uniqueUsers',
             'topCountries', 'topReferrers', 'topPages', 
-            'recentVisits', 'filter', 'liveUsers', 
-            'bounceRate', 'devices', 'browsers', 'bots', 'botCount'
+            'recentVisits', 'filter', 'liveUsers', 'blockedIps', 'blockedIpList',
+            'bounceRate', 'devices', 'browsers', 'goodBots', 'badBots'
         ));
+    }
+
+    public function blockIp(Request $request)
+    {
+        $request->validate([
+            'ip_address' => 'required|ip'
+        ]);
+
+        BlockedIp::firstOrCreate(['ip_address' => $request->ip_address], [
+            'reason' => $request->reason ?? 'Blocked manually from Analytics Dashboard'
+        ]);
+
+        // Delete recent visits for this IP to prevent displaying banned IP logic loop (Optional)
+        // \App\Models\Visit::where('ip_address', $request->ip_address)->delete();
+
+        return back()->with('status', 'IP Address has been successfully blocked.');
+    }
+
+    public function unblockIp(Request $request)
+    {
+        $request->validate([
+            'ip_address' => 'required|ip'
+        ]);
+
+        BlockedIp::where('ip_address', $request->ip_address)->delete();
+
+        return back()->with('status', 'IP Address has been unblocked.');
     }
 
     public function export(Request $request)
