@@ -42,9 +42,35 @@ class UserController extends Controller
             'role' => 'required|in:admin,editor,author,user'
         ]);
 
-        // Remove all previous roles
         $user->syncRoles([$request->role]);
 
         return back()->with('status', 'User role updated successfully.');
+    }
+
+    public function toggleBan(User $user)
+    {
+        if ($user->id === auth()->id()) {
+            return back()->with('status', 'You cannot ban yourself.');
+        }
+
+        $user->status = $user->status === 'banned' ? 'active' : 'banned';
+        $user->save();
+
+        $action = $user->status === 'banned' ? 'banned' : 'unbanned';
+        return back()->with('status', 'User has been ' . $action . ' successfully.');
+    }
+
+    public function destroy(User $user)
+    {
+        if ($user->id === auth()->id()) {
+            return back()->with('status', 'You cannot delete yourself.');
+        }
+
+        // Delete associated posts
+        \App\Models\Post::where('user_id', $user->id)->delete();
+        
+        $user->delete();
+
+        return back()->with('status', 'User and all their posts have been permanently deleted.');
     }
 }

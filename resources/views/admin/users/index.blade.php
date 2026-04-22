@@ -61,15 +61,32 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{{ $user->name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $user->email }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $user->created_at->format('M d, Y') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm flex justify-end">
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm flex justify-end gap-2">
                                     <form action="{{ route('admin.users.role', $user->id) }}" method="POST">
                                         @csrf
-                                        <select name="role" onchange="this.form.submit()" class="text-sm border-gray-300 rounded p-1">
+                                        <select name="role" onchange="this.form.submit()" class="text-xs font-bold border-gray-300 rounded shadow-sm py-1.5 focus:ring-indigo-500 focus:border-indigo-500">
                                             @php $currentRole = $user->roles->first()->name ?? 'user'; @endphp
                                             <option value="user" {{ $currentRole == 'user' ? 'selected' : '' }}>User</option>
                                             <option value="author" {{ $currentRole == 'author' ? 'selected' : '' }}>Author</option>
+                                            <option value="editor" {{ $currentRole == 'editor' ? 'selected' : '' }}>Editor</option>
                                             <option value="admin" {{ $currentRole == 'admin' ? 'selected' : '' }}>Admin</option>
                                         </select>
+                                    </form>
+
+                                    <form action="{{ route('admin.users.toggle-ban', $user->id) }}" method="POST">
+                                        @csrf
+                                        @method('PATCH')
+                                        @if($user->status === 'banned')
+                                            <button type="submit" class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-bold rounded shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none" onclick="return confirm('Unban this user?')">Unban</button>
+                                        @else
+                                            <button type="submit" class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-bold rounded shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none" onclick="return confirm('Ban this user? They will not be able to log in.')">Ban</button>
+                                        @endif
+                                    </form>
+
+                                    <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-bold rounded shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none" onclick="return confirm('Delete this user permanently AND all of their submitted posts?')">Delete</button>
                                     </form>
                                 </td>
                             </tr>

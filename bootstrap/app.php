@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\CheckInstallation::class,
             \App\Http\Middleware\BlockIpMiddleware::class,
             \App\Http\Middleware\TrackVisitor::class,
+            \App\Http\Middleware\CheckBannedUser::class,
         ]);
         
         $middleware->alias([
