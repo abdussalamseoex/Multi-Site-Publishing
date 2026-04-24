@@ -24,8 +24,22 @@
         <!-- Desktop Menu -->
         <div class="hidden lg:flex items-center gap-8 text-sm font-semibold" style="color: {{ $headerText }} !important;">
             @if($headerMenu && $headerMenu->items)
-                @foreach($headerMenu->items->sortBy('order') as $item)
-                    <a href="{{ $item->url }}" class="hover:opacity-70 transition-opacity duration-200">{{ $item->title }}</a>
+                @foreach($headerMenu->items->whereNull('parent_id')->sortBy('order') as $item)
+                    @if($item->children->count() > 0)
+                        <div class="relative group">
+                            <a href="{{ $item->url }}" class="hover:opacity-70 transition-opacity duration-200 flex items-center gap-1">
+                                {{ $item->title }}
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </a>
+                            <div class="absolute left-0 mt-2 w-48 bg-white border border-gray-100 shadow-xl rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 overflow-hidden text-gray-800">
+                                @foreach($item->children->sortBy('order') as $child)
+                                    <a href="{{ $child->url }}" class="block px-4 py-3 text-sm hover:bg-gray-50 hover:text-primary transition-colors border-b border-gray-50 last:border-0">{{ $child->title }}</a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @else
+                        <a href="{{ $item->url }}" class="hover:opacity-70 transition-opacity duration-200">{{ $item->title }}</a>
+                    @endif
                 @endforeach
             @endif
         </div>

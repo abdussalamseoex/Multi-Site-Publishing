@@ -18,6 +18,15 @@
                             <input type="text" name="name" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
                         </div>
                         <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Parent Category</label>
+                            <select name="parent_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                                <option value="">None (Main Category)</option>
+                                @foreach($parentCategories as $parent)
+                                    <option value="{{ $parent->id }}">{{ $parent->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700">Custom Slug (Optional)</label>
                             <input type="text" name="slug" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="e.g. tech-news">
                         </div>
@@ -114,7 +123,12 @@
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @foreach($categories as $cat)
                                 <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{{ $cat->name }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+                                        @if($cat->parent_id)
+                                            <span class="text-gray-400 font-normal">↳ {{ $cat->parent->name }} /</span>
+                                        @endif
+                                        {{ $cat->name }}
+                                    </td>
                                     <td class="px-6 py-4 text-sm text-gray-500">{{ Str::limit($cat->description, 50) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $cat->posts_count }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm">

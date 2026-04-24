@@ -37,6 +37,15 @@
                                 <label class="block text-sm font-medium text-gray-700">URL</label>
                                 <input type="text" name="url" required placeholder="/page-url OR https://..." class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
                             </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700">Parent Link</label>
+                                <select name="parent_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                                    <option value="">None (Top Level)</option>
+                                    @foreach($activeMenu->items->whereNull('parent_id') as $parentItem)
+                                        <option value="{{ $parentItem->id }}">{{ $parentItem->title }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                             <button type="submit" class="w-full bg-indigo-600 text-white rounded py-2 text-sm font-bold shadow hover:bg-indigo-700 transition">Add to Menu</button>
                         </form>
                     </div>
@@ -65,17 +74,38 @@
                     </div>
 
                     <div id="menu-list" class="space-y-3">
-                        @forelse($activeMenu->items as $item)
-                            <div class="border border-gray-200 bg-gray-50 p-3 rounded shadow-sm flex justify-between items-center cursor-move" data-id="{{ $item->id }}">
-                                <div>
-                                    <span class="font-bold text-gray-800">{{ $item->title }}</span>
-                                    <span class="text-xs text-gray-500 ml-2">{{ $item->url }}</span>
+                        @forelse($activeMenu->items->whereNull('parent_id')->sortBy('order') as $item)
+                            <div class="border border-gray-200 bg-gray-50 p-3 rounded shadow-sm cursor-move" data-id="{{ $item->id }}">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="font-bold text-gray-800">{{ $item->title }}</span>
+                                        <span class="text-xs text-gray-500 ml-2">{{ $item->url }}</span>
+                                    </div>
+                                    <form action="{{ route('admin.menus.items.destroy', $item->id) }}" method="POST" class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-red-500 text-sm hover:text-red-700" onclick="return confirm('Are you sure?')">Remove</button>
+                                    </form>
                                 </div>
-                                <form action="{{ route('admin.menus.items.destroy', $item->id) }}" method="POST" class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-500 text-sm hover:text-red-700" onclick="return confirm('Are you sure?')">Remove</button>
-                                </form>
+                                
+                                <!-- Sub Items -->
+                                @if($item->children->count() > 0)
+                                <div class="mt-3 pl-6 space-y-2 border-l-2 border-indigo-200">
+                                    @foreach($item->children->sortBy('order') as $child)
+                                    <div class="border border-gray-200 bg-white p-2 rounded shadow-sm flex justify-between items-center">
+                                        <div>
+                                            <span class="font-semibold text-gray-700 text-sm">↳ {{ $child->title }}</span>
+                                            <span class="text-xs text-gray-400 ml-2">{{ $child->url }}</span>
+                                        </div>
+                                        <form action="{{ route('admin.menus.items.destroy', $child->id) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-red-500 text-xs hover:text-red-700" onclick="return confirm('Are you sure?')">Remove</button>
+                                        </form>
+                                    </div>
+                                    @endforeach
+                                </div>
+                                @endif
                             </div>
                         @empty
                             <p class="text-gray-500 italic">No menu items added yet.</p>

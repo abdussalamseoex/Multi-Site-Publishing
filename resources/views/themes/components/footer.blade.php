@@ -38,8 +38,17 @@
             <h3 class="font-bold text-gray-900 mb-6 uppercase tracking-wider text-sm">Legal & Links</h3>
             <ul class="space-y-3 text-sm text-gray-500 font-medium">
                 @if($footerMenu && $footerMenu->items)
-                    @foreach($footerMenu->items->sortBy('order') as $item)
-                        <li><a href="{{ $item->url }}" class="hover:text-primary transition-colors flex items-center gap-2"><span class="text-primary hover-opacity-80">&#8250;</span> {{ $item->title }}</a></li>
+                    @foreach($footerMenu->items->whereNull('parent_id')->sortBy('order') as $item)
+                        <li>
+                            <a href="{{ $item->url }}" class="hover:text-primary transition-colors flex items-center gap-2"><span class="text-primary hover-opacity-80">&#8250;</span> {{ $item->title }}</a>
+                            @if($item->children->count() > 0)
+                                <ul class="ml-4 mt-2 space-y-2 border-l border-gray-200 pl-2">
+                                    @foreach($item->children->sortBy('order') as $child)
+                                        <li><a href="{{ $child->url }}" class="hover:text-primary transition-colors flex items-center gap-2 text-xs"><span class="text-gray-300">-</span> {{ $child->title }}</a></li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                        </li>
                     @endforeach
                 @else
                     <li><a href="/" class="hover:text-primary transition-colors">Home</a></li>
@@ -51,8 +60,8 @@
         <div>
             <h3 class="font-bold text-gray-900 mb-6 uppercase tracking-wider text-sm">Categories</h3>
             <ul class="space-y-3 text-sm text-gray-500 font-medium">
-                @foreach(\App\Models\Category::take(5)->get() as $cat)
-                    <li><a href="#" class="hover:text-primary transition-colors flex items-center gap-2"><span class="text-primary">&#8250;</span> {{ $cat->name }}</a></li>
+                @foreach(\App\Models\Category::whereNull('parent_id')->take(5)->get() as $cat)
+                    <li><a href="{{ route('frontend.category', $cat->slug) }}" class="hover:text-primary transition-colors flex items-center gap-2"><span class="text-primary">&#8250;</span> {{ $cat->name }}</a></li>
                 @endforeach
             </ul>
         </div>

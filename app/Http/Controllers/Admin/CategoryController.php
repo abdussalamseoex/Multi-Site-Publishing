@@ -11,7 +11,7 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Category::withCount('posts');
+        $query = Category::with(['parent'])->withCount('posts');
 
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
@@ -27,7 +27,8 @@ class CategoryController extends Controller
         }
 
         $categories = $query->get();
-        return view('admin.categories.index', compact('categories'));
+        $parentCategories = Category::whereNull('parent_id')->get();
+        return view('admin.categories.index', compact('categories', 'parentCategories'));
     }
 
     public function store(Request $request)
@@ -36,10 +37,12 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255',
             'description' => 'nullable|string',
+            'parent_id' => 'nullable|exists:categories,id',
         ]);
 
         Category::create([
             'name' => $request->name,
+            'parent_id' => $request->parent_id,
             'slug' => $request->slug ? Str::slug($request->slug) : Str::slug($request->name),
             'description' => $request->description,
             'meta_title' => $request->meta_title ?? $request->name,

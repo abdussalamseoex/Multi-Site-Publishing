@@ -31,6 +31,7 @@ class MenuController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'url' => 'required|string|max:255',
+            'parent_id' => 'nullable|exists:menu_items,id'
         ]);
 
         $menu = Menu::findOrFail($menuId);
@@ -39,6 +40,7 @@ class MenuController extends Controller
         $menu->items()->create([
             'title' => $request->title,
             'url' => $request->url,
+            'parent_id' => $request->parent_id,
             'order' => $order
         ]);
 
@@ -64,26 +66,43 @@ class MenuController extends Controller
     public function importCategories($menuId)
     {
         $menu = Menu::findOrFail($menuId);
-        $categories = \App\Models\Category::all();
-        
         $order = $menu->items()->max('order') + 1;
         $count = 0;
         
-        foreach ($categories as $category) {
+        // 1. Get all main categories
+        $mainCategories = \App\Models\Category::whereNull('parent_id')->with('children')->get();
+        
+        foreach ($mainCategories as $category) {
             $url = '/category/' . $category->slug;
             
-            // Only add if not already exists in this menu
-            $exists = $menu->items()->where('url', $url)->orWhere('url', url($url))->exists();
-            if (!$exists) {
-                $menu->items()->create([
+            $parentItem = $menu->items()->where('url', $url)->orWhere('url', url($url))->first();
+            
+            if (!$parentItem) {
+                $parentItem = $menu->items()->create([
                     'title' => $category->name,
                     'url' => $url,
                     'order' => $order++
                 ]);
                 $count++;
             }
+
+            // 2. Import children
+            foreach ($category->children as $child) {
+                $childUrl = '/category/' . $child->slug;
+                $childExists = $menu->items()->where('url', $childUrl)->orWhere('url', url($childUrl))->exists();
+                
+                if (!$childExists) {
+                    $menu->items()->create([
+                        'title' => $child->name,
+                        'url' => $childUrl,
+                        'parent_id' => $parentItem->id,
+                        'order' => $order++
+                    ]);
+                    $count++;
+                }
+            }
         }
         
-        return back()->with('status', $count . ' Categories imported successfully to ' . $menu->name . '!');
+        return back()->with('status', $count . ' Categories (with subcategories) imported successfully to ' . $menu->name . '!');
     }
 }
