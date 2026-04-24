@@ -44,6 +44,12 @@
                                 <input type="text" name="social_messenger" value="{{ $settings['social_messenger'] ?? '' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="e.g. https://m.me/pagename">
                                 <p class="text-xs text-gray-500 mt-1">Full Messenger URL.</p>
                             </div>
+
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700">WhatsApp Group Link</label>
+                                <input type="text" name="social_whatsapp_group" value="{{ $settings['social_whatsapp_group'] ?? '' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="e.g. https://chat.whatsapp.com/...">
+                                <p class="text-xs text-gray-500 mt-1">Provide this to enable the "Join Free Group" popup option on the WhatsApp button.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
