@@ -18,26 +18,29 @@ class DemoContentSeeder extends Seeder
             return;
         }
 
-        $categories = [
-            'Technology' => 'Latest in tech, gadgets and software.',
-            'Business' => 'Finance, markets and corporate news.',
-            'Lifestyle' => 'Health, fitness and daily life.',
-            'Entertainment' => 'Movies, music and pop culture.',
-            'World News' => 'Global events and politics.',
-            'Sports' => 'Football, cricket and more.',
-        ];
+        $allCategories = Category::all();
 
-        foreach ($categories as $catName => $desc) {
-            if (!Category::where('name', $catName)->exists()) {
+        // Only create default categories if the database is completely empty
+        if ($allCategories->isEmpty()) {
+            $categories = [
+                'Technology' => 'Latest in tech, gadgets and software.',
+                'Business' => 'Finance, markets and corporate news.',
+                'Lifestyle' => 'Health, fitness and daily life.',
+                'Entertainment' => 'Movies, music and pop culture.',
+                'World News' => 'Global events and politics.',
+                'Sports' => 'Football, cricket and more.',
+            ];
+
+            foreach ($categories as $catName => $desc) {
                 Category::create([
                     'name' => $catName,
                     'slug' => Str::slug($catName),
                     'description' => $desc,
                 ]);
             }
+            
+            $allCategories = Category::all();
         }
-
-        $allCategories = Category::all();
 
         $titles = [
             "The Future of AI: How Machine Learning is Changing Everything",

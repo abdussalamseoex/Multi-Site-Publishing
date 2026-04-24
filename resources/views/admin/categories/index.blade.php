@@ -65,13 +65,17 @@
                     
                     <form action="{{ route('admin.categories.bulk_import') }}" method="POST" x-show="open" style="display: none;" class="mt-2">
                         @csrf
+                        <div class="flex justify-between items-center mb-2 px-1">
+                            <span class="text-xs font-bold text-gray-600 uppercase">Available Niches</span>
+                            <button type="button" class="text-xs text-indigo-600 hover:underline font-bold" onclick="let cbs = document.querySelectorAll('.niche-checkbox'); let allChecked = Array.from(cbs).every(cb => cb.checked); cbs.forEach(cb => cb.checked = !allChecked);">Select / Deselect All</button>
+                        </div>
                         <div class="h-56 overflow-y-auto border border-gray-200 rounded p-3 mb-4 space-y-2 text-sm bg-gray-50">
                             @php
                             $niches = ['Technology & IT', 'Software Development', 'Health & Fitness', 'Business & Finance', 'Digital Marketing', 'Real Estate', 'Home Improvement', 'Travel & Tourism', 'Lifestyle & Culture', 'Fashion & Beauty', 'Education & Learning', 'Gaming & Esports', 'Cryptocurrency & Web3', 'Law & Legal', 'Automotive', 'Sports', 'Entertainment & Pop Culture', 'Pets & Animals', 'Food & Recipes'];
                             @endphp
                             @foreach($niches as $niche)
                             <label class="flex items-center gap-2 hover:bg-white p-1 rounded transition cursor-pointer">
-                                <input type="checkbox" name="categories[]" value="{{ $niche }}" class="rounded text-indigo-600 border-gray-300 shadow-sm focus:ring-indigo-500">
+                                <input type="checkbox" name="categories[]" value="{{ $niche }}" class="niche-checkbox rounded text-indigo-600 border-gray-300 shadow-sm focus:ring-indigo-500">
                                 <span class="text-gray-700">{{ $niche }}</span>
                             </label>
                             @endforeach
