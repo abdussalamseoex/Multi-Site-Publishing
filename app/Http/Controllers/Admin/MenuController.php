@@ -23,7 +23,9 @@ class MenuController extends Controller
             $activeMenu = Menu::findOrFail(request('id'));
         }
 
-        return view('admin.menus.index', compact('menus', 'activeMenu'));
+        $mainCategories = \App\Models\Category::whereNull('parent_id')->get();
+
+        return view('admin.menus.index', compact('menus', 'activeMenu', 'mainCategories'));
     }
 
     public function storeItem(Request $request, $menuId)
@@ -63,39 +65,76 @@ class MenuController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function importCategories($menuId)
+    public function importCategories(Request $request, $menuId)
     {
+        $request->validate([
+            'categories' => 'required|array',
+            'import_mode' => 'required|in:top_level,dropdown',
+            'dropdown_name' => 'nullable|string'
+        ]);
+
         $menu = Menu::findOrFail($menuId);
         $order = $menu->items()->max('order') + 1;
         $count = 0;
         
-        // 1. Get all main categories
-        $mainCategories = \App\Models\Category::whereNull('parent_id')->with('children')->get();
+        $selectedCategoryIds = $request->input('categories');
+        $mainCategories = \App\Models\Category::whereIn('id', $selectedCategoryIds)->with('children')->get();
+        
+        $dropdownParentId = null;
+        
+        if ($request->import_mode === 'dropdown') {
+            $dropdownName = $request->input('dropdown_name', 'Categories');
+            
+            $parentItem = $menu->items()->where('title', $dropdownName)->whereNull('parent_id')->first();
+            if (!$parentItem) {
+                $parentItem = $menu->items()->create([
+                    'title' => $dropdownName,
+                    'url' => '#',
+                    'order' => $order++
+                ]);
+            }
+            $dropdownParentId = $parentItem->id;
+        }
         
         foreach ($mainCategories as $category) {
             $url = '/category/' . $category->slug;
             
-            $parentItem = $menu->items()->where('url', $url)->orWhere('url', url($url))->first();
+            // Check if already exists in this specific level
+            $query = $menu->items()->where(function($q) use ($url) {
+                $q->where('url', $url)->orWhere('url', url($url));
+            });
             
-            if (!$parentItem) {
-                $parentItem = $menu->items()->create([
+            if ($dropdownParentId) {
+                $query->where('parent_id', $dropdownParentId);
+            } else {
+                $query->whereNull('parent_id');
+            }
+            
+            $catItem = $query->first();
+            
+            if (!$catItem) {
+                $catItem = $menu->items()->create([
                     'title' => $category->name,
                     'url' => $url,
+                    'parent_id' => $dropdownParentId,
                     'order' => $order++
                 ]);
                 $count++;
             }
 
-            // 2. Import children
+            // Import subcategories under this main category
             foreach ($category->children as $child) {
                 $childUrl = '/category/' . $child->slug;
-                $childExists = $menu->items()->where('url', $childUrl)->orWhere('url', url($childUrl))->exists();
+                $childExists = $menu->items()->where('parent_id', $catItem->id)
+                                            ->where(function($q) use ($childUrl) {
+                                                $q->where('url', $childUrl)->orWhere('url', url($childUrl));
+                                            })->exists();
                 
                 if (!$childExists) {
                     $menu->items()->create([
                         'title' => $child->name,
                         'url' => $childUrl,
-                        'parent_id' => $parentItem->id,
+                        'parent_id' => $catItem->id,
                         'order' => $order++
                     ]);
                     $count++;
@@ -103,6 +142,6 @@ class MenuController extends Controller
             }
         }
         
-        return back()->with('status', $count . ' Categories (with subcategories) imported successfully to ' . $menu->name . '!');
+        return back()->with('status', $count . ' Categories imported successfully!');
     }
 }
