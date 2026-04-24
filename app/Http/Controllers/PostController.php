@@ -26,28 +26,32 @@ class PostController extends Controller
     {
         $user = Auth::user();
         if (!$user->hasRole('admin')) {
-            $isPromoActive = \App\Models\Setting::get('enable_promotional_free_posts') == '1';
-            $promoLimit = (int)\App\Models\Setting::get('promotional_free_post_limit', 1);
-            $postsToday = Post::where('user_id', $user->id)->whereDate('created_at', \Carbon\Carbon::today())->count();
-            $eligibleForPromo = $isPromoActive && ($postsToday < $promoLimit);
+            $dailySetting = \App\Models\Setting::get('default_daily_post_limit');
+            $dailyLimit = (int)($user->daily_post_limit ?? (is_numeric($dailySetting) ? $dailySetting : 1));
 
-            if (!$eligibleForPromo && $user->points <= 0) {
-                return back()->with('error', 'You do not have enough points to publish a post. Please top up your account.');
+            $totalSetting = \App\Models\Setting::get('default_total_post_limit');
+            $totalLimit = (int)($user->total_post_limit ?? (is_numeric($totalSetting) ? $totalSetting : 10));
+
+            $postsToday = Post::where('user_id', $user->id)->whereDate('created_at', \Carbon\Carbon::today())->count();
+            
+            $withinFreeLimits = false;
+            if ($user->is_unlimited || ($totalLimit > 0 && $user->total_posts < $totalLimit && $dailyLimit > 0 && $postsToday < $dailyLimit)) {
+                $withinFreeLimits = true;
             }
 
-            if (!$user->is_unlimited) {
-                $dailySetting = \App\Models\Setting::get('default_daily_post_limit');
-                $dailyLimit = (int)($user->daily_post_limit ?? (is_numeric($dailySetting) ? $dailySetting : 1));
+            $isPromoActive = \App\Models\Setting::get('enable_promotional_free_posts') == '1';
+            $promoLimit = (int)\App\Models\Setting::get('promotional_free_post_limit', 1);
+            $eligibleForPromo = $isPromoActive && ($postsToday < $promoLimit);
 
-                $totalSetting = \App\Models\Setting::get('default_total_post_limit');
-                $totalLimit = (int)($user->total_post_limit ?? (is_numeric($totalSetting) ? $totalSetting : 10));
+            $hasPoints = $user->points > 0;
 
-                if ($user->total_posts >= $totalLimit && $totalLimit > 0) {
-                    return back()->with('error', "You have reached your total post limit of {$totalLimit}.");
-                }
-
-                if ($postsToday >= $dailyLimit && $dailyLimit > 0) {
-                    return back()->with('error', "You have reached your daily post limit of {$dailyLimit}. Please try again tomorrow.");
+            if (!$withinFreeLimits && !$eligibleForPromo && !$hasPoints) {
+                if ($totalLimit > 0 && $user->total_posts >= $totalLimit) {
+                    return back()->with('error', "You have reached your free total post limit of {$totalLimit}. Please top up your points to continue posting.");
+                } else if ($dailyLimit > 0 && $postsToday >= $dailyLimit) {
+                    return back()->with('error', "You have reached your free daily post limit of {$dailyLimit}. Please top up your points to post more today.");
+                } else {
+                    return back()->with('error', 'You do not have enough points to publish a post. Please top up your account.');
                 }
             }
         }
@@ -91,31 +95,35 @@ class PostController extends Controller
         $usedFreePromo = false;
 
         if (!$user->hasRole('admin')) {
-            $isPromoActive = \App\Models\Setting::get('enable_promotional_free_posts') == '1';
-            $promoLimit = (int)\App\Models\Setting::get('promotional_free_post_limit', 1);
-            $postsToday = Post::where('user_id', $user->id)->whereDate('created_at', \Carbon\Carbon::today())->count();
-            $eligibleForPromo = $isPromoActive && ($postsToday < $promoLimit);
+            $dailySetting = \App\Models\Setting::get('default_daily_post_limit');
+            $dailyLimit = (int)($user->daily_post_limit ?? (is_numeric($dailySetting) ? $dailySetting : 1));
 
-            if (!$eligibleForPromo && $user->points <= 0) {
-                return back()->with('error', 'You do not have enough points.');
+            $totalSetting = \App\Models\Setting::get('default_total_post_limit');
+            $totalLimit = (int)($user->total_post_limit ?? (is_numeric($totalSetting) ? $totalSetting : 10));
+
+            $postsToday = Post::where('user_id', $user->id)->whereDate('created_at', \Carbon\Carbon::today())->count();
+            
+            $withinFreeLimits = false;
+            if ($user->is_unlimited || ($totalLimit > 0 && $user->total_posts < $totalLimit && $dailyLimit > 0 && $postsToday < $dailyLimit)) {
+                $withinFreeLimits = true;
             }
 
-            if (!$user->is_unlimited) {
-                $dailySetting = \App\Models\Setting::get('default_daily_post_limit');
-                $dailyLimit = (int)($user->daily_post_limit ?? (is_numeric($dailySetting) ? $dailySetting : 1));
+            $isPromoActive = \App\Models\Setting::get('enable_promotional_free_posts') == '1';
+            $promoLimit = (int)\App\Models\Setting::get('promotional_free_post_limit', 1);
+            $eligibleForPromo = $isPromoActive && ($postsToday < $promoLimit);
 
-                $totalSetting = \App\Models\Setting::get('default_total_post_limit');
-                $totalLimit = (int)($user->total_post_limit ?? (is_numeric($totalSetting) ? $totalSetting : 10));
+            $hasPoints = $user->points > 0;
 
-                if ($user->total_posts >= $totalLimit && $totalLimit > 0) return back()->with('error', "You have reached your total limit.");
-                if ($postsToday >= $dailyLimit && $dailyLimit > 0) {
-                    return back()->with('error', "You have reached your daily limit.");
-                }
+            if (!$withinFreeLimits && !$eligibleForPromo && !$hasPoints) {
+                return back()->with('error', "You cannot publish any more posts. Please top up your points.");
             }
 
             if ($eligibleForPromo) {
                 $usedFreePromo = true;
+            } elseif ($withinFreeLimits) {
+                // Free via limits, no points deducted
             } else {
+                // Spend point
                 $user->decrement('points');
             }
             
@@ -145,7 +153,9 @@ class PostController extends Controller
         if (\App\Models\Setting::get('enable_checkout_flow') == '1') {
             return redirect()->route('orders.checkout', $post->id);
         } else {
-            $msg = $usedFreePromo ? 'Post submitted successfully! This was a free promotional post (0 points deducted).' : 'Post submitted successfully! 1 point has been deducted.';
+            $msg = (isset($usedFreePromo) && $usedFreePromo) || (isset($withinFreeLimits) && $withinFreeLimits) 
+                ? 'Post submitted successfully! This was a free post (0 points deducted).' 
+                : 'Post submitted successfully! 1 point has been deducted.';
             return redirect()->route('posts.index')->with('success', $msg);
         }
     }
