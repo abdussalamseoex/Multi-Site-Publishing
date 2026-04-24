@@ -12,8 +12,17 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
             @if(session('success'))
-                <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-4">
-                    <p class="text-sm text-green-700">{{ session('success') }}</p>
+                <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-4 shadow-sm">
+                    <p class="text-sm font-bold text-green-700">{{ session('success') }}</p>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4 shadow-sm">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        <p class="text-sm font-bold text-red-700">{{ session('error') }}</p>
+                    </div>
                 </div>
             @endif
 
@@ -54,7 +63,11 @@
                                     {{ $post->created_at->format('M d, Y') }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <a href="#" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                    @if(Auth::user()->hasRole('admin') || \App\Models\Setting::get('enable_user_post_editing') == '1')
+                                        <a href="{{ route('posts.edit', $post->id) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                    @else
+                                        <span class="text-gray-400 cursor-not-allowed" title="Editing is disabled">Edit</span>
+                                    @endif
                                 </td>
                             </tr>
                             @empty

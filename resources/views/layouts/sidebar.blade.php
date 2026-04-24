@@ -37,10 +37,17 @@
             $postCreateRoute = auth()->user()->role === 'admin' ? route('admin.posts.create') : route('posts.create');
         @endphp
 
-        <a href="{{ $postIndexRoute }}" class="{{ request()->routeIs('*.posts.index') ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white' }} flex items-center px-3 py-2 text-sm font-medium rounded-md transition transition-colors">
+        <a href="{{ $postIndexRoute }}" class="{{ request()->routeIs('*.posts.index') && request('status') !== 'pending' ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white' }} flex items-center px-3 py-2 text-sm font-medium rounded-md transition transition-colors">
             <svg class="mr-3 flex-shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5L16.5 5.5M9 11l3 3L22 4"></path></svg>
             All Posts
         </a>
+
+        @if(auth()->user()->role === 'admin')
+        <a href="{{ route('admin.posts.index', ['status' => 'pending']) }}" class="{{ request()->routeIs('admin.posts.index') && request('status') === 'pending' ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white' }} flex items-center px-3 py-2 text-sm font-medium rounded-md transition transition-colors mt-1">
+            <svg class="mr-3 flex-shrink-0 h-5 w-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+            Pending Edits
+        </a>
+        @endif
 
         <a href="{{ $postCreateRoute }}" class="{{ request()->routeIs('*.posts.create') ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white' }} flex items-center px-3 py-2 text-sm font-medium rounded-md transition transition-colors mt-1">
             <svg class="mr-3 flex-shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>

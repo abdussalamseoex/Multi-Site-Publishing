@@ -21,12 +21,18 @@
                     
                     <!-- Guest Post & User Settings -->
                     <div class="bg-white shadow-sm sm:rounded-lg p-6">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Default Global Limits</h3>
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">User & Post Controls</h3>
                         <div class="space-y-4">
                             <div class="flex items-center mb-2 bg-gray-50 p-2 rounded border">
                                 <input type="hidden" name="enable_checkout_flow" value="0">
                                 <input type="checkbox" name="enable_checkout_flow" value="1" {{ ($settings['enable_checkout_flow'] ?? '0') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                                 <span class="ml-2 text-sm text-gray-700 font-bold">Enable Checkout/Payment Flow (Legacy)</span>
+                            </div>
+
+                            <div class="flex items-center mb-2 bg-indigo-50 p-2 rounded border border-indigo-100">
+                                <input type="hidden" name="enable_user_post_editing" value="0">
+                                <input type="checkbox" name="enable_user_post_editing" value="1" {{ ($settings['enable_user_post_editing'] ?? '0') == '1' ? 'checked' : '' }} class="rounded border-indigo-400 text-indigo-600 focus:ring-indigo-500">
+                                <span class="ml-2 text-sm text-indigo-900 font-bold">Allow Users to Edit Their Posts (Sends to Pending)</span>
                             </div>
 
                             <div class="grid grid-cols-2 gap-4">
@@ -52,7 +58,7 @@
 
                     <!-- Pricing & Add-ons -->
                     <div class="bg-white shadow-sm sm:rounded-lg p-6">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Pricing Settings (For Points/Legacy)</h3>
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Pricing & Promotions</h3>
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Base Price (Per Post/Point $)</label>
@@ -68,7 +74,26 @@
                                     <input type="number" step="0.01" name="addon_fast_approval_price" value="{{ $settings['addon_fast_approval_price'] ?? '10.00' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
                                 </div>
                             </div>
+                            
+                            <hr class="border-gray-200">
+                            
+                            <div class="flex items-center mb-2 bg-green-50 p-2 rounded border border-green-100">
+                                <input type="hidden" name="enable_promotional_free_posts" value="0">
+                                <input type="checkbox" name="enable_promotional_free_posts" value="1" {{ ($settings['enable_promotional_free_posts'] ?? '0') == '1' ? 'checked' : '' }} class="rounded border-green-400 text-green-600 focus:ring-green-500">
+                                <span class="ml-2 text-sm text-green-900 font-bold">Enable Free Promo (Bypass Point Deduction)</span>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 text-xs">Free Promo Posts Per User Today</label>
+                                <input type="number" name="promotional_free_post_limit" value="{{ $settings['promotional_free_post_limit'] ?? '1' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                            </div>
                         </div>
+                    </div>
+
+                    <!-- Payment Instructions -->
+                    <div class="bg-white shadow-sm sm:rounded-lg p-6 md:col-span-2">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Payment & Bank Instructions for Top-ups</h3>
+                        <p class="text-sm text-gray-500 mb-4">Enter the payment details (Bank Transfer, PayPal, Stripe Link) that users will see when requesting a point top-up. HTML is allowed.</p>
+                        <textarea name="payment_instructions" rows="5" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="<p>Please send money to Bkash: 017XXXXXX</p>">{{ $settings['payment_instructions'] ?? '<p>Please pay the total amount via Bank Transfer to Account #123456789 (XYZ Bank). Once paid, enter your transaction ID above.</p>' }}</textarea>
                     </div>
 
                 </div>

@@ -39,6 +39,10 @@
                         <form action="{{ route('user.topup.store') }}" method="POST">
                             @csrf
                             <div class="space-y-4">
+                                <div class="mb-4 bg-gray-50 border border-gray-200 rounded-md p-4 text-sm text-gray-700">
+                                    {!! \App\Models\Setting::get('payment_instructions', '<p>Please pay the total amount via Bank Transfer to Account #123456789 (XYZ Bank). Once paid, enter your transaction ID below.</p>') !!}
+                                </div>
+                                
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Points to Top-up</label>
                                     <input type="number" name="requested_points" id="requested_points" min="1" value="1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm" oninput="calculateTotal()">
@@ -50,7 +54,6 @@
                                 <div class="pt-2 border-t border-gray-200">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Transaction ID / Payment Proof</label>
                                     <input type="text" name="transaction_id" placeholder="e.g. PayPal TXN-12345" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm" required>
-                                    <p class="text-xs text-gray-500 mt-1">Please pay the total amount and enter the transaction ID here for verification.</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Notes (Optional)</label>

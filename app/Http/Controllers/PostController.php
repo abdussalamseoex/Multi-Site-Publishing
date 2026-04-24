@@ -26,7 +26,12 @@ class PostController extends Controller
     {
         $user = Auth::user();
         if (!$user->hasRole('admin')) {
-            if ($user->points <= 0) {
+            $isPromoActive = \App\Models\Setting::get('enable_promotional_free_posts') == '1';
+            $promoLimit = (int)\App\Models\Setting::get('promotional_free_post_limit', 1);
+            $postsToday = Post::where('user_id', $user->id)->whereDate('created_at', \Carbon\Carbon::today())->count();
+            $eligibleForPromo = $isPromoActive && ($postsToday < $promoLimit);
+
+            if (!$eligibleForPromo && $user->points <= 0) {
                 return back()->with('error', 'You do not have enough points to publish a post. Please top up your account.');
             }
 
@@ -38,7 +43,6 @@ class PostController extends Controller
                     return back()->with('error', "You have reached your total post limit of {$totalLimit}.");
                 }
 
-                $postsToday = Post::where('user_id', $user->id)->whereDate('created_at', \Carbon\Carbon::today())->count();
                 if ($postsToday >= $dailyLimit) {
                     return back()->with('error', "You have reached your daily post limit of {$dailyLimit}. Please try again tomorrow.");
                 }
@@ -46,7 +50,7 @@ class PostController extends Controller
         }
 
         $categories = Category::all();
-        return view('posts.create', compact('categories'));
+        return view('posts.create', compact('categories', 'eligibleForPromo', 'promoLimit', 'postsToday'));
     }
 
     public function store(Request $request)
@@ -81,9 +85,15 @@ class PostController extends Controller
 
         $user = Auth::user();
         $isDofollow = false;
+        $usedFreePromo = false;
 
         if (!$user->hasRole('admin')) {
-            if ($user->points <= 0) {
+            $isPromoActive = \App\Models\Setting::get('enable_promotional_free_posts') == '1';
+            $promoLimit = (int)\App\Models\Setting::get('promotional_free_post_limit', 1);
+            $postsToday = Post::where('user_id', $user->id)->whereDate('created_at', \Carbon\Carbon::today())->count();
+            $eligibleForPromo = $isPromoActive && ($postsToday < $promoLimit);
+
+            if (!$eligibleForPromo && $user->points <= 0) {
                 return back()->with('error', 'You do not have enough points.');
             }
 
@@ -92,12 +102,17 @@ class PostController extends Controller
                 $totalLimit = $user->total_post_limit ?? \App\Models\Setting::get('default_total_post_limit', 10);
 
                 if ($user->total_posts >= $totalLimit) return back()->with('error', "You have reached your total limit.");
-                if (Post::where('user_id', $user->id)->whereDate('created_at', \Carbon\Carbon::today())->count() >= $dailyLimit) {
+                if ($postsToday >= $dailyLimit) {
                     return back()->with('error', "You have reached your daily limit.");
                 }
             }
 
-            $user->decrement('points');
+            if ($eligibleForPromo) {
+                $usedFreePromo = true;
+            } else {
+                $user->decrement('points');
+            }
+            
             $user->increment('total_posts');
 
             $globalDofollow = \App\Models\Setting::get('default_dofollow_status', 0);
@@ -124,7 +139,76 @@ class PostController extends Controller
         if (\App\Models\Setting::get('enable_checkout_flow') == '1') {
             return redirect()->route('orders.checkout', $post->id);
         } else {
-            return redirect()->route('posts.index')->with('status', 'Post submitted successfully! 1 point has been deducted.');
+            $msg = $usedFreePromo ? 'Post submitted successfully! This was a free promotional post (0 points deducted).' : 'Post submitted successfully! 1 point has been deducted.';
+            return redirect()->route('posts.index')->with('success', $msg);
         }
+    }
+
+    public function edit(Post $post)
+    {
+        $user = Auth::user();
+        if (!$user->hasRole('admin')) {
+            if (\App\Models\Setting::get('enable_user_post_editing') != '1') {
+                return back()->with('error', 'Post editing is currently disabled by the administrator.');
+            }
+            if ($post->user_id !== $user->id) {
+                return back()->with('error', 'You do not have permission to edit this post.');
+            }
+        }
+
+        $categories = Category::all();
+        return view('posts.edit', compact('post', 'categories'));
+    }
+
+    public function update(Request $request, Post $post)
+    {
+        $user = Auth::user();
+        if (!$user->hasRole('admin')) {
+            if (\App\Models\Setting::get('enable_user_post_editing') != '1') {
+                return back()->with('error', 'Post editing is currently disabled.');
+            }
+            if ($post->user_id !== $user->id) {
+                return back()->with('error', 'You do not have permission to edit this post.');
+            }
+        }
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255',
+            'content' => 'required',
+            'category_id' => 'required|exists:categories,id',
+            'featured_image' => 'nullable|image|max:10240',
+        ]);
+
+        if ($request->hasFile('featured_image')) {
+            $filename = time() . '_' . uniqid() . '.' . $request->file('featured_image')->getClientOriginalExtension();
+            $request->file('featured_image')->move(public_path('uploads/posts'), $filename);
+            $post->featured_image = '/uploads/posts/' . $filename;
+        }
+
+        $baseSlug = $request->input('slug') ? \Illuminate\Support\Str::slug($request->input('slug')) : \Illuminate\Support\Str::slug($request->input('title'));
+        $finalSlug = \App\Models\Setting::get('seo_post_slug_code') === 'on' ? $baseSlug . '-' . uniqid() : $baseSlug;
+        
+        if (\App\Models\Setting::get('seo_post_slug_code') !== 'on') {
+            $originalFinal = $finalSlug;
+            $counter = 1;
+            while (Post::where('slug', $finalSlug)->where('id', '!=', $post->id)->exists()) {
+                $finalSlug = $originalFinal . '-' . $counter;
+                $counter++;
+            }
+        }
+
+        $post->update([
+            'title' => $request->input('title'),
+            'slug' => $finalSlug,
+            'content' => $request->input('content'),
+            'category_id' => $request->input('category_id'),
+            'status' => 'pending', 
+            'meta_title' => $request->input('meta_title') ?? $request->input('title'),
+            'meta_description' => $request->input('meta_description') ?? substr(strip_tags($request->input('content')), 0, 150),
+            'meta_keywords' => $request->input('meta_keywords'),
+        ]);
+
+        return redirect()->route('posts.index')->with('success', 'Post updated successfully! It has been sent to pending status for admin review.');
     }
 }
