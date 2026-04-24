@@ -77,4 +77,16 @@ class SettingController extends Controller
             return back()->with('error', 'Demo import failed: ' . $e->getMessage());
         }
     }
+
+    public function runMigration()
+    {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('migrate', [
+                '--force' => true
+            ]);
+            return back()->with('status', 'Database Migrations completed successfully! System is up to date.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Migration failed: ' . $e->getMessage());
+        }
+    }
 }
