@@ -89,7 +89,7 @@
 
                             <div class="pt-4 border-t flex justify-end">
                                 <button type="submit" onclick="document.getElementById('content-hidden').value = quill.root.innerHTML" class="px-6 py-3 bg-indigo-600 text-white rounded-md font-medium text-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
-                                    Proceed to Checkout / Submit
+                                    Submit
                                 </button>
                             </div>
                         </div>
