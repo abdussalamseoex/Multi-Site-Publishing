@@ -24,6 +24,27 @@ class PostController extends Controller
 
     public function create()
     {
+        $user = Auth::user();
+        if (!$user->hasRole('admin')) {
+            if ($user->points <= 0) {
+                return back()->with('error', 'You do not have enough points to publish a post. Please top up your account.');
+            }
+
+            if (!$user->is_unlimited) {
+                $dailyLimit = $user->daily_post_limit ?? \App\Models\Setting::get('default_daily_post_limit', 1);
+                $totalLimit = $user->total_post_limit ?? \App\Models\Setting::get('default_total_post_limit', 10);
+
+                if ($user->total_posts >= $totalLimit) {
+                    return back()->with('error', "You have reached your total post limit of {$totalLimit}.");
+                }
+
+                $postsToday = Post::where('user_id', $user->id)->whereDate('created_at', \Carbon\Carbon::today())->count();
+                if ($postsToday >= $dailyLimit) {
+                    return back()->with('error', "You have reached your daily post limit of {$dailyLimit}. Please try again tomorrow.");
+                }
+            }
+        }
+
         $categories = Category::all();
         return view('posts.create', compact('categories'));
     }
@@ -58,6 +79,33 @@ class PostController extends Controller
             }
         }
 
+        $user = Auth::user();
+        $isDofollow = false;
+
+        if (!$user->hasRole('admin')) {
+            if ($user->points <= 0) {
+                return back()->with('error', 'You do not have enough points.');
+            }
+
+            if (!$user->is_unlimited) {
+                $dailyLimit = $user->daily_post_limit ?? \App\Models\Setting::get('default_daily_post_limit', 1);
+                $totalLimit = $user->total_post_limit ?? \App\Models\Setting::get('default_total_post_limit', 10);
+
+                if ($user->total_posts >= $totalLimit) return back()->with('error', "You have reached your total limit.");
+                if (Post::where('user_id', $user->id)->whereDate('created_at', \Carbon\Carbon::today())->count() >= $dailyLimit) {
+                    return back()->with('error', "You have reached your daily limit.");
+                }
+            }
+
+            $user->decrement('points');
+            $user->increment('total_posts');
+
+            $globalDofollow = \App\Models\Setting::get('default_dofollow_status', 0);
+            $isDofollow = is_null($user->dofollow_default) ? (bool)$globalDofollow : (bool)$user->dofollow_default;
+        } else {
+            $isDofollow = true;
+        }
+
         $post = Post::create([
             'user_id' => Auth::id(),
             'title' => $request->input('title'),
@@ -70,8 +118,13 @@ class PostController extends Controller
             'meta_title' => $request->input('meta_title') ?? $request->input('title'),
             'meta_description' => $request->input('meta_description') ?? substr(strip_tags($request->input('content')), 0, 150),
             'meta_keywords' => $request->input('meta_keywords'),
+            'is_dofollow' => $isDofollow,
         ]);
 
-        return redirect()->route('orders.checkout', $post->id);
+        if (\App\Models\Setting::get('enable_checkout_flow') == '1') {
+            return redirect()->route('orders.checkout', $post->id);
+        } else {
+            return redirect()->route('posts.index')->with('status', 'Post submitted successfully! 1 point has been deducted.');
+        }
     }
 }

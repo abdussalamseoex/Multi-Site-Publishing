@@ -73,4 +73,24 @@ class UserController extends Controller
 
         return back()->with('status', 'User and all their posts have been permanently deleted.');
     }
+
+    public function updateLimits(Request $request, User $user)
+    {
+        $request->validate([
+            'points' => 'required|integer',
+            'daily_post_limit' => 'nullable|integer|min:1',
+            'total_post_limit' => 'nullable|integer|min:1',
+            'dofollow_default' => 'nullable|boolean',
+        ]);
+
+        $user->points = $request->points;
+        $user->daily_post_limit = $request->daily_post_limit;
+        $user->total_post_limit = $request->total_post_limit;
+        $user->is_unlimited = $request->has('is_unlimited');
+        $user->dofollow_default = $request->dofollow_default;
+        
+        $user->save();
+
+        return back()->with('status', "Limits and Points updated for {$user->name}.");
+    }
 }

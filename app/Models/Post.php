@@ -12,7 +12,7 @@ class Post extends Model
     protected $fillable = [
         'user_id', 'category_id', 'title', 'slug', 'original_slug', 'summary', 'content', 
         'featured_image', 'status', 'is_featured', 'meta_title', 
-        'meta_description', 'meta_keywords', 'canonical_url', 'views'
+        'meta_description', 'meta_keywords', 'canonical_url', 'views', 'is_dofollow'
     ];
 
     public function user()
@@ -38,12 +38,12 @@ class Post extends Model
     {
         static::saving(function ($post) {
             if ($post->content) {
-                $post->content = self::processLinks($post->content);
+                $post->content = self::processLinks($post->content, $post->is_dofollow);
             }
         });
     }
 
-    public static function processLinks($html)
+    public static function processLinks($html, $isDofollow = false)
     {
         if (empty($html)) return $html;
 
@@ -60,7 +60,12 @@ class Post extends Model
 
                 // If it's an external link
                 if ($host && $host !== $appUrl) {
-                    $link->setAttribute('rel', 'nofollow sponsored');
+                    if (!$isDofollow) {
+                        $link->setAttribute('rel', 'nofollow sponsored');
+                    } else {
+                        // User is allowed dofollow, so we can just use external or strip it
+                        $link->removeAttribute('rel');
+                    }
                     $link->setAttribute('target', '_blank');
                 } else {
                     // internal link, strip rel just in case
