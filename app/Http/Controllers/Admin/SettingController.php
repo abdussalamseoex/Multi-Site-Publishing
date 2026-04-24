@@ -20,6 +20,12 @@ class SettingController extends Controller
         return view('admin.seo', compact('settings'));
     }
 
+    public function limitsIndex()
+    {
+        $settings = Setting::all()->pluck('value', 'key')->toArray();
+        return view('admin.settings_limits', compact('settings'));
+    }
+
     public function store(Request $request)
     {
         $data = $request->except(['_token', 'site_logo', 'site_favicon']);

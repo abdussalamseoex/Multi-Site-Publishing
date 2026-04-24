@@ -42,6 +42,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Points Topup
+    Route::get('/topup', [\App\Http\Controllers\User\TopupController::class, 'index'])->name('user.topup');
+    Route::post('/topup', [\App\Http\Controllers\User\TopupController::class, 'store'])->name('user.topup.store');
+
     // Posts & Guest Post Checkouts
     Route::resource('posts', \App\Http\Controllers\PostController::class);
     Route::get('orders/{post}/checkout', [\App\Http\Controllers\OrderController::class, 'checkout'])->name('orders.checkout');
@@ -61,7 +65,7 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
     Route::post('/settings', [SettingController::class, 'store'])->name('settings.store');
-    
+    Route::get('/settings/limits', [SettingController::class, 'limitsIndex'])->name('settings.limits');
     Route::get('/seo', [SettingController::class, 'seoIndex'])->name('seo.index');
     Route::post('/seo', [SettingController::class, 'store'])->name('seo.store');
 
@@ -87,6 +91,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.status');
     
     Route::post('/system/migrate', [\App\Http\Controllers\Admin\SettingController::class, 'runMigration'])->name('system.migrate');
+
+    // Point Top-up Requests
+    Route::get('/topup-requests', [\App\Http\Controllers\Admin\TopupRequestController::class, 'index'])->name('topup.requests');
+    Route::patch('/topup-requests/{topupRequest}', [\App\Http\Controllers\Admin\TopupRequestController::class, 'update'])->name('topup.update');
 
     Route::get('/menus', [\App\Http\Controllers\Admin\MenuController::class, 'index'])->name('menus.index');
     Route::post('/menus/{menu}/items', [\App\Http\Controllers\Admin\MenuController::class, 'storeItem'])->name('menus.items.store');
