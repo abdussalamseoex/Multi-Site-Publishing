@@ -1,5 +1,6 @@
 @php
     $footerMenu = \App\Models\Menu::where('location', 'footer')->with('items')->first();
+    $footerCategoriesMenu = \App\Models\Menu::where('location', 'footer_categories')->with('items')->first();
     $aboutText = \App\Models\Setting::get('site_description', 'We are a premier publishing platform dedicated to bringing you the best content from talented authors around the globe.');
     $siteTitle = \App\Models\Setting::get('site_title', 'Publish.');
     $logo = \App\Models\Setting::get('site_logo');
@@ -60,9 +61,24 @@
         <div>
             <h3 class="font-bold text-gray-900 mb-6 uppercase tracking-wider text-sm">Categories</h3>
             <ul class="space-y-3 text-sm text-gray-500 font-medium">
-                @foreach(\App\Models\Category::whereNull('parent_id')->take(5)->get() as $cat)
-                    <li><a href="{{ route('frontend.category', $cat->slug) }}" class="hover:text-primary transition-colors flex items-center gap-2"><span class="text-primary">&#8250;</span> {{ $cat->name }}</a></li>
-                @endforeach
+                @if($footerCategoriesMenu && $footerCategoriesMenu->items->count() > 0)
+                    @foreach($footerCategoriesMenu->items->whereNull('parent_id')->sortBy('order') as $item)
+                        <li>
+                            <a href="{{ $item->url }}" class="hover:text-primary transition-colors flex items-center gap-2"><span class="text-primary">&#8250;</span> {{ $item->title }}</a>
+                            @if($item->children->count() > 0)
+                                <ul class="ml-4 mt-2 space-y-2 border-l border-gray-200 pl-2">
+                                    @foreach($item->children->sortBy('order') as $child)
+                                        <li><a href="{{ $child->url }}" class="hover:text-primary transition-colors flex items-center gap-2 text-xs"><span class="text-gray-300">-</span> {{ $child->title }}</a></li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                        </li>
+                    @endforeach
+                @else
+                    @foreach(\App\Models\Category::whereNull('parent_id')->take(5)->get() as $cat)
+                        <li><a href="{{ route('frontend.category', $cat->slug) }}" class="hover:text-primary transition-colors flex items-center gap-2"><span class="text-primary">&#8250;</span> {{ $cat->name }}</a></li>
+                    @endforeach
+                @endif
             </ul>
         </div>
 

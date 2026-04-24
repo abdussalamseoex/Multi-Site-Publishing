@@ -15,6 +15,12 @@ class MenuController extends Controller
         if ($menus->isEmpty()) {
             Menu::create(['name' => 'Header Navigation', 'location' => 'header']);
             Menu::create(['name' => 'Footer Navigation', 'location' => 'footer']);
+            Menu::create(['name' => 'Footer Categories', 'location' => 'footer_categories']);
+            return redirect()->route('admin.menus.index');
+        }
+
+        if (!Menu::where('location', 'footer_categories')->exists()) {
+            Menu::create(['name' => 'Footer Categories', 'location' => 'footer_categories']);
             return redirect()->route('admin.menus.index');
         }
         
@@ -53,6 +59,17 @@ class MenuController extends Controller
     {
         MenuItem::findOrFail($id)->delete();
         return back()->with('status', 'Menu Item Deleted!');
+    }
+
+    public function bulkDeleteItems(Request $request)
+    {
+        $request->validate([
+            'item_ids' => 'required|array',
+            'item_ids.*' => 'exists:menu_items,id'
+        ]);
+
+        MenuItem::whereIn('id', $request->item_ids)->delete();
+        return back()->with('status', count($request->item_ids) . ' Menu Items Deleted!');
     }
 
     public function reorder(Request $request)

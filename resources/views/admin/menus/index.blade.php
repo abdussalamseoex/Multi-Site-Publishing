@@ -94,23 +94,31 @@
                 <!-- Menu Structure -->
                 <div class="md:col-span-2 bg-white shadow sm:rounded-lg p-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-bold text-gray-800">Menu Structure: {{ $activeMenu->name }}</h3>
+                        <div class="flex items-center gap-3">
+                            <h3 class="text-lg font-bold text-gray-800">Menu Structure: {{ $activeMenu->name }}</h3>
+                            <button type="button" onclick="document.querySelectorAll('.menu-checkbox').forEach(cb => cb.checked = !cb.checked)" class="text-xs bg-indigo-50 text-indigo-600 px-2 py-1 rounded border border-indigo-100 hover:bg-indigo-100 transition">Select All</button>
+                        </div>
                         <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Drag to Reorder</span>
                     </div>
 
-                    <div id="menu-list" class="space-y-3">
+                    <form action="{{ route('admin.menus.items.bulk_destroy') }}" method="POST" id="bulkDeleteForm">
+                        @csrf
+                        @method('DELETE')
+                        <div class="mb-3">
+                            <button type="submit" class="bg-red-50 text-red-600 text-xs font-bold px-3 py-1.5 rounded border border-red-200 hover:bg-red-100 transition" onclick="return confirm('Are you sure you want to delete selected items?')">Remove Selected</button>
+                        </div>
+                        <div id="menu-list" class="space-y-3">
                         @forelse($activeMenu->items->whereNull('parent_id')->sortBy('order') as $item)
                             <div class="border border-gray-200 bg-gray-50 p-3 rounded shadow-sm cursor-move" data-id="{{ $item->id }}">
                                 <div class="flex justify-between items-center">
-                                    <div>
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" name="item_ids[]" value="{{ $item->id }}" class="menu-checkbox rounded text-red-600 focus:ring-red-500">
                                         <span class="font-bold text-gray-800">{{ $item->title }}</span>
                                         <span class="text-xs text-gray-500 ml-2">{{ $item->url }}</span>
                                     </div>
-                                    <form action="{{ route('admin.menus.items.destroy', $item->id) }}" method="POST" class="inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-red-500 text-sm hover:text-red-700" onclick="return confirm('Are you sure?')">Remove</button>
-                                    </form>
+                                    <div class="flex items-center gap-2">
+                                        <a href="{{ route('admin.menus.items.destroy', $item->id) }}" class="text-red-500 text-sm hover:text-red-700" onclick="event.preventDefault(); document.getElementById('delete-item-{{ $item->id }}').submit();">Remove</a>
+                                    </div>
                                 </div>
                                 
                                 <!-- Sub Items -->
@@ -118,15 +126,14 @@
                                 <div class="mt-3 pl-6 space-y-2 border-l-2 border-indigo-200">
                                     @foreach($item->children->sortBy('order') as $child)
                                     <div class="border border-gray-200 bg-white p-2 rounded shadow-sm flex justify-between items-center">
-                                        <div>
+                                        <div class="flex items-center gap-2">
+                                            <input type="checkbox" name="item_ids[]" value="{{ $child->id }}" class="menu-checkbox rounded text-red-600 focus:ring-red-500">
                                             <span class="font-semibold text-gray-700 text-sm">↳ {{ $child->title }}</span>
                                             <span class="text-xs text-gray-400 ml-2">{{ $child->url }}</span>
                                         </div>
-                                        <form action="{{ route('admin.menus.items.destroy', $child->id) }}" method="POST" class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-500 text-xs hover:text-red-700" onclick="return confirm('Are you sure?')">Remove</button>
-                                        </form>
+                                        <div>
+                                            <a href="{{ route('admin.menus.items.destroy', $child->id) }}" class="text-red-500 text-xs hover:text-red-700" onclick="event.preventDefault(); document.getElementById('delete-item-{{ $child->id }}').submit();">Remove</a>
+                                        </div>
                                     </div>
                                     @endforeach
                                 </div>
@@ -136,7 +143,16 @@
                             <p class="text-gray-500 italic">No menu items added yet.</p>
                         @endforelse
                     </div>
+                    </form>
                 </div>
+
+                <!-- Hidden Delete Forms for Individual items -->
+                @foreach($activeMenu->items as $item)
+                    <form id="delete-item-{{ $item->id }}" action="{{ route('admin.menus.items.destroy', $item->id) }}" method="POST" style="display: none;">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+                @endforeach
 
             </div>
         </div>
