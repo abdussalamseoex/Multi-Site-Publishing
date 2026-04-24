@@ -215,38 +215,7 @@
                         </div>
                     </div>
 
-                    <!-- Demo Content Importer & System Updates -->
-                    <div class="bg-white shadow-sm sm:rounded-lg p-6 lg:col-span-2 border-l-4 border-blue-400">
-                        <div class="flex items-center gap-2 mb-4">
-                            <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            <h3 class="text-lg font-medium text-gray-900">System Utilities</h3>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-sm mb-2">Database & System Updates</h4>
-                                <p class="text-xs text-gray-500 mb-4">Run this immediately after downloading new code updates from GitHub to update the database schema automatically.</p>
-                                
-                                <form action="{{ route('admin.system.migrate') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" onclick="return confirm('Run database migrations? This will apply all pending structure changes.')" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none transition">
-                                        Run System Updates (Migrate)
-                                    </button>
-                                </form>
-                            </div>
-                            
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-sm mb-2">Demo Content Importer</h4>
-                                <p class="text-xs text-gray-500 mb-4">Generate 30 fully formatted demo articles with random images, categories, and typography styling instantly.</p>
-                                
-                                <a href="{{ route('admin.demo.import') }}" onclick="return confirm('Are you sure you want to generate 30 demo posts? This may take a few seconds.')" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-900 focus:outline-none transition">
-                                    Import Demo Content
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
+                </div> <!-- End grid -->
 
                 <div class="mt-6 flex justify-end">
                     <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded font-medium shadow hover:bg-indigo-700">
@@ -254,6 +223,37 @@
                     </button>
                 </div>
             </form>
+
+            <!-- Demo Content Importer & System Updates -->
+            <div class="bg-white shadow-sm sm:rounded-lg p-6 border-l-4 border-blue-400">
+                <div class="flex items-center gap-2 mb-4">
+                    <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    <h3 class="text-lg font-medium text-gray-900">System Utilities</h3>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-bold text-gray-800 text-sm mb-2">Database & System Updates</h4>
+                        <p class="text-xs text-gray-500 mb-4">Run this immediately after downloading new code updates from GitHub to update the database schema automatically.</p>
+                        
+                        <form action="{{ route('admin.system.migrate') }}" method="POST">
+                            @csrf
+                            <button type="submit" onclick="return confirm('Run database migrations? This will apply all pending structure changes.')" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none transition">
+                                Run System Updates (Migrate)
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-bold text-gray-800 text-sm mb-2">Demo Content Importer</h4>
+                        <p class="text-xs text-gray-500 mb-4">Generate 30 fully formatted demo articles with random images, categories, and typography styling instantly.</p>
+                        
+                        <a href="{{ route('admin.demo.import') }}" onclick="return confirm('Are you sure you want to generate 30 demo posts? This may take a few seconds.')" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-900 focus:outline-none transition">
+                            Import Demo Content
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </x-app-layout>
