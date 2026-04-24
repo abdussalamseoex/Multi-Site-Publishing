@@ -66,6 +66,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
     Route::post('/settings', [SettingController::class, 'store'])->name('settings.store');
     Route::get('/settings/limits', [SettingController::class, 'limitsIndex'])->name('settings.limits');
+    Route::get('/settings/social', [SettingController::class, 'socialIndex'])->name('settings.social');
     Route::get('/seo', [SettingController::class, 'seoIndex'])->name('seo.index');
     Route::post('/seo', [SettingController::class, 'store'])->name('seo.store');
 

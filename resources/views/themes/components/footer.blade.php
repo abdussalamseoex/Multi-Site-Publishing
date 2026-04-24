@@ -108,5 +108,7 @@
         <p>&copy; {{ date('Y') }} {{ $siteTitle }}. All rights reserved.</p>
         <p>Built with ❤️ Modern UI</p>
     </div>
+
+    <x-social-contact-widgets />
 </footer>
 

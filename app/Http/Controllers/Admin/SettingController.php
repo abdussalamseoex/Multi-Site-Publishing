@@ -26,6 +26,12 @@ class SettingController extends Controller
         return view('admin.settings_limits', compact('settings'));
     }
 
+    public function socialIndex()
+    {
+        $settings = Setting::all()->pluck('value', 'key')->toArray();
+        return view('admin.settings_social', compact('settings'));
+    }
+
     public function store(Request $request)
     {
         $data = $request->except(['_token', 'site_logo', 'site_favicon']);
