@@ -27,18 +27,18 @@
                 @foreach($headerMenu->items->whereNull('parent_id')->sortBy('order') as $item)
                     @if($item->children->count() > 0)
                         <div class="relative group">
-                            <a href="{{ $item->url }}" class="hover:opacity-70 transition-opacity duration-200 flex items-center gap-1">
+                            <a href="{{ $item->url }}" class="hover:opacity-70 transition-opacity duration-200 flex items-center gap-1" style="color: {{ $headerText }} !important;">
                                 {{ $item->title }}
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </a>
-                            <div class="absolute left-0 mt-2 w-48 bg-white border border-gray-100 shadow-xl rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 overflow-hidden text-gray-800">
+                            <div class="absolute left-0 mt-2 w-48 bg-white border border-gray-100 shadow-xl rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 overflow-hidden" style="color: #1f2937 !important;">
                                 @foreach($item->children->sortBy('order') as $child)
-                                    <a href="{{ $child->url }}" class="block px-4 py-3 text-sm hover:bg-gray-50 hover:text-primary transition-colors border-b border-gray-50 last:border-0">{{ $child->title }}</a>
+                                    <a href="{{ $child->url }}" class="block px-4 py-3 text-sm hover:bg-gray-50 hover:text-primary transition-colors border-b border-gray-50 last:border-0" style="color: #1f2937 !important;">{{ $child->title }}</a>
                                 @endforeach
                             </div>
                         </div>
                     @else
-                        <a href="{{ $item->url }}" class="hover:opacity-70 transition-opacity duration-200">{{ $item->title }}</a>
+                        <a href="{{ $item->url }}" class="hover:opacity-70 transition-opacity duration-200" style="color: {{ $headerText }} !important;">{{ $item->title }}</a>
                     @endif
                 @endforeach
             @endif
