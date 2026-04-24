@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="{{ \App\Models\Setting::get('site_favicon') ? url(\App\Models\Setting::get('site_favicon')) : asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.ico') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Setup Wizard - Database Configuration</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
+    <!-- Setup wizard does not load custom header scripts -->
 </head>
 <body class="bg-gray-50 flex items-center justify-center min-h-screen p-6">
 
@@ -79,7 +79,7 @@
             }
         }
     </script>
-    {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
+    <!-- Setup wizard does not load custom footer scripts -->
 </body>
 </html>
 

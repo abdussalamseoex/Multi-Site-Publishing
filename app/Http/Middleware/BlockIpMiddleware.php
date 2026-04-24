@@ -16,6 +16,10 @@ class BlockIpMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if (!env('APP_INSTALLED', false)) {
+            return $next($request);
+        }
+
         if (BlockedIp::where('ip_address', $request->ip())->exists()) {
             abort(403, 'Your IP address has been banned by the administrator.');
         }

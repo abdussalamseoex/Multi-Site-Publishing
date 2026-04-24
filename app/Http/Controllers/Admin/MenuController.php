@@ -60,4 +60,30 @@ class MenuController extends Controller
         
         return response()->json(['success' => true]);
     }
+
+    public function importCategories($menuId)
+    {
+        $menu = Menu::findOrFail($menuId);
+        $categories = \App\Models\Category::all();
+        
+        $order = $menu->items()->max('order') + 1;
+        $count = 0;
+        
+        foreach ($categories as $category) {
+            $url = '/category/' . $category->slug;
+            
+            // Only add if not already exists in this menu
+            $exists = $menu->items()->where('url', $url)->orWhere('url', url($url))->exists();
+            if (!$exists) {
+                $menu->items()->create([
+                    'title' => $category->name,
+                    'url' => $url,
+                    'order' => $order++
+                ]);
+                $count++;
+            }
+        }
+        
+        return back()->with('status', $count . ' Categories imported successfully to ' . $menu->name . '!');
+    }
 }

@@ -118,17 +118,10 @@ class InstallController extends Controller
         $str = file_get_contents($envFile);
 
         foreach ($data as $key => $val) {
-            $keyPosition = strpos($str, "{$key}=");
-            if ($keyPosition !== false) {
-                // Determine the end of the line
-                $endOfLinePosition = strpos($str, "\n", $keyPosition);
-                if ($endOfLinePosition === false) {
-                    $endOfLinePosition = strlen($str);
-                }
-                $oldLine = substr($str, $keyPosition, $endOfLinePosition - $keyPosition);
-                $str = str_replace($oldLine, "{$key}={$val}", $str);
+            $pattern = "/^#?\s*{$key}=.*/m";
+            if (preg_match($pattern, $str)) {
+                $str = preg_replace($pattern, "{$key}={$val}", $str);
             } else {
-                // If it doesn't exist, append
                 $str .= "\n{$key}={$val}";
             }
         }
