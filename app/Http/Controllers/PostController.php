@@ -36,14 +36,17 @@ class PostController extends Controller
             }
 
             if (!$user->is_unlimited) {
-                $dailyLimit = $user->daily_post_limit ?? \App\Models\Setting::get('default_daily_post_limit', 1);
-                $totalLimit = $user->total_post_limit ?? \App\Models\Setting::get('default_total_post_limit', 10);
+                $dailySetting = \App\Models\Setting::get('default_daily_post_limit');
+                $dailyLimit = (int)($user->daily_post_limit ?? (is_numeric($dailySetting) ? $dailySetting : 1));
 
-                if ($user->total_posts >= $totalLimit) {
+                $totalSetting = \App\Models\Setting::get('default_total_post_limit');
+                $totalLimit = (int)($user->total_post_limit ?? (is_numeric($totalSetting) ? $totalSetting : 10));
+
+                if ($user->total_posts >= $totalLimit && $totalLimit > 0) {
                     return back()->with('error', "You have reached your total post limit of {$totalLimit}.");
                 }
 
-                if ($postsToday >= $dailyLimit) {
+                if ($postsToday >= $dailyLimit && $dailyLimit > 0) {
                     return back()->with('error', "You have reached your daily post limit of {$dailyLimit}. Please try again tomorrow.");
                 }
             }
@@ -98,11 +101,14 @@ class PostController extends Controller
             }
 
             if (!$user->is_unlimited) {
-                $dailyLimit = $user->daily_post_limit ?? \App\Models\Setting::get('default_daily_post_limit', 1);
-                $totalLimit = $user->total_post_limit ?? \App\Models\Setting::get('default_total_post_limit', 10);
+                $dailySetting = \App\Models\Setting::get('default_daily_post_limit');
+                $dailyLimit = (int)($user->daily_post_limit ?? (is_numeric($dailySetting) ? $dailySetting : 1));
 
-                if ($user->total_posts >= $totalLimit) return back()->with('error', "You have reached your total limit.");
-                if ($postsToday >= $dailyLimit) {
+                $totalSetting = \App\Models\Setting::get('default_total_post_limit');
+                $totalLimit = (int)($user->total_post_limit ?? (is_numeric($totalSetting) ? $totalSetting : 10));
+
+                if ($user->total_posts >= $totalLimit && $totalLimit > 0) return back()->with('error', "You have reached your total limit.");
+                if ($postsToday >= $dailyLimit && $dailyLimit > 0) {
                     return back()->with('error', "You have reached your daily limit.");
                 }
             }
