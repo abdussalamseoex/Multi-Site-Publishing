@@ -164,11 +164,11 @@ class PostController extends Controller
     {
         $user = Auth::user();
         if (!$user->hasRole('admin')) {
-            if (\App\Models\Setting::get('enable_user_post_editing') != '1') {
-                return back()->with('error', 'Post editing is currently disabled by the administrator.');
-            }
             if ($post->user_id !== $user->id) {
                 return back()->with('error', 'You do not have permission to edit this post.');
+            }
+            if ($post->status === 'published' && \App\Models\Setting::get('enable_user_post_editing') != '1') {
+                return back()->with('error', 'Editing published posts is currently disabled by the administrator.');
             }
         }
 
@@ -180,11 +180,11 @@ class PostController extends Controller
     {
         $user = Auth::user();
         if (!$user->hasRole('admin')) {
-            if (\App\Models\Setting::get('enable_user_post_editing') != '1') {
-                return back()->with('error', 'Post editing is currently disabled.');
-            }
             if ($post->user_id !== $user->id) {
                 return back()->with('error', 'You do not have permission to edit this post.');
+            }
+            if ($post->status === 'published' && \App\Models\Setting::get('enable_user_post_editing') != '1') {
+                return back()->with('error', 'Editing published posts is currently disabled.');
             }
         }
 

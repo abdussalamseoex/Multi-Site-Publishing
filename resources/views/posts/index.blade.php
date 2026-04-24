@@ -63,10 +63,10 @@
                                     {{ $post->created_at->format('M d, Y') }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    @if(Auth::user()->hasRole('admin') || \App\Models\Setting::get('enable_user_post_editing') == '1')
+                                    @if(Auth::user()->hasRole('admin') || $post->status !== 'published' || \App\Models\Setting::get('enable_user_post_editing') == '1')
                                         <a href="{{ route('posts.edit', $post->id) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
                                     @else
-                                        <span class="text-gray-400 cursor-not-allowed" title="Editing is disabled">Edit</span>
+                                        <span class="text-gray-400 cursor-not-allowed" title="Editing published posts is disabled">Edit</span>
                                     @endif
                                 </td>
                             </tr>
