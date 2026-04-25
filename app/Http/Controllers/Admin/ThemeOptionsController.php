@@ -24,22 +24,15 @@ class ThemeOptionsController extends Controller
         $homepageLayout = $homepageLayoutRaw ? json_decode($homepageLayoutRaw, true) : [];
         $sidebarLayout = $sidebarLayoutRaw ? json_decode($sidebarLayoutRaw, true) : [];
 
-        // Provide a default layout for the 'good' theme if it's completely empty
+        // Provide a default layout if it's completely empty
         if (empty($homepageLayout)) {
-            if ($activeTheme === 'good') {
-                $homepageLayout = [
-                    ['id' => uniqid(), 'type' => 'hero_grid', 'title' => 'Top Stories', 'category_id' => null, 'limit' => 4],
-                    ['id' => uniqid(), 'type' => 'latest_news', 'title' => 'Latest Articles', 'category_id' => null, 'limit' => 6],
-                    ['id' => uniqid(), 'type' => 'ad_block', 'title' => 'Middle Ad', 'category_id' => null, 'limit' => null],
-                    ['id' => uniqid(), 'type' => 'category_spotlight', 'title' => 'Editorial Choice', 'category_id' => null, 'limit' => 5],
-                    ['id' => uniqid(), 'type' => 'category_grid', 'title' => 'More News', 'category_id' => null, 'limit' => 6]
-                ];
-            } else {
-                // For all other themes, default to their legacy hardcoded layout
-                $homepageLayout = [
-                    ['id' => uniqid(), 'type' => 'legacy_theme_content', 'title' => 'Original ' . ucfirst($activeTheme) . ' Design', 'category_id' => null, 'limit' => null]
-                ];
-            }
+            $homepageLayout = [
+                ['id' => uniqid(), 'type' => 'hero_grid', 'title' => 'Top Stories', 'category_id' => null, 'limit' => 4],
+                ['id' => uniqid(), 'type' => 'latest_news', 'title' => 'Latest Articles', 'category_id' => null, 'limit' => 6],
+                ['id' => uniqid(), 'type' => 'ad_block', 'title' => 'Middle Ad', 'category_id' => null, 'limit' => null],
+                ['id' => uniqid(), 'type' => 'category_spotlight', 'title' => 'Editorial Choice', 'category_id' => null, 'limit' => 5],
+                ['id' => uniqid(), 'type' => 'category_grid', 'title' => 'More News', 'category_id' => null, 'limit' => 6]
+            ];
         }
 
         if (empty($sidebarLayout)) {

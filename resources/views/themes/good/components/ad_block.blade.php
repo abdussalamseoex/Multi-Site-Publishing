@@ -1,6 +1,7 @@
 <section class="mb-10 text-center flex justify-center w-full">
     @php
         $adCode = !empty($block['ad_code']) ? $block['ad_code'] : \App\Models\Setting::get('ad_header', '');
+        // Determine if we are likely in a sidebar by checking if the parent wrapper is narrow, but we can just use responsive CSS
     @endphp
     
     @if(!empty($adCode))
@@ -8,8 +9,8 @@
             {!! $adCode !!}
         </div>
     @else
-        <div class="w-full max-w-[728px] h-[90px] bg-gray-200 text-gray-400 flex items-center justify-center font-bold uppercase tracking-widest text-xs rounded border border-gray-300">
-            Advertisement Space (728x90)
+        <div class="w-full min-h-[90px] md:min-h-[250px] bg-gray-200 text-gray-400 flex items-center justify-center font-bold uppercase tracking-widest text-xs rounded border border-gray-300 px-4 text-center">
+            Ad Space<br>(Responsive)
         </div>
     @endif
 </section>

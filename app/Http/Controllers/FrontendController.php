@@ -25,6 +25,25 @@ class FrontendController extends Controller
                            ->orderBy('id', 'desc')
                            ->paginate(12);
 
+        // Auto-fix for deprecated legacy_theme_content
+        $blocksKey = "theme_blocks_{$activeTheme}";
+        $layoutRaw = Setting::get($blocksKey);
+        if ($layoutRaw) {
+            $blocks = json_decode($layoutRaw, true);
+            if (is_array($blocks)) {
+                $filtered = array_filter($blocks, function($block) {
+                    return isset($block['type']) && $block['type'] !== 'legacy_theme_content';
+                });
+                if (count($filtered) !== count($blocks)) {
+                    if (empty($filtered)) {
+                        Setting::where('key', $blocksKey)->delete();
+                    } else {
+                        Setting::set($blocksKey, json_encode(array_values($filtered)));
+                    }
+                }
+            }
+        }
+
         $viewName = "themes.{$activeTheme}.home";
 
         // Check if theme view exists, fallback to minimal if standard wasn't found
