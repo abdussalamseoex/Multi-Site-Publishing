@@ -202,8 +202,7 @@
                     { id: 'latest_news', name: 'Latest Articles List' },
                     { id: 'category_spotlight', name: 'Category Spotlight' },
                     { id: 'category_grid', name: '3-Column Grid' },
-                    { id: 'ad_block', name: 'Advertisement Banner' },
-                    { id: 'legacy_theme_content', name: 'Legacy Theme Content' }
+                    { id: 'ad_block', name: 'Advertisement Banner' }
                 ],
                 
                 sidebarTypes: [
