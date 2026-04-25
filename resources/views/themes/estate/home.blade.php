@@ -43,120 +43,63 @@
 
 
     <!-- Hero Showcase -->
-    @if(\App\Models\Setting::get('show_featured_section', '1') == '1' && $featuredPosts->count())
-        @php $hero = $featuredPosts->first(); @endphp
-        <div class="relative w-full h-[70vh] min-h-[500px] flex items-center justify-center">
-            @if($hero->featured_image)
-                <img src="{{ Str::startsWith($hero->featured_image, 'http') ? $hero->featured_image : url($hero->featured_image) }}" class="absolute inset-0 w-full h-full object-cover">
-            @else
-                <div class="absolute inset-0 bg-stone-800"></div>
-            @endif
-            <div class="absolute inset-0 bg-stone-900/60"></div>
+        @php
+            $layoutRaw = \App\Models\Setting::get('theme_blocks_' . $activeTheme);
+            $blocks = $layoutRaw ? json_decode($layoutRaw, true) : [];
             
-            <div class="relative z-10 text-center max-w-4xl px-4 mt-16">
-                <a href="{{ isset($hero->category) ? route('frontend.category', $hero->category->slug) : '#' }}" class="hover:opacity-80 transition"><span class="text-amber-500 font-bold tracking-[0.2em] uppercase text-xs mb-4 block">{{ $hero->category->name ?? 'Exclusive' }}</span></a>
-                <a href="{{ route('frontend.post', $hero->slug) }}">
-                    <h2 class="text-5xl md:text-7xl font-elegant font-bold text-white leading-tight mb-6 line-clamp-2">{{ $hero->title }}</h2>
-                </a>
-                <p class="text-stone-200 text-lg md:text-xl font-light mb-8">{{ Str::limit(strip_tags($hero->summary ?? $hero->content), 120) }}</p>
-                <div class="flex items-center justify-center gap-6 text-stone-300 text-sm tracking-widest uppercase">
-                    <span>{{ $hero->user->name ?? 'Broker' }}</span>
-                    <span>|</span>
-                    <span>{{ $hero->created_at->format('F Y') }}</span>
-                </div>
-            </div>
-        </div>
-    @endif
+            if (empty($blocks)) {
+                $blocks = [
+                    ['id' => uniqid(), 'type' => 'hero_grid', 'title' => 'Featured', 'category_id' => null, 'limit' => 4],
+                    ['id' => uniqid(), 'type' => 'latest_news', 'title' => 'Market Insights', 'category_id' => null, 'limit' => 6]
+                ];
+            }
+        @endphp
 
-    <div class="max-w-7xl mx-auto px-4 py-16">
-        
-        <!-- Featured Properties / Guides -->
-        @if($featuredPosts->count() > 1)
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20 -mt-24 relative z-20">
-            @foreach($featuredPosts->skip(1)->take(3) as $post)
-            <article class="bg-white shadow-2xl shadow-stone-200/50 block group relative">
-    <a href="{{ route('frontend.post', $post->slug) }}" class="absolute inset-0 z-0"></a>
-                <div class="aspect-[4/3] overflow-hidden relative">
-                    @if($post->featured_image)
-                        <img src="{{ Str::startsWith($post->featured_image, 'http') ? $post->featured_image : url($post->featured_image) }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
-                    @endif
-                    <div class="absolute inset-0 bg-stone-900/20 group-hover:bg-transparent transition"></div>
-                </div>
-                <div class="p-8 text-center border-b-4 border-transparent group-hover:gold-border transition duration-300">
-                    <a href="{{ isset($post->category) ? route('frontend.category', $post->category->slug) : '#' }}" class="hover:opacity-80 transition"><span class="text-[10px] text-amber-600 font-bold uppercase tracking-[0.15em] mb-3 block">{{ $post->category->name ?? 'Design' }}</span></a>
-                    <h3 class="text-2xl font-elegant font-bold text-stone-900 leading-snug line-clamp-2">{{ $post->title }}</h3>
-                </div>
-            </article>
-            @endforeach
-        </div>
-        @endif
+        <!-- Render Hero Grid if it exists at the top -->
+        @foreach($blocks as $index => $block)
+            @if($block['type'] === 'hero_grid')
+                @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
+                    @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
+                @else
+                    @include("themes.good.components.{$block['type']}", ['block' => $block])
+                @endif
+                @php unset($blocks[$index]); @endphp
+            @endif
+        @endforeach
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 mt-12">
             <!-- Latest Articles -->
             <main class="lg:col-span-8 space-y-12">
-                @if(\App\Models\Setting::get('show_latest_section', '1') == '1')
-                <div class="border-b border-stone-200 pb-4 mb-10 flex items-center justify-between">
-                    <h3 class="text-3xl font-elegant font-bold text-stone-900 italic">Market Insights</h3>
-                </div>
-                
-                <div class="space-y-12">
-                    @foreach($latestPosts as $post)
-                    <article class="flex flex-col md:flex-row gap-8 group">
-                        <a href="{{ route('frontend.post', $post->slug) }}" class="w-full md:w-5/12 aspect-[4/3] relative overflow-hidden bg-stone-100">
-                            @if($post->featured_image)
-                                <img src="{{ Str::startsWith($post->featured_image, 'http') ? $post->featured_image : url($post->featured_image) }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
-                            @endif
-                        </a>
-                        <div class="w-full md:w-7/12 flex flex-col justify-center">
-                            <a href="{{ isset($post->category) ? route('frontend.category', $post->category->slug) : '#' }}" class="hover:opacity-80 transition"><span class="text-xs text-amber-600 font-bold uppercase tracking-[0.15em] mb-3 block">{{ $post->category->name ?? 'Market' }}</span></a>
-                            <a href="{{ route('frontend.post', $post->slug) }}">
-                                <h4 class="text-3xl font-elegant font-bold mb-4 text-stone-900 leading-tight group-hover:text-amber-700 transition line-clamp-2">{{ $post->title }}</h4>
-                            </a>
-                            <p class="text-stone-500 font-light leading-relaxed mb-6">{{ strip_tags($post->summary ?? $post->content) }}</p>
-                            <div class="flex items-center text-[11px] text-stone-400 tracking-[0.1em] uppercase">
-                                <span>{{ $post->created_at->format('M d, Y') }}</span>
-                                <span class="mx-3 border-l border-stone-300 h-3"></span>
-                                <span>By {{ $post->user->name ?? 'Agent' }}</span>
-                            </div>
-                        </div>
-                    </article>
-                    @endforeach
-                </div>
-                
-                <div class="mt-16 text-center border-t border-stone-200 pt-8">{{ $latestPosts->links() }}</div>
-                @endif
+                @foreach($blocks as $block)
+                    @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
+                        @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
+                    @else
+                        @include("themes.good.components.{$block['type']}", ['block' => $block])
+                    @endif
+                @endforeach
             </main>
 
             <!-- Sidebar -->
             <aside class="lg:col-span-4 space-y-12">
-                <!-- Agency Widget -->
-                <div class="bg-stone-900 text-center p-10 text-white relative">
-                    <div class="w-16 h-16 bg-amber-600 rounded-full mx-auto flex items-center justify-center mb-6">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                    </div>
-                    <h3 class="text-2xl font-elegant font-bold mb-3 italic">List With Us</h3>
-                    <p class="text-stone-400 font-light text-sm mb-8">Exclusive marketing for exceptional properties worldwide.</p>
-                    <a href="#" class="inline-block border border-amber-600 text-amber-500 hover:bg-amber-600 hover:text-white transition px-8 py-3 text-xs tracking-[0.2em] uppercase font-bold">Contact Agent</a>
-                </div>
+                @php
+                    $sidebarLayoutRaw = \App\Models\Setting::get('theme_sidebar_' . $activeTheme);
+                    $sidebarBlocks = $sidebarLayoutRaw ? json_decode($sidebarLayoutRaw, true) : [];
+                    
+                    if (empty($sidebarBlocks)) {
+                        $sidebarBlocks = [
+                            ['id' => uniqid(), 'type' => 'popular_posts', 'title' => 'Trending Areas', 'limit' => 4],
+                            ['id' => uniqid(), 'type' => 'agency_widget', 'title' => 'List With Us']
+                        ];
+                    }
+                @endphp
 
-                <!-- Popular Local -->
-                <div>
-                    <h3 class="text-xl font-elegant font-bold border-b border-stone-200 pb-3 mb-6">Trending Areas</h3>
-                    <ul class="space-y-4">
-                        @foreach(\App\Models\Post::where('status', 'published')->orderBy('views', 'desc')->take(4)->get() as $pop)
-                        <li class="flex items-center gap-4 group">
-                            <a href="{{ route('frontend.post', $pop->slug) }}" class="w-24 h-24 shrink-0 overflow-hidden bg-stone-100 flex-1">
-                                @if($pop->featured_image)
-                                    <img src="{{ url($pop->featured_image) }}" class="w-full h-full object-cover group-hover:scale-105 transition">
-                                @endif
-                            </a>
-                            <div class="flex-[2]">
-                                <a href="{{ route('frontend.post', $pop->slug) }}" class="font-elegant font-bold text-lg leading-snug group-hover:text-amber-700 transition">{{ $pop->title }}</a>
-                            </div>
-                        </li>
-                        @endforeach
-                    </ul>
-                </div>
+                @foreach($sidebarBlocks as $block)
+                    @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
+                        @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
+                    @else
+                        @include("themes.good.components.{$block['type']}", ['block' => $block])
+                    @endif
+                @endforeach
             </aside>
         </div>
     </div>

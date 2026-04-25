@@ -32,7 +32,7 @@ class FrontendController extends Controller
             $viewName = "themes.minimal.home";
         }
 
-        return view($viewName, compact('featuredPosts', 'latestPosts'));
+        return view($viewName, compact('featuredPosts', 'latestPosts', 'activeTheme'));
     }
 
     public function showPost($slug)
@@ -62,7 +62,7 @@ class FrontendController extends Controller
             $viewName = "themes.minimal.post";
         }
 
-        return view($viewName, compact('post'));
+        return view($viewName, compact('post', 'activeTheme'));
     }
 
         public function category($slug)
@@ -77,7 +77,7 @@ class FrontendController extends Controller
         $viewName = "themes.{$activeTheme}.category";
 
         if (view()->exists($viewName)) {
-            return view($viewName, compact('category', 'posts'));
+            return view($viewName, compact('category', 'posts', 'activeTheme'));
         }
 
         // Re-use current active theme's home layout as the category page
@@ -86,15 +86,16 @@ class FrontendController extends Controller
             $featuredPosts = collect(); 
             $latestPosts = $posts;
             $isCategory = true;
-            return view($homeView, compact('category', 'latestPosts', 'featuredPosts', 'isCategory'));
+            return view($homeView, compact('category', 'latestPosts', 'featuredPosts', 'isCategory', 'activeTheme'));
         }
 
-        return view('themes.category', compact('category', 'posts'));
+        return view('themes.category', compact('category', 'posts', 'activeTheme'));
     }
 
     public function page($slug)
     {
         $page = \App\Models\Page::where('slug', $slug)->firstOrFail();
-        return view('themes.page', compact('page'));
+        $activeTheme = \App\Models\Setting::get('active_theme', 'minimal');
+        return view('themes.page', compact('page', 'activeTheme'));
     }
 }
