@@ -81,7 +81,7 @@
                 <!-- Main Content -->
                 <div class="col-span-1 lg:col-span-7">
                     <article class="prose-lens">
-                        {!! $post->content !!}
+                        {!! \App\Helpers\AdHelper::injectInArticleAds($post->content) !!}
                     </article>
 
                     <!-- In-Article Advertisement -->
@@ -104,19 +104,11 @@
                 <!-- Right Sidebar -->
                 <div class="col-span-1 lg:col-span-3 space-y-16">
                     <!-- Advertising Setup -->
-                    @php $adSidebar = \App\Models\Setting::get('ad_sidebar_code'); @endphp
-                    @if($adSidebar)
-                        <div class="w-full flex justify-center overflow-hidden">
-                            {!! $adSidebar !!}
-                        </div>
-                    @else
-                        <div class="bg-gray-50 border border-dashed border-gray-200 p-6 text-center">
-                            <span class="text-[10px] uppercase text-gray-400 tracking-[0.2em] mb-4 block font-bold">Featured Partner</span>
-                            <div class="w-full bg-gray-200 h-[250px] flex items-center justify-center text-gray-400 text-xs font-mono">
-                                300x250 Ad Space
-                            </div>
-                        </div>
-                    @endif
+                    @if(!empty(\App\Models\Setting::get('ad_placement_sidebar')))
+                    <div class="widget text-center overflow-hidden flex justify-center">
+                        <x-ad-slot placement="sidebar" />
+                    </div>
+                @endif
 
                     <!-- More from Genre -->
                     <div>

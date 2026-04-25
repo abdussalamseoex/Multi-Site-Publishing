@@ -84,7 +84,7 @@
 
             <div class="bg-white p-8 md:p-12 rounded-2xl shadow border border-slate-200 font-sans">
                 <div class="prose max-w-none">
-                    {!! $post->content !!}
+                    {!! \App\Helpers\AdHelper::injectInArticleAds($post->content) !!}
                 </div>
                 
                 <!-- Interaction Bar -->

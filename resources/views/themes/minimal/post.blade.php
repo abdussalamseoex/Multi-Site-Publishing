@@ -80,7 +80,7 @@
             @endif
 
             <div class="prose max-w-none text-gray-700">
-                {!! $post->content !!}
+                {!! \App\Helpers\AdHelper::injectInArticleAds($post->content) !!}
             </div>
             
             <!-- Related Posts -->

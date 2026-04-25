@@ -93,7 +93,7 @@
                     <!-- Content Area -->
                     <div class="flex-1">
                         <article class="prose max-w-none mb-12">
-                            {!! $post->content !!}
+                            {!! \App\Helpers\AdHelper::injectInArticleAds($post->content) !!}
                         </article>
 
                         <!-- Author Box -->
@@ -130,17 +130,9 @@
             <!-- RIGHT COLUMN (Sidebar - 1/3 width) -->
             <div class="lg:col-span-1 space-y-10">
                 <!-- ADVERTISEMENT -->
-                @php $adSidebar = \App\Models\Setting::get('ad_sidebar_code'); @endphp
-                @if($adSidebar)
+                @if(!empty(\App\Models\Setting::get('ad_placement_sidebar')))
                     <div class="widget text-center overflow-hidden flex justify-center">
-                        {!! $adSidebar !!}
-                    </div>
-                @else
-                    <div class="widget text-center">
-                        <div class="text-[9px] text-gray-400 uppercase tracking-widest mb-1">- Advertisement -</div>
-                        <div class="w-full bg-gray-200 h-[250px] flex items-center justify-center font-bold text-gray-400 text-sm border border-gray-300">
-                            300 x 250 Banner
-                        </div>
+                        <x-ad-slot placement="sidebar" />
                     </div>
                 @endif
 

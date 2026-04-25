@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Ads & Monetization') }}
+            {{ __('Ads & Monetization Control Panel') }}
         </h2>
     </x-slot>
 
@@ -17,168 +17,221 @@
             <form action="{{ route('admin.settings.store') }}" method="POST">
                 @csrf
                 
-                <div class="bg-white shadow-sm sm:rounded-lg mb-6 overflow-hidden" x-data="{ activeTab: 'adsense' }">
+                <div class="bg-white shadow-sm sm:rounded-lg mb-6 overflow-hidden" x-data="{ activeTab: 'units' }">
                     <div class="border-b border-gray-200">
                         <nav class="-mb-px flex text-sm font-medium" aria-label="Tabs">
-                            <button type="button" @click="activeTab = 'adsense'" 
-                                :class="activeTab === 'adsense' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                                class="w-1/4 border-b-2 py-4 px-1 text-center font-bold transition-colors">
-                                Google AdSense
+                            <button type="button" @click="activeTab = 'units'" 
+                                :class="activeTab === 'units' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                                class="w-1/2 border-b-2 py-4 px-1 text-center font-bold transition-colors">
+                                1. Ad Units Setup (Paste Codes)
                             </button>
-                            <button type="button" @click="activeTab = 'adsterra'" 
-                                :class="activeTab === 'adsterra' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                                class="w-1/4 border-b-2 py-4 px-1 text-center font-bold transition-colors">
-                                AdsTerra
-                            </button>
-                            <button type="button" @click="activeTab = 'medianet'" 
-                                :class="activeTab === 'medianet' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                                class="w-1/4 border-b-2 py-4 px-1 text-center font-bold transition-colors">
-                                Media.net
-                            </button>
-                            <button type="button" @click="activeTab = 'custom'" 
-                                :class="activeTab === 'custom' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                                class="w-1/4 border-b-2 py-4 px-1 text-center font-bold transition-colors">
-                                Custom Scripts
+                            <button type="button" @click="activeTab = 'placements'" 
+                                :class="activeTab === 'placements' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                                class="w-1/2 border-b-2 py-4 px-1 text-center font-bold transition-colors">
+                                2. Placements & Display Rules
                             </button>
                         </nav>
                     </div>
 
                     <div class="p-6">
-                        <!-- Google AdSense -->
-                        <div x-show="activeTab === 'adsense'">
-                            <div class="flex items-center gap-3 mb-6 border-b pb-4">
-                                <div class="w-10 h-10 bg-yellow-100 text-yellow-600 flex items-center justify-center rounded-full font-bold">G</div>
-                                <div>
-                                    <h3 class="text-lg font-bold text-gray-900">Google AdSense</h3>
-                                    <p class="text-sm text-gray-500">Paste your AdSense auto-ads code or manual ad unit codes below.</p>
-                                </div>
+                        <!-- AD UNITS TAB -->
+                        <div x-show="activeTab === 'units'">
+                            <div class="mb-6 border-b pb-4">
+                                <h3 class="text-lg font-bold text-gray-900">Configure Ad Units</h3>
+                                <p class="text-sm text-gray-500">Paste the HTML/JS codes for each specific ad size from your network (e.g., AdsTerra, AdSense). Only fill out the ones you want to use.</p>
                             </div>
                             
-                            <div class="space-y-6">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Auto Ads Header Script</label>
-                                    <textarea name="adsense_header_code" rows="4" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs" placeholder="<script async src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxx' crossorigin='anonymous'></script>">{{ $settings['adsense_header_code'] ?? '' }}</textarea>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <!-- Global / Script Ads -->
+                                <div class="space-y-4 bg-gray-50 p-4 rounded border">
+                                    <h4 class="font-bold text-gray-700 border-b pb-2">Global & Background Ads</h4>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Popunder Script</label>
+                                        <textarea name="ad_code_popunder" rows="2" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs">{{ $settings['ad_code_popunder'] ?? '' }}</textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Social Bar Script</label>
+                                        <textarea name="ad_code_socialbar" rows="2" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs">{{ $settings['ad_code_socialbar'] ?? '' }}</textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Smartlink / Direct Link URL</label>
+                                        <input type="text" name="ad_code_smartlink" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs" value="{{ $settings['ad_code_smartlink'] ?? '' }}" placeholder="https://...">
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Sidebar Ad Unit</label>
-                                    <textarea name="adsense_sidebar_code" rows="4" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs" placeholder="<ins class='adsbygoogle' ...></ins>">{{ $settings['adsense_sidebar_code'] ?? '' }}</textarea>
+
+                                <!-- Native & Special -->
+                                <div class="space-y-4 bg-gray-50 p-4 rounded border">
+                                    <h4 class="font-bold text-gray-700 border-b pb-2">Native & Content Ads</h4>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Native Banner HTML</label>
+                                        <textarea name="ad_code_native" rows="4" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs">{{ $settings['ad_code_native'] ?? '' }}</textarea>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">In-Article Ad Unit</label>
-                                    <textarea name="adsense_content_code" rows="4" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs" placeholder="<ins class='adsbygoogle' ...></ins>">{{ $settings['adsense_content_code'] ?? '' }}</textarea>
+
+                                <!-- Banner Sizes Left -->
+                                <div class="space-y-4 bg-gray-50 p-4 rounded border">
+                                    <h4 class="font-bold text-gray-700 border-b pb-2">Standard Banners (Horizontal)</h4>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Banner 728x90 (Desktop Header)</label>
+                                        <textarea name="ad_code_728x90" rows="2" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs">{{ $settings['ad_code_728x90'] ?? '' }}</textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Banner 468x60 (In-Article / Header)</label>
+                                        <textarea name="ad_code_468x60" rows="2" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs">{{ $settings['ad_code_468x60'] ?? '' }}</textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Banner 320x50 (Mobile / Footer)</label>
+                                        <textarea name="ad_code_320x50" rows="2" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs">{{ $settings['ad_code_320x50'] ?? '' }}</textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Banner Sizes Right -->
+                                <div class="space-y-4 bg-gray-50 p-4 rounded border">
+                                    <h4 class="font-bold text-gray-700 border-b pb-2">Standard Banners (Vertical/Square)</h4>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Banner 160x600 (Skyscraper / Floating)</label>
+                                        <textarea name="ad_code_160x600" rows="2" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs">{{ $settings['ad_code_160x600'] ?? '' }}</textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Banner 160x300 (Half Skyscraper)</label>
+                                        <textarea name="ad_code_160x300" rows="2" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs">{{ $settings['ad_code_160x300'] ?? '' }}</textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Banner 300x250 (Sidebar / Footer Rectangle)</label>
+                                        <textarea name="ad_code_300x250" rows="2" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs">{{ $settings['ad_code_300x250'] ?? '' }}</textarea>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- AdsTerra -->
-                        <div x-show="activeTab === 'adsterra'" style="display: none;">
-                            <div class="flex items-center gap-3 mb-6 border-b pb-4">
-                                <div class="w-10 h-10 bg-blue-100 text-blue-600 flex items-center justify-center rounded-full font-bold">A</div>
-                                <div>
-                                    <h3 class="text-lg font-bold text-gray-900">AdsTerra Monetization</h3>
-                                    <p class="text-sm text-gray-500">Integrate AdsTerra's high-paying ad formats like Native Banners and Social Bars.</p>
-                                </div>
+                        <!-- PLACEMENTS TAB -->
+                        <div x-show="activeTab === 'placements'" style="display: none;">
+                            <div class="mb-6 border-b pb-4">
+                                <h3 class="text-lg font-bold text-gray-900">Ad Placements & UI Logic</h3>
+                                <p class="text-sm text-gray-500">Determine exactly where the ads you configured in step 1 will show up on your website. Setting a placement to "Disabled" will safely hide it without breaking the UI.</p>
                             </div>
                             
-                            <div class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                
+                                <!-- Core Layout Slots -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Social Bar / Popunder Script (Header)</label>
-                                    <textarea name="adsterra_header_code" rows="4" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs" placeholder="<script type='text/javascript' src='//your-adsterra-code.js'></script>">{{ $settings['adsterra_header_code'] ?? '' }}</textarea>
+                                    <h4 class="font-bold text-gray-700 border-b pb-2 mb-4">Core Layout Slots</h4>
+                                    
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Header Ad Slot</label>
+                                            <select name="ad_placement_header" class="block w-full border-gray-300 rounded-md sm:text-sm bg-gray-50">
+                                                <option value="" {{ empty($settings['ad_placement_header']) ? 'selected' : '' }}>Disabled (No Ad)</option>
+                                                <option value="ad_code_728x90" {{ ($settings['ad_placement_header'] ?? '') == 'ad_code_728x90' ? 'selected' : '' }}>Banner 728x90</option>
+                                                <option value="ad_code_468x60" {{ ($settings['ad_placement_header'] ?? '') == 'ad_code_468x60' ? 'selected' : '' }}>Banner 468x60</option>
+                                                <option value="ad_code_native" {{ ($settings['ad_placement_header'] ?? '') == 'ad_code_native' ? 'selected' : '' }}>Native Banner</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Footer Ad Slot</label>
+                                            <select name="ad_placement_footer" class="block w-full border-gray-300 rounded-md sm:text-sm bg-gray-50">
+                                                <option value="" {{ empty($settings['ad_placement_footer']) ? 'selected' : '' }}>Disabled (No Ad)</option>
+                                                <option value="ad_code_728x90" {{ ($settings['ad_placement_footer'] ?? '') == 'ad_code_728x90' ? 'selected' : '' }}>Banner 728x90</option>
+                                                <option value="ad_code_300x250" {{ ($settings['ad_placement_footer'] ?? '') == 'ad_code_300x250' ? 'selected' : '' }}>Banner 300x250</option>
+                                                <option value="ad_code_320x50" {{ ($settings['ad_placement_footer'] ?? '') == 'ad_code_320x50' ? 'selected' : '' }}>Banner 320x50</option>
+                                                <option value="ad_code_native" {{ ($settings['ad_placement_footer'] ?? '') == 'ad_code_native' ? 'selected' : '' }}>Native Banner</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Theme Right Sidebar Ad</label>
+                                            <select name="ad_placement_sidebar" class="block w-full border-gray-300 rounded-md sm:text-sm bg-gray-50">
+                                                <option value="" {{ empty($settings['ad_placement_sidebar']) ? 'selected' : '' }}>Disabled (No Ad)</option>
+                                                <option value="ad_code_300x250" {{ ($settings['ad_placement_sidebar'] ?? '') == 'ad_code_300x250' ? 'selected' : '' }}>Banner 300x250</option>
+                                                <option value="ad_code_160x600" {{ ($settings['ad_placement_sidebar'] ?? '') == 'ad_code_160x600' ? 'selected' : '' }}>Banner 160x600</option>
+                                                <option value="ad_code_160x300" {{ ($settings['ad_placement_sidebar'] ?? '') == 'ad_code_160x300' ? 'selected' : '' }}>Banner 160x300</option>
+                                                <option value="ad_code_native" {{ ($settings['ad_placement_sidebar'] ?? '') == 'ad_code_native' ? 'selected' : '' }}>Native Banner</option>
+                                            </select>
+                                            <p class="text-xs text-gray-500 mt-1">Shows inside the default sidebar for themes like News, Magazine, Blog.</p>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <!-- Post In-Article Ads -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Native Banner (Sidebar Area)</label>
-                                    <textarea name="adsterra_sidebar_code" rows="4" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs" placeholder="<div id='container-xxx'></div>">{{ $settings['adsterra_sidebar_code'] ?? '' }}</textarea>
+                                    <h4 class="font-bold text-gray-700 border-b pb-2 mb-4">Inside Post Content (In-Article)</h4>
+                                    
+                                    <div class="space-y-4 border p-4 rounded bg-indigo-50 border-indigo-100">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">In-Article Ad Slot</label>
+                                            <select name="ad_placement_in_article" class="block w-full border-gray-300 rounded-md sm:text-sm font-bold text-indigo-700">
+                                                <option value="" {{ empty($settings['ad_placement_in_article']) ? 'selected' : '' }}>Disabled (No In-Article Ads)</option>
+                                                <option value="ad_code_native" {{ ($settings['ad_placement_in_article'] ?? '') == 'ad_code_native' ? 'selected' : '' }}>Native Banner</option>
+                                                <option value="ad_code_468x60" {{ ($settings['ad_placement_in_article'] ?? '') == 'ad_code_468x60' ? 'selected' : '' }}>Banner 468x60</option>
+                                                <option value="ad_code_300x250" {{ ($settings['ad_placement_in_article'] ?? '') == 'ad_code_300x250' ? 'selected' : '' }}>Banner 300x250</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Ad Frequency (Paragraphs)</label>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-sm text-gray-600">Show 1 ad every</span>
+                                                <input type="number" name="ad_in_article_frequency" class="w-20 border-gray-300 rounded-md shadow-sm sm:text-sm text-center" value="{{ $settings['ad_in_article_frequency'] ?? '3' }}" min="1" max="10">
+                                                <span class="text-sm text-gray-600">paragraphs.</span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mt-2">The system will dynamically calculate and inject the ad without breaking the post text!</p>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <!-- Floating & Background Ads -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Native Banner (In-Article Area)</label>
-                                    <textarea name="adsterra_content_code" rows="4" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs" placeholder="<div id='container-xxx'></div>">{{ $settings['adsterra_content_code'] ?? '' }}</textarea>
+                                    <h4 class="font-bold text-gray-700 border-b pb-2 mb-4">Floating Ads (Both Sides)</h4>
+                                    <p class="text-xs text-gray-500 mb-3">These stick to the left and right sides of the screen on Desktop devices. Ideal for 160x600 banners.</p>
+                                    
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Floating Left Slot</label>
+                                            <select name="ad_placement_floating_left" class="block w-full border-gray-300 rounded-md sm:text-sm bg-gray-50">
+                                                <option value="" {{ empty($settings['ad_placement_floating_left']) ? 'selected' : '' }}>Disabled (No Ad)</option>
+                                                <option value="ad_code_160x600" {{ ($settings['ad_placement_floating_left'] ?? '') == 'ad_code_160x600' ? 'selected' : '' }}>Banner 160x600</option>
+                                                <option value="ad_code_160x300" {{ ($settings['ad_placement_floating_left'] ?? '') == 'ad_code_160x300' ? 'selected' : '' }}>Banner 160x300</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Floating Right Slot</label>
+                                            <select name="ad_placement_floating_right" class="block w-full border-gray-300 rounded-md sm:text-sm bg-gray-50">
+                                                <option value="" {{ empty($settings['ad_placement_floating_right']) ? 'selected' : '' }}>Disabled (No Ad)</option>
+                                                <option value="ad_code_160x600" {{ ($settings['ad_placement_floating_right'] ?? '') == 'ad_code_160x600' ? 'selected' : '' }}>Banner 160x600</option>
+                                                <option value="ad_code_160x300" {{ ($settings['ad_placement_floating_right'] ?? '') == 'ad_code_160x300' ? 'selected' : '' }}>Banner 160x300</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <!-- Background Scripts -->
+                                <div>
+                                    <h4 class="font-bold text-gray-700 border-b pb-2 mb-4">Background Scripts Toggle</h4>
+                                    
+                                    <div class="space-y-3">
+                                        <label class="flex items-center gap-3 p-3 border rounded cursor-pointer hover:bg-gray-50">
+                                            <input type="hidden" name="enable_popunder" value="0">
+                                            <input type="checkbox" name="enable_popunder" value="1" {{ ($settings['enable_popunder'] ?? '0') == '1' ? 'checked' : '' }} class="rounded text-indigo-600 focus:ring-indigo-500">
+                                            <span class="font-medium text-gray-700 text-sm">Enable Popunder Script (Site-wide)</span>
+                                        </label>
+                                        <label class="flex items-center gap-3 p-3 border rounded cursor-pointer hover:bg-gray-50">
+                                            <input type="hidden" name="enable_socialbar" value="0">
+                                            <input type="checkbox" name="enable_socialbar" value="1" {{ ($settings['enable_socialbar'] ?? '0') == '1' ? 'checked' : '' }} class="rounded text-indigo-600 focus:ring-indigo-500">
+                                            <span class="font-medium text-gray-700 text-sm">Enable Social Bar Script (Site-wide)</span>
+                                        </label>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
 
-                        <!-- Media.net -->
-                        <div x-show="activeTab === 'medianet'" style="display: none;">
-                            <div class="flex items-center gap-3 mb-6 border-b pb-4">
-                                <div class="w-10 h-10 bg-red-100 text-red-600 flex items-center justify-center rounded-full font-bold">M</div>
-                                <div>
-                                    <h3 class="text-lg font-bold text-gray-900">Media.net Settings</h3>
-                                    <p class="text-sm text-gray-500">Add context-driven ads from Media.net for alternative monetization.</p>
-                                </div>
-                            </div>
-                            
-                            <div class="space-y-6">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Header Script</label>
-                                    <textarea name="medianet_header_code" rows="4" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs" placeholder="<script type='text/javascript'>...</script>">{{ $settings['medianet_header_code'] ?? '' }}</textarea>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Sidebar Ad Unit</label>
-                                    <textarea name="medianet_sidebar_code" rows="4" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs" placeholder="<div id='...'></div>">{{ $settings['medianet_sidebar_code'] ?? '' }}</textarea>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">In-Article Ad Unit</label>
-                                    <textarea name="medianet_content_code" rows="4" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs" placeholder="<div id='...'></div>">{{ $settings['medianet_content_code'] ?? '' }}</textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Custom Scripts -->
-                        <div x-show="activeTab === 'custom'" style="display: none;">
-                            <div class="flex items-center gap-3 mb-6 border-b pb-4">
-                                <div class="w-10 h-10 bg-gray-100 text-gray-600 flex items-center justify-center rounded-full font-bold">&lt;&gt;</div>
-                                <div>
-                                    <h3 class="text-lg font-bold text-gray-900">Custom / Fallback Scripts</h3>
-                                    <p class="text-sm text-gray-500">Legacy ad codes or custom network placements. Will act as fallback.</p>
-                                </div>
-                            </div>
-                            
-                            <div class="space-y-6">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Global Sidebar Ad Code (Legacy)</label>
-                                    <textarea name="ad_sidebar_code" rows="4" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs" placeholder="<script async src='...'></script>">{{ $settings['ad_sidebar_code'] ?? '' }}</textarea>
-                                    <p class="text-xs text-gray-500 mt-1">If AdsTerra/AdSense sidebar is empty, this will show.</p>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Global Header/Top Banner Code</label>
-                                    <textarea name="ad_header_code" rows="4" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs" placeholder="<script async src='...'></script>">{{ $settings['ad_header_code'] ?? '' }}</textarea>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Global In-Article Ad Code (Legacy)</label>
-                                    <textarea name="ad_content_code" rows="4" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs" placeholder="<script async src='...'></script>">{{ $settings['ad_content_code'] ?? '' }}</textarea>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
-                <!-- Active Ad Network Selection -->
-                <div class="bg-white shadow-sm sm:rounded-lg p-6 mb-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4 border-b pb-2">Active Ad Network</h3>
-                    <p class="text-sm text-gray-600 mb-4">Select which network to primarily display across the site frontend. You must enter the codes above for your selection to work.</p>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <label class="border p-4 rounded-lg cursor-pointer hover:bg-gray-50 transition flex items-center gap-3">
-                            <input type="radio" name="active_ad_network" value="adsense" {{ ($settings['active_ad_network'] ?? 'adsense') === 'adsense' ? 'checked' : '' }} class="text-indigo-600 focus:ring-indigo-500">
-                            <span class="font-bold text-gray-800">Google AdSense</span>
-                        </label>
-                        <label class="border p-4 rounded-lg cursor-pointer hover:bg-gray-50 transition flex items-center gap-3">
-                            <input type="radio" name="active_ad_network" value="adsterra" {{ ($settings['active_ad_network'] ?? '') === 'adsterra' ? 'checked' : '' }} class="text-indigo-600 focus:ring-indigo-500">
-                            <span class="font-bold text-gray-800">AdsTerra</span>
-                        </label>
-                        <label class="border p-4 rounded-lg cursor-pointer hover:bg-gray-50 transition flex items-center gap-3">
-                            <input type="radio" name="active_ad_network" value="medianet" {{ ($settings['active_ad_network'] ?? '') === 'medianet' ? 'checked' : '' }} class="text-indigo-600 focus:ring-indigo-500">
-                            <span class="font-bold text-gray-800">Media.net</span>
-                        </label>
-                        <label class="border p-4 rounded-lg cursor-pointer hover:bg-gray-50 transition flex items-center gap-3">
-                            <input type="radio" name="active_ad_network" value="custom" {{ ($settings['active_ad_network'] ?? '') === 'custom' ? 'checked' : '' }} class="text-indigo-600 focus:ring-indigo-500">
-                            <span class="font-bold text-gray-800">Custom / Legacy</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="flex justify-end">
-                    <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded font-medium shadow hover:bg-indigo-700">
-                        Save Ad Settings
+                <div class="flex justify-end mt-4">
+                    <button type="submit" class="px-8 py-3 bg-indigo-600 text-white rounded-lg font-bold shadow-lg hover:bg-indigo-700 transition">
+                        Save Monetization Settings
                     </button>
                 </div>
             </form>

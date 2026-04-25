@@ -74,7 +74,7 @@
             @endif
 
             <div class="prose max-w-none">
-                {!! $post->content !!}
+                {!! \App\Helpers\AdHelper::injectInArticleAds($post->content) !!}
             </div>
 
             <!-- Related Posts -->

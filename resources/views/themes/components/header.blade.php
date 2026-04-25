@@ -58,3 +58,6 @@
     </nav>
 </header>
 
+<!-- Header Ad Slot -->
+<x-ad-slot placement="header" class="max-w-7xl mx-auto px-4 mt-4" />
+

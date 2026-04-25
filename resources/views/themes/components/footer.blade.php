@@ -82,37 +82,8 @@
             </ul>
         </div>
 
-        <!-- Ad Space -->
-        @php 
-            $activeNetwork = \App\Models\Setting::get('active_ad_network', 'adsense');
-            if ($activeNetwork === 'adsense') {
-                $adContent = \App\Models\Setting::get('adsense_content_code');
-            } elseif ($activeNetwork === 'adsterra') {
-                $adContent = \App\Models\Setting::get('adsterra_content_code');
-            } elseif ($activeNetwork === 'medianet') {
-                $adContent = \App\Models\Setting::get('medianet_content_code');
-            } else {
-                $adContent = \App\Models\Setting::get('ad_content_code');
-            }
-        @endphp
-        @if($adContent)
-            <div class="flex flex-col justify-center items-center text-center overflow-hidden w-full">
-                {!! $adContent !!}
-            </div>
-        @else
-            <div class="bg-gray-50 p-6 rounded-xl border border-dashed border-gray-300 flex flex-col justify-center items-center text-center">
-                <span class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1">
-                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Advertisement
-                </span>
-                <!-- ADD GOOGLE ADSENSE CODE HERE -->
-                <div class="w-full h-32 bg-gray-200/60 rounded flex items-center justify-center">
-                    <span class="text-sm text-gray-500 font-mono">300x250 Ad Space</span>
-                </div>
-                <!-- END ADSENSE CODE -->
-            </div>
-        @endif
-
+        <!-- Footer Ad Space -->
+        <x-ad-slot placement="footer" />
     </div>
 
     <div class="max-w-7xl mx-auto px-6 mt-16 pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500 font-medium">
@@ -126,5 +97,30 @@
     </div>
 
     <x-social-contact-widgets />
+
+    <!-- FLOATING ADS (DESKTOP ONLY) -->
+    <div class="hidden lg:block">
+        @if(!empty(\App\Models\Setting::get('ad_placement_floating_left')))
+            <div style="position: fixed; left: 10px; top: 50%; transform: translateY(-50%); z-index: 40; max-width: 160px; text-align:center;">
+                <span class="text-[8px] text-gray-400 block uppercase mb-1 leading-none">Advertisement</span>
+                <x-ad-slot placement="floating_left" />
+            </div>
+        @endif
+        @if(!empty(\App\Models\Setting::get('ad_placement_floating_right')))
+            <div style="position: fixed; right: 10px; top: 50%; transform: translateY(-50%); z-index: 40; max-width: 160px; text-align:center;">
+                <span class="text-[8px] text-gray-400 block uppercase mb-1 leading-none">Advertisement</span>
+                <x-ad-slot placement="floating_right" />
+            </div>
+        @endif
+    </div>
+
+    <!-- GLOBAL BACKGROUND SCRIPTS -->
+    @if(\App\Models\Setting::get('enable_popunder') == '1')
+        {!! \App\Models\Setting::get('ad_code_popunder', '') !!}
+    @endif
+    @if(\App\Models\Setting::get('enable_socialbar') == '1')
+        {!! \App\Models\Setting::get('ad_code_socialbar', '') !!}
+    @endif
+
 </footer>
 

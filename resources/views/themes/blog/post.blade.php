@@ -28,7 +28,7 @@
             </header>
 
             <div class="prose max-w-none text-gray-700 leading-loose" style="font-size: 1.1rem;">
-                {!! $post->content !!}
+                {!! \App\Helpers\AdHelper::injectInArticleAds($post->content) !!}
             </div>
         </article>
     </div>
