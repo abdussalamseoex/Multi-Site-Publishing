@@ -59,6 +59,7 @@ require __DIR__.'/auth.php';
 
 // Admin Routes
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\ThemeOptionsController;
 use App\Http\Controllers\Admin\PostController as AdminPostController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 
@@ -69,6 +70,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/settings/social', [SettingController::class, 'socialIndex'])->name('settings.social');
     Route::get('/settings/ads', [SettingController::class, 'adsIndex'])->name('settings.ads');
     Route::post('/settings', [SettingController::class, 'store'])->name('settings.store');
+    
+    // Theme Options / Homepage Builder
+    Route::get('/theme-options', [ThemeOptionsController::class, 'index'])->name('theme.options');
+    Route::post('/theme-options', [ThemeOptionsController::class, 'store'])->name('theme.options.store');
+
     Route::get('/seo', [SettingController::class, 'seoIndex'])->name('seo.index');
     Route::post('/seo', [SettingController::class, 'store'])->name('seo.store');
 

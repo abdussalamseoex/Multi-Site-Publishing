@@ -75,6 +75,7 @@
                                 <label class="block text-sm font-medium text-gray-700">Active Theme</label>
                                 <select name="active_theme" class="mt-1 block w-full border-gray-300 rounded-md sm:text-sm">
                                     <option value="minimal" {{ ($settings['active_theme'] ?? '') == 'minimal' ? 'selected' : '' }}>Minimal SEO</option>
+                                    <option value="good" {{ ($settings['active_theme'] ?? '') == 'good' ? 'selected' : '' }}>GOOD (Dynamic Builder)</option>
                                     <option value="blog" {{ ($settings['active_theme'] ?? '') == 'blog' ? 'selected' : '' }}>Standard Blog</option>
                                     <option value="news" {{ ($settings['active_theme'] ?? '') == 'news' ? 'selected' : '' }}>News Layout</option>
                                     <option value="magazine" {{ ($settings['active_theme'] ?? '') == 'magazine' ? 'selected' : '' }}>Magazine Layout</option>
