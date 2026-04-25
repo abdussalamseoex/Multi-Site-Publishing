@@ -135,4 +135,14 @@ class ThemeOptionsController extends Controller
 
         return back()->with('status', 'Theme layout successfully saved for the active theme (' . strtoupper($activeTheme) . ')!');
     }
+
+    public function reset()
+    {
+        $activeTheme = Setting::get('active_theme', 'minimal');
+        
+        \Illuminate\Support\Facades\DB::table('settings')->where('key', "theme_blocks_{$activeTheme}")->delete();
+        \Illuminate\Support\Facades\DB::table('settings')->where('key', "theme_sidebar_{$activeTheme}")->delete();
+
+        return back()->with('status', 'Layout has been completely reset to original ' . strtoupper($activeTheme) . ' factory defaults!');
+    }
 }

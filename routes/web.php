@@ -74,6 +74,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Theme Options / Homepage Builder
     Route::get('/theme-options', [ThemeOptionsController::class, 'index'])->name('theme.options');
     Route::post('/theme-options', [ThemeOptionsController::class, 'store'])->name('theme.options.store');
+    Route::get('/theme-options/reset', [ThemeOptionsController::class, 'reset'])->name('theme.options.reset');
 
     Route::get('/seo', [SettingController::class, 'seoIndex'])->name('seo.index');
     Route::post('/seo', [SettingController::class, 'store'])->name('seo.store');

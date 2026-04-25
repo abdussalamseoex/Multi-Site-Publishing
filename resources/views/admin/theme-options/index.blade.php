@@ -24,9 +24,12 @@
                 <input type="hidden" name="layout_data" :value="JSON.stringify(blocks)">
                 <input type="hidden" name="sidebar_data" :value="JSON.stringify(sidebarBlocks)">
 
-                <div class="flex justify-between items-center mb-6">
-                    <p class="text-gray-600">You are currently editing the layout for the <strong class="uppercase text-indigo-600">{{ $activeTheme }}</strong> theme. Any changes saved here will only apply to this theme.</p>
-                    <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded font-bold shadow-sm hover:bg-indigo-700 transition">Save All Layouts</button>
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+                    <p class="text-gray-600 flex-1">You are currently editing the layout for the <strong class="uppercase text-indigo-600">{{ $activeTheme }}</strong> theme. Any changes saved here will only apply to this theme.</p>
+                    <div class="flex gap-3">
+                        <a href="{{ route('admin.theme.options.reset') }}" onclick="return confirm('Are you sure you want to reset this theme to its original design? This will delete your current blocks.')" class="bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded font-bold shadow-sm hover:bg-red-100 transition whitespace-nowrap">Factory Reset Theme</a>
+                        <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded font-bold shadow-sm hover:bg-indigo-700 transition whitespace-nowrap">Save All Layouts</button>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
