@@ -46,89 +46,27 @@
             
             if (empty($blocks)) {
                 $blocks = [
-                    ['type' => 'legacy_theme_content', 'title' => 'Original Theme Design']
+                    ['id' => uniqid(), 'type' => 'hero_grid', 'title' => 'Featured', 'category_id' => null, 'limit' => 2],
+                    ['id' => uniqid(), 'type' => 'latest_news', 'title' => 'Latest Articles', 'category_id' => null, 'limit' => 10]
                 ];
             }
         @endphp
 
         <div class="space-y-12">
+            <!-- Theme Header Text -->
+            <header class="py-12">
+                <h1 class="text-4xl font-extrabold tracking-tight text-gray-900 border-b-4 border-primary inline-block mb-4">
+                    Hi, welcome.
+                </h1>
+                <p class="text-lg text-gray-500">{{ \App\Models\Setting::get('site_tagline', 'A beautiful, typography-first reading experience.') }}</p>
+            </header>
+
             @foreach($blocks as $block)
-                
-                @if($block['type'] === 'legacy_theme_content')
-                    <!-- Original Hardcoded Minimal Theme Content -->
-                    <header class="py-12">
-                        <h1 class="text-4xl font-extrabold tracking-tight text-gray-900 border-b-4 border-primary inline-block mb-4">
-                            Hi, welcome.
-                        </h1>
-                        <p class="text-lg text-gray-500">{{ \App\Models\Setting::get('site_tagline', 'A beautiful, typography-first reading experience.') }}</p>
-                    </header>
-
-                    @if(\App\Models\Setting::get('show_featured_section', '1') == '1' && $featuredPosts->count())
-                    <section class="mb-16">
-                        <h2 class="text-sm font-bold uppercase tracking-widest text-primary mb-8">Featured</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-                            @foreach($featuredPosts as $post)
-                                <article class="group cursor-pointer">
-                                    <a href="{{ route('frontend.post', $post->slug) }}" class="block">
-                                        @if($post->featured_image)
-                                            <div class="aspect-video w-full overflow-hidden rounded-lg mb-4">
-                                                <img src="{{ Str::startsWith($post->featured_image, 'http') ? $post->featured_image : url($post->featured_image) }}" class="object-cover w-full h-full group-hover:scale-105 transition duration-500">
-                                            </div>
-                                        @endif
-                                        <h3 class="text-2xl font-bold mb-2 group-hover:text-primary transition line-clamp-2">{{ $post->title }}</h3>
-                                        <p class="text-gray-600 mb-4 leading-relaxed">{{ Str::limit($post->summary ?? strip_tags($post->content), 120) }}</p>
-                                        <span class="text-xs font-mono text-gray-400 uppercase">{{ $post->created_at->format('M d, Y') }}</span>
-                                    </a>
-                                </article>
-                            @endforeach
-                        </div>
-                    </section>
-                    @endif
-
-                    @if(\App\Models\Setting::get('show_latest_section', '1') == '1')
-                    <section>
-                        <h2 class="text-sm font-bold uppercase tracking-widest text-gray-400 mb-8">Latest Articles</h2>
-                        <div class="space-y-12">
-                            @forelse($latestPosts as $post)
-                                <article class="group border-b pb-12 flex flex-col md:flex-row gap-8">
-                                    <div class="flex-1">
-                                        <article class="block relative">
-                                            <a href="{{ route('frontend.post', $post->slug) }}" class="absolute inset-0 z-0"></a>
-                                            <h3 class="text-3xl font-bold mb-3 group-hover:underline decoration-4 underline-offset-4 text-primary line-clamp-2">{{ $post->title }}</h3>
-                                            <p class="text-gray-600 text-lg leading-relaxed mb-4">{{ Str::limit(strip_tags($post->content), 200) }}</p>
-                                            <div class="flex items-center text-sm font-mono text-gray-400 uppercase gap-4">
-                                                <span>{{ $post->created_at->format('F d, Y') }}</span>
-                                                <span>&bull;</span>
-                                                <a href="{{ isset($post->category) ? route('frontend.category', $post->category->slug) : '#' }}" class="hover:opacity-80 transition"><span>{{ $post->category->name ?? 'Uncategorized' }}</span></a>
-                                            </div>
-                                        </article>
-                                    </div>
-                                    @if($post->featured_image)
-                                        <div class="w-full md:w-1/3 aspect-video md:aspect-square overflow-hidden rounded-lg">
-                                            <img src="{{ Str::startsWith($post->featured_image, 'http') ? $post->featured_image : url($post->featured_image) }}" class="object-cover w-full h-full group-hover:opacity-80 transition">
-                                        </div>
-                                    @endif
-                                </article>
-                            @empty
-                                <p class="text-xl text-gray-400">No posts written yet.</p>
-                            @endforelse
-                        </div>
-                        <div class="mt-12">{{ $latestPosts->links() }}</div>
-                    </section>
-                    @endif
-
-                @elseif($block['type'] === 'hero_grid')
-                    @include('themes.good.components.hero_grid', ['block' => $block])
-                @elseif($block['type'] === 'latest_news')
-                    @include('themes.good.components.latest_news', ['block' => $block])
-                @elseif($block['type'] === 'category_spotlight')
-                    @include('themes.good.components.category_spotlight', ['block' => $block])
-                @elseif($block['type'] === 'category_grid')
-                    @include('themes.good.components.category_grid', ['block' => $block])
-                @elseif($block['type'] === 'ad_block')
-                    @include('themes.good.components.ad_block', ['block' => $block])
+                @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
+                    @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
+                @else
+                    @include("themes.good.components.{$block['type']}", ['block' => $block])
                 @endif
-                
             @endforeach
         </div>
     </main>
