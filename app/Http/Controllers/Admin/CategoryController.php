@@ -82,4 +82,16 @@ class CategoryController extends Controller
         $category->delete();
         return back()->with('status', 'Category deleted successfully.');
     }
+
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'categories' => 'required|array',
+            'categories.*' => 'exists:categories,id'
+        ]);
+
+        Category::whereIn('id', $request->categories)->delete();
+
+        return back()->with('status', count($request->categories) . ' categories deleted successfully.');
+    }
 }

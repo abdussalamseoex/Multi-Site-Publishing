@@ -114,10 +114,20 @@
                 </div>
 
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900 overflow-x-auto">
+                    <form action="{{ route('admin.categories.bulk_destroy') }}" method="POST" id="bulk-delete-form">
+                        @csrf
+                        <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="select-all" class="rounded text-indigo-600 border-gray-300 shadow-sm focus:ring-indigo-500 cursor-pointer">
+                                <label for="select-all" class="text-sm text-gray-700 cursor-pointer select-none">Select All</label>
+                            </div>
+                            <button type="submit" class="px-3 py-1.5 bg-red-600 text-white shadow-sm rounded-md text-xs font-bold hover:bg-red-700 transition" onclick="return confirm('Are you sure you want to delete the selected categories?')">Delete Selected</button>
+                        </div>
+                        <div class="p-0 text-gray-900 overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase w-10"></th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Posts</th>
@@ -127,6 +137,9 @@
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @foreach($categories as $cat)
                                 <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <input type="checkbox" name="categories[]" value="{{ $cat->id }}" class="category-checkbox rounded text-indigo-600 border-gray-300 shadow-sm focus:ring-indigo-500 cursor-pointer">
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
                                         @if($cat->parent_id)
                                             <span class="text-gray-400 font-normal">↳ {{ $cat->parent->name }} /</span>
@@ -148,10 +161,30 @@
                             </tbody>
                         </table>
                     </div>
+                    </form>
                 </div>
             </div>
 
         </div>
     </div>
+
+    <script>
+        document.getElementById('select-all').addEventListener('change', function() {
+            let checkboxes = document.querySelectorAll('.category-checkbox');
+            checkboxes.forEach(cb => cb.checked = this.checked);
+        });
+
+        // If a single checkbox is unchecked, uncheck the select-all
+        document.querySelectorAll('.category-checkbox').forEach(cb => {
+            cb.addEventListener('change', function() {
+                if (!this.checked) {
+                    document.getElementById('select-all').checked = false;
+                } else {
+                    let allChecked = Array.from(document.querySelectorAll('.category-checkbox')).every(c => c.checked);
+                    if (allChecked) document.getElementById('select-all').checked = true;
+                }
+            });
+        });
+    </script>
 </x-app-layout>
 
