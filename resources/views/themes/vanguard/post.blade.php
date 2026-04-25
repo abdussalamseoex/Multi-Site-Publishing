@@ -124,26 +124,25 @@
 
         <!-- Sidebar -->
         <aside class="space-y-8 mt-24">
-            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                <h3 class="text-xl font-gaming font-bold border-b-2 border-slate-100 pb-2 mb-6 uppercase"><span class="border-b-4 border-primary pb-2.5">Follow Us</span></h3>
-                <div class="flex gap-4">
-                    <a href="#" class="flex-1 bg-[#1877f2] text-white p-3 rounded-lg text-center hover:opacity-90 transition shadow border border-[#1877f2]">
-                        <svg class="h-5 w-5 mx-auto fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                    </a>
-                    <a href="#" class="flex-1 bg-[#1da1f2] text-white p-3 rounded-lg text-center hover:opacity-90 transition shadow border border-[#1da1f2]">
-                        <svg class="h-5 w-5 mx-auto fill-current" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
-                    </a>
-                </div>
-            </div>
+            @php
+                $sidebarLayoutRaw = \App\Models\Setting::get('theme_sidebar_' . $activeTheme);
+                $sidebarBlocks = $sidebarLayoutRaw ? json_decode($sidebarLayoutRaw, true) : [];
+                
+                if (empty($sidebarBlocks)) {
+                    $sidebarBlocks = [
+                        ['id' => uniqid(), 'type' => 'popular_posts', 'title' => 'Most Popular', 'limit' => 5],
+                        ['id' => uniqid(), 'type' => 'ad_block', 'title' => 'Sidebar Ad']
+                    ];
+                }
+            @endphp
 
-            <div class="bg-slate-900 rounded-xl p-8 text-center text-white relative overflow-hidden shadow-2xl border-2 border-slate-700">
-                <div class="absolute inset-0 bg-primary opacity-20"></div>
-                <div class="relative z-10">
-                    <h3 class="text-3xl font-gaming font-bold uppercase mb-2">Pro Access</h3>
-                    <p class="text-slate-300 text-sm mb-6 leading-relaxed">Experience zero ads and gain early access to our premium editorial piece.</p>
-                    <a href="#" class="inline-block bg-primary text-white font-bold uppercase tracking-widest text-[11px] px-6 py-3 rounded shadow-lg hover:bg-orange-500 hover:-translate-y-1 transition transform duration-200">Go Premium</a>
-                </div>
-            </div>
+            @foreach($sidebarBlocks as $block)
+                @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
+                    @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
+                @else
+                    @include("themes.good.components.{$block['type']}", ['block' => $block])
+                @endif
+            @endforeach
         </aside>
     </div>
 
