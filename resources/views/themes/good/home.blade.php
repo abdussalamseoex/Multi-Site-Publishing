@@ -42,7 +42,8 @@
 
     <main class="flex-grow max-w-[1200px] w-full mx-auto px-4 py-8">
         @php
-            $layoutRaw = \App\Models\Setting::get('homepage_layout');
+            // Read specific theme blocks
+            $layoutRaw = \App\Models\Setting::get('theme_blocks_good');
             $blocks = $layoutRaw ? json_decode($layoutRaw, true) : [];
             
             // Provide a rich default layout if empty so the theme looks "ready" out of the box
