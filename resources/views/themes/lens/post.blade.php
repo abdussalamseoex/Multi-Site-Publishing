@@ -103,29 +103,7 @@
 
                 <!-- Right Sidebar -->
                 <div class="col-span-1 lg:col-span-3 space-y-16">
-                    <!-- Advertising Setup -->
-                    @if(!empty(\App\Models\Setting::get('ad_placement_sidebar')))
-                    <div class="widget text-center overflow-hidden flex justify-center">
-                        <x-ad-slot placement="sidebar" />
-                    </div>
-                @endif
-
-                    <!-- More from Genre -->
-                    <div>
-                        <h4 class="text-xs font-bold tracking-[0.2em] text-gray-900 uppercase border-b border-gray-200 pb-3 mb-6">Gallery Highlights</h4>
-                        <div class="space-y-8">
-                            @foreach(\App\Models\Post::where('category_id', $post->category_id)->where('id', '!=', $post->id)->where('status', 'published')->latest()->take(3)->get() as $rel)
-                            <article class="group block text-center">
-                                <a href="{{ route('frontend.post', $rel->slug) }}" class="block w-full aspect-[4/3] overflow-hidden bg-gray-100 mb-4">
-                                    @if($rel->featured_image)
-                                        <img src="{{ Str::startsWith($rel->featured_image, 'http') ? $rel->featured_image : url($rel->featured_image) }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
-                                    @endif
-                                </a>
-                                <h5 class="text-sm font-medium text-gray-900 leading-snug group-hover:text-gray-500 transition">{{ $rel->title }}</h5>
-                            </article>
-                            @endforeach
-                        </div>
-                    </div>
+                    @include('themes.components.dynamic_sidebar')
                 </div>
             </div>
         </div>

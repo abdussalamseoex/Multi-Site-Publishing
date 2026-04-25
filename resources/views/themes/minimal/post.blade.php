@@ -107,42 +107,7 @@
 
         <!-- Sidebar -->
         <aside class="space-y-8">
-            <div class="bg-white shadow-sm p-8 rounded-2xl border border-gray-100">
-                <h3 class="text-xs font-bold uppercase tracking-widest text-primary mb-6">About the Author</h3>
-                <div class="flex items-center gap-4 mb-4">
-                    <div class="w-16 h-16 bg-gray-900 text-white rounded-full flex items-center justify-center font-bold text-2xl shadow-inner">
-                        {{ substr($post->user->name ?? 'A', 0, 1) }}
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-xl text-gray-900">{{ $post->user->name ?? 'Author' }}</h4>
-                        <p class="text-xs text-gray-500 font-medium tracking-wide uppercase mt-1">Contributing Writer</p>
-                    </div>
-                </div>
-                <p class="text-sm text-gray-600 leading-relaxed mt-4">Writing about the things that matter. Exploring ideas and sharing insights with the world.</p>
-            </div>
-
-            <div class="bg-white shadow-sm p-8 rounded-2xl border border-gray-100">
-                <h3 class="text-xs font-bold uppercase tracking-widest text-primary mb-6">Explore Categories</h3>
-                <ul class="space-y-3 text-sm">
-                    @foreach(\App\Models\Category::all() as $cat)
-                        <li>
-                            <a href="#" class="flex items-center justify-between text-gray-600 hover:text-primary hover:translate-x-1 transition transform duration-200">
-                                <span class="font-bold">{{ $cat->name }}</span>
-                                <span class="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-500">{{ $cat->posts()->count() }}</span>
-                            </a>
-                        </li>
-                    @endforeach
-                </ul>
-            </div>
-            
-            <div class="bg-primary text-white p-8 rounded-2xl shadow-lg">
-                <h3 class="text-2xl font-bold mb-2">Subscribe</h3>
-                <p class="text-white/80 text-sm mb-6">Get the latest posts delivered right to your inbox.</p>
-                <form onsubmit="event.preventDefault(); alert('Subscribed!');" class="flex flex-col gap-3">
-                    <input type="email" placeholder="Email address..." class="px-4 py-3 rounded-lg text-gray-900 text-sm w-full outline-none focus:ring-2 focus:ring-white">
-                    <button class="bg-gray-900 text-white font-bold py-3 rounded-lg hover:bg-black transition text-sm uppercase tracking-widest">Subscribe</button>
-                </form>
-            </div>
+            @include('themes.components.dynamic_sidebar')
         </aside>
     </div>
     

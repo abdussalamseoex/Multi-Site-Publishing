@@ -100,35 +100,7 @@
 
         <!-- Sidebar -->
         <aside class="space-y-12 border-t-4 border-black lg:border-t-0 pt-12 lg:pt-0">
-            <div>
-                <h3 class="text-sm font-black uppercase tracking-widest border-b-2 border-black pb-2 mb-6">Contributor</h3>
-                <div class="bg-white p-6 border border-gray-200 text-center">
-                    <div class="w-20 h-20 bg-black text-white mx-auto rounded-full flex items-center justify-center font-bold text-4xl font-serif mb-4">
-                        {{ substr($post->user->name ?? 'M', 0, 1) }}
-                    </div>
-                    <h4 class="font-black text-xl mb-1">{{ $post->user->name ?? 'Editorial Team' }}</h4>
-                    <p class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-4">Senior Editor</p>
-                    <p class="text-sm text-gray-600 font-sans italic">Delivering the latest insights in fashion, lifestyle, and culture.</p>
-                </div>
-            </div>
-
-            <div>
-                <h3 class="text-sm font-black uppercase tracking-widest border-b-2 border-black pb-2 mb-6">Topics</h3>
-                <div class="flex flex-wrap gap-2 font-sans font-bold text-xs uppercase tracking-wider">
-                    @foreach(\App\Models\Category::all() as $cat)
-                        <a href="#" class="px-3 py-2 bg-gray-100 hover:bg-primary hover:text-white transition">{{ $cat->name }}</a>
-                    @endforeach
-                </div>
-            </div>
-
-            <div class="bg-black text-white p-8 text-center border-4 border-black">
-                <h3 class="text-2xl font-black uppercase tracking-widest mb-4">The VIP List</h3>
-                <p class="text-gray-400 text-sm font-sans mb-6">Exclusive content straight to your inbox.</p>
-                <form onsubmit="event.preventDefault(); alert('Subscribed to VIP List!');" class="flex flex-col gap-4 font-sans">
-                    <input type="email" placeholder="Your Email" class="bg-transparent border border-gray-600 px-4 py-3 text-white text-sm text-center focus:border-white outline-none">
-                    <button class="bg-white text-black font-bold uppercase tracking-widest py-3 hover:bg-gray-200 transition text-sm">Join Now</button>
-                </form>
-            </div>
+            @include('themes.components.dynamic_sidebar')
         </aside>
     </div>
     

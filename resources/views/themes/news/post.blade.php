@@ -129,33 +129,7 @@
 
             <!-- RIGHT COLUMN (Sidebar - 1/3 width) -->
             <div class="lg:col-span-1 space-y-10">
-                <!-- ADVERTISEMENT -->
-                @if(!empty(\App\Models\Setting::get('ad_placement_sidebar')))
-                    <div class="widget text-center overflow-hidden flex justify-center">
-                        <x-ad-slot placement="sidebar" />
-                    </div>
-                @endif
-
-                <!-- LATEST NEWS -->
-                <div class="widget">
-                    <h3 class="section-title">Latest News</h3>
-                    <div class="space-y-4">
-                        @foreach(\App\Models\Post::where('status', 'published')->latest()->take(5)->get() as $pop)
-                        <a href="{{ route('frontend.post', $pop->slug) }}" class="flex gap-4 group items-center">
-                            @if($pop->featured_image)
-                                <div class="w-16 h-16 shrink-0 overflow-hidden relative">
-                                    <img src="{{ url($pop->featured_image) }}" class="w-full h-full object-cover">
-                                    <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition"></div>
-                                </div>
-                            @endif
-                            <div>
-                                <h4 class="text-sm font-bold leading-snug group-hover:text-blue-600 transition line-clamp-2 mb-1">{{ $pop->title }}</h4>
-                                <div class="font-ui text-[10px] text-gray-400">{{ $pop->created_at->format('M d, Y') }}</div>
-                            </div>
-                        </a>
-                        @endforeach
-                    </div>
-                </div>
+                @include('themes.components.dynamic_sidebar')
             </div>
 
         </div>
