@@ -52,26 +52,25 @@
 
     <div class="max-w-7xl mx-auto px-4 py-10">
         @php
+            $activeTheme = \App\Models\Setting::get('active_theme', 'minimal');
             $layoutRaw = \App\Models\Setting::get('theme_blocks_' . $activeTheme);
             $blocks = $layoutRaw ? json_decode($layoutRaw, true) : [];
             
             if (empty($blocks)) {
                 $blocks = [
-                    ['id' => uniqid(), 'type' => 'hero_grid', 'title' => 'Market Watch', 'category_id' => null, 'limit' => 5],
+                    ['id' => uniqid(), 'type' => 'hero_grid', 'title' => 'Top Stories', 'category_id' => null, 'limit' => 5],
                     ['id' => uniqid(), 'type' => 'latest_news', 'title' => 'Latest Wire', 'category_id' => null, 'limit' => 6]
                 ];
             }
         @endphp
-
-        <!-- Render Hero Grid if it exists at the top -->
-        @foreach($blocks as $index => $block)
+        <!-- Market Overview / Main News -->
+        @foreach($blocks as $block)
             @if($block['type'] === 'hero_grid')
                 @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
                     @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
                 @else
                     @include("themes.good.components.{$block['type']}", ['block' => $block])
                 @endif
-                @php unset($blocks[$index]); @endphp
             @endif
         @endforeach
 
@@ -79,10 +78,12 @@
             <!-- Latest Wire -->
             <main class="lg:col-span-2">
                 @foreach($blocks as $block)
-                    @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
-                        @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
-                    @else
-                        @include("themes.good.components.{$block['type']}", ['block' => $block])
+                    @if($block['type'] !== 'hero_grid')
+                        @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
+                            @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
+                        @else
+                            @include("themes.good.components.{$block['type']}", ['block' => $block])
+                        @endif
                     @endif
                 @endforeach
             </main>

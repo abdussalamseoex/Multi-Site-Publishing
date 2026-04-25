@@ -60,23 +60,21 @@
                 ];
             }
         @endphp
-
-        <!-- Render Hero Grid if it exists at the top -->
-        @foreach($blocks as $index => $block)
+        <!-- Hero Section (Featured) -->
+        @foreach($blocks as $block)
             @if($block['type'] === 'hero_grid')
                 @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
                     @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
                 @else
                     @include("themes.good.components.{$block['type']}", ['block' => $block])
                 @endif
-                @php unset($blocks[$index]); @endphp
             @endif
         @endforeach
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <main class="lg:col-span-3 space-y-12">
                 @foreach($blocks as $block)
-                    @if($block['type'] !== 'category_spotlight')
+                    @if($block['type'] !== 'category_spotlight' && $block['type'] !== 'hero_grid')
                         @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
                             @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
                         @else
@@ -110,7 +108,6 @@
             </aside>
         </div>
 
-        <!-- Render Category Spotlight (Deep Dive) at the bottom if it exists -->
         @foreach($blocks as $block)
             @if($block['type'] === 'category_spotlight')
                 @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))

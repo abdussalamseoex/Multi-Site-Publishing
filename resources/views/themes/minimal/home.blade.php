@@ -41,26 +41,19 @@
 
     <main class="max-w-4xl mx-auto px-6 pb-20 mt-8">
         @php
-            $layoutRaw = \App\Models\Setting::get('theme_blocks_minimal');
+            $activeTheme = \App\Models\Setting::get('active_theme', 'minimal');
+            $layoutRaw = \App\Models\Setting::get('theme_blocks_' . $activeTheme);
             $blocks = $layoutRaw ? json_decode($layoutRaw, true) : [];
             
             if (empty($blocks)) {
                 $blocks = [
                     ['id' => uniqid(), 'type' => 'hero_grid', 'title' => 'Featured', 'category_id' => null, 'limit' => 2],
-                    ['id' => uniqid(), 'type' => 'latest_news', 'title' => 'Latest Articles', 'category_id' => null, 'limit' => 10]
+                    ['id' => uniqid(), 'type' => 'latest_news', 'title' => 'Latest Articles', 'category_id' => null, 'limit' => 6]
                 ];
             }
         @endphp
 
         <div class="space-y-12">
-            <!-- Theme Header Text -->
-            <header class="py-12">
-                <h1 class="text-4xl font-extrabold tracking-tight text-gray-900 border-b-4 border-primary inline-block mb-4">
-                    Hi, welcome.
-                </h1>
-                <p class="text-lg text-gray-500">{{ \App\Models\Setting::get('site_tagline', 'A beautiful, typography-first reading experience.') }}</p>
-            </header>
-
             @foreach($blocks as $block)
                 @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
                     @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])

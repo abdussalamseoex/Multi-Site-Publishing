@@ -26,23 +26,93 @@ class ThemeOptionsController extends Controller
 
         // Provide a default layout if it's completely empty
         if (empty($homepageLayout)) {
-            $homepageLayout = [
-                ['id' => uniqid(), 'type' => 'hero_grid', 'title' => 'Top Stories', 'category_id' => null, 'limit' => 4],
-                ['id' => uniqid(), 'type' => 'latest_news', 'title' => 'Latest Articles', 'category_id' => null, 'limit' => 6],
-                ['id' => uniqid(), 'type' => 'ad_block', 'title' => 'Middle Ad', 'category_id' => null, 'limit' => null],
-                ['id' => uniqid(), 'type' => 'category_spotlight', 'title' => 'Editorial Choice', 'category_id' => null, 'limit' => 5],
-                ['id' => uniqid(), 'type' => 'category_grid', 'title' => 'More News', 'category_id' => null, 'limit' => 6]
-            ];
+            $homepageLayout = self::getDefaultBlocks($activeTheme);
         }
 
         if (empty($sidebarLayout)) {
-            $sidebarLayout = [
-                ['id' => uniqid(), 'type' => 'social_counter', 'title' => 'Stay Connected'],
-                ['id' => uniqid(), 'type' => 'ad_block', 'title' => 'Sidebar Ad'],
-                ['id' => uniqid(), 'type' => 'popular_posts', 'title' => 'Most Popular', 'limit' => 5],
-                ['id' => uniqid(), 'type' => 'categories_list', 'title' => 'Categories', 'limit' => 6],
-                ['id' => uniqid(), 'type' => 'newsletter', 'title' => 'Subscribe']
-            ];
+            $sidebarLayout = self::getDefaultSidebar($activeTheme);
+        }
+
+        return view('admin.theme-options.index', compact('categories', 'homepageLayout', 'sidebarLayout', 'activeTheme'));
+    }
+
+    public static function getDefaultBlocks($theme)
+    {
+        switch ($theme) {
+            case 'vanguard':
+            case 'estate':
+            case 'vitality':
+                return [
+                    ['id' => uniqid(), 'type' => 'hero_grid', 'title' => 'Featured', 'category_id' => null, 'limit' => 4],
+                    ['id' => uniqid(), 'type' => 'latest_news', 'title' => 'Latest Articles', 'category_id' => null, 'limit' => 6]
+                ];
+            case 'voyage':
+            case 'news':
+                return [
+                    ['id' => uniqid(), 'type' => 'hero_grid', 'title' => 'Top Stories', 'category_id' => null, 'limit' => 5],
+                    ['id' => uniqid(), 'type' => 'category_spotlight', 'title' => "Don't Miss", 'category_id' => null, 'limit' => 5],
+                    ['id' => uniqid(), 'type' => 'category_grid', 'title' => 'Lifestyle News', 'category_id' => null, 'limit' => 4],
+                    ['id' => uniqid(), 'type' => 'latest_news', 'title' => 'Latest Articles', 'category_id' => null, 'limit' => 6]
+                ];
+            case 'blog':
+                return [
+                    ['id' => uniqid(), 'type' => 'latest_news', 'title' => 'Latest Articles', 'category_id' => null, 'limit' => 10]
+                ];
+            case 'minimal':
+                return [
+                    ['id' => uniqid(), 'type' => 'hero_grid', 'title' => 'Featured', 'category_id' => null, 'limit' => 2],
+                    ['id' => uniqid(), 'type' => 'latest_news', 'title' => 'Latest Articles', 'category_id' => null, 'limit' => 6]
+                ];
+            default:
+                return [
+                    ['id' => uniqid(), 'type' => 'hero_grid', 'title' => 'Top Stories', 'category_id' => null, 'limit' => 4],
+                    ['id' => uniqid(), 'type' => 'latest_news', 'title' => 'Latest Articles', 'category_id' => null, 'limit' => 6],
+                    ['id' => uniqid(), 'type' => 'ad_block', 'title' => 'Middle Ad', 'category_id' => null, 'limit' => null],
+                    ['id' => uniqid(), 'type' => 'category_spotlight', 'title' => 'Editorial Choice', 'category_id' => null, 'limit' => 5],
+                    ['id' => uniqid(), 'type' => 'category_grid', 'title' => 'More News', 'category_id' => null, 'limit' => 6]
+                ];
+        }
+    }
+
+    public static function getDefaultSidebar($theme)
+    {
+        switch ($theme) {
+            case 'vanguard':
+            case 'minimal':
+                return [
+                    ['id' => uniqid(), 'type' => 'social_counter', 'title' => 'Stay Connected'],
+                    ['id' => uniqid(), 'type' => 'popular_posts', 'title' => 'Most Popular', 'limit' => 5],
+                    ['id' => uniqid(), 'type' => 'ad_block', 'title' => 'Sidebar Ad']
+                ];
+            case 'blog':
+                return [
+                    ['id' => uniqid(), 'type' => 'about_agency', 'title' => 'About Us'],
+                    ['id' => uniqid(), 'type' => 'popular_posts', 'title' => 'Featured', 'limit' => 5],
+                    ['id' => uniqid(), 'type' => 'ad_block', 'title' => 'Sidebar Ad']
+                ];
+            case 'vitality':
+                return [
+                    ['id' => uniqid(), 'type' => 'popular_posts', 'title' => 'Trending Topics', 'limit' => 5],
+                    ['id' => uniqid(), 'type' => 'newsletter', 'title' => 'Stay Healthy']
+                ];
+            case 'voyage':
+                return [
+                    ['id' => uniqid(), 'type' => 'popular_tags', 'title' => 'Popular Tags'],
+                    ['id' => uniqid(), 'type' => 'ad_block', 'title' => 'Sidebar Ad']
+                ];
+            case 'estate':
+                return [
+                    ['id' => uniqid(), 'type' => 'popular_posts', 'title' => 'Popular Local', 'limit' => 4],
+                    ['id' => uniqid(), 'type' => 'about_agency', 'title' => 'List With Us']
+                ];
+            default:
+                return [
+                    ['id' => uniqid(), 'type' => 'social_counter', 'title' => 'Stay Connected'],
+                    ['id' => uniqid(), 'type' => 'ad_block', 'title' => 'Sidebar Ad'],
+                    ['id' => uniqid(), 'type' => 'popular_posts', 'title' => 'Most Popular', 'limit' => 5],
+                    ['id' => uniqid(), 'type' => 'categories_list', 'title' => 'Categories', 'limit' => 6],
+                    ['id' => uniqid(), 'type' => 'newsletter', 'title' => 'Subscribe']
+                ];
         }
 
         return view('admin.theme-options.index', compact('categories', 'homepageLayout', 'sidebarLayout', 'activeTheme'));

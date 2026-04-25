@@ -27,19 +27,19 @@
 
 
     <div class="max-w-6xl mx-auto px-4 py-8 flex flex-col md:flex-row gap-8">
+        @php
+            $activeTheme = \App\Models\Setting::get('active_theme', 'blog');
+            $layoutRaw = \App\Models\Setting::get('theme_blocks_' . $activeTheme);
+            $blocks = $layoutRaw ? json_decode($layoutRaw, true) : [];
+            
+            if (empty($blocks)) {
+                $blocks = [
+                    ['id' => uniqid(), 'type' => 'latest_news', 'title' => 'Latest Articles', 'category_id' => null, 'limit' => 10]
+                ];
+            }
+        @endphp
         
         <main class="w-full md:w-2/3">
-            @php
-                $layoutRaw = \App\Models\Setting::get('theme_blocks_' . $activeTheme);
-                $blocks = $layoutRaw ? json_decode($layoutRaw, true) : [];
-                
-                if (empty($blocks)) {
-                    $blocks = [
-                        ['id' => uniqid(), 'type' => 'latest_news', 'title' => 'Latest Articles', 'category_id' => null, 'limit' => 10]
-                    ];
-                }
-            @endphp
-
             @foreach($blocks as $block)
                 @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
                     @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
@@ -50,17 +50,16 @@
         </main>
 
         <aside class="w-full md:w-1/3">
-            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 sticky top-8">
-                <h3 class="font-bold text-lg border-b pb-2 mb-4">About Us</h3>
-                <p class="text-sm text-gray-600 mb-6">Welcome to {{ \App\Models\Setting::get('site_title') }}. Here you will find the best articles and guest posts.</p>
-                
+            <div class="space-y-8">
                 @php
                     $sidebarLayoutRaw = \App\Models\Setting::get('theme_sidebar_' . $activeTheme);
                     $sidebarBlocks = $sidebarLayoutRaw ? json_decode($sidebarLayoutRaw, true) : [];
                     
                     if (empty($sidebarBlocks)) {
                         $sidebarBlocks = [
-                            ['id' => uniqid(), 'type' => 'popular_posts', 'title' => 'Featured', 'limit' => 5]
+                            ['id' => uniqid(), 'type' => 'about_agency', 'title' => 'About Us'],
+                            ['id' => uniqid(), 'type' => 'popular_posts', 'title' => 'Featured', 'limit' => 5],
+                            ['id' => uniqid(), 'type' => 'ad_block', 'title' => 'Sidebar Ad']
                         ];
                     }
                 @endphp

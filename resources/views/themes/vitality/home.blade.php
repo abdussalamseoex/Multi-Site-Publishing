@@ -43,29 +43,27 @@
     @endif
 
 
-    <!-- Hero / Featured -->
     <div class="max-w-7xl mx-auto px-4 py-10">
         @php
+            $activeTheme = \App\Models\Setting::get('active_theme', 'minimal');
             $layoutRaw = \App\Models\Setting::get('theme_blocks_' . $activeTheme);
             $blocks = $layoutRaw ? json_decode($layoutRaw, true) : [];
             
             if (empty($blocks)) {
                 $blocks = [
-                    ['id' => uniqid(), 'type' => 'hero_grid', 'title' => 'Featured', 'category_id' => null, 'limit' => 4],
+                    ['id' => uniqid(), 'type' => 'hero_grid', 'title' => 'Top Stories', 'category_id' => null, 'limit' => 4],
                     ['id' => uniqid(), 'type' => 'latest_news', 'title' => 'Recent Insights', 'category_id' => null, 'limit' => 6]
                 ];
             }
         @endphp
-
-        <!-- Render Hero Grid if it exists at the top -->
-        @foreach($blocks as $index => $block)
+        <!-- Hero / Featured -->
+        @foreach($blocks as $block)
             @if($block['type'] === 'hero_grid')
                 @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
                     @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
                 @else
                     @include("themes.good.components.{$block['type']}", ['block' => $block])
                 @endif
-                @php unset($blocks[$index]); @endphp
             @endif
         @endforeach
 
@@ -73,10 +71,12 @@
             <!-- Latest Wellness Articles -->
             <main class="lg:col-span-2">
                 @foreach($blocks as $block)
-                    @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
-                        @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
-                    @else
-                        @include("themes.good.components.{$block['type']}", ['block' => $block])
+                    @if($block['type'] !== 'hero_grid')
+                        @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
+                            @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
+                        @else
+                            @include("themes.good.components.{$block['type']}", ['block' => $block])
+                        @endif
                     @endif
                 @endforeach
             </main>
@@ -90,7 +90,7 @@
                     if (empty($sidebarBlocks)) {
                         $sidebarBlocks = [
                             ['id' => uniqid(), 'type' => 'popular_posts', 'title' => 'Trending Topics', 'limit' => 5],
-                            ['id' => uniqid(), 'type' => 'newsletter_block', 'title' => 'Stay Healthy']
+                            ['id' => uniqid(), 'type' => 'newsletter', 'title' => 'Stay Healthy']
                         ];
                     }
                 @endphp

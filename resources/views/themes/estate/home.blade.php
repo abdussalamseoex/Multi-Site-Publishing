@@ -42,44 +42,48 @@
     @endif
 
 
-    <!-- Hero Showcase -->
-        @php
-            $layoutRaw = \App\Models\Setting::get('theme_blocks_' . $activeTheme);
-            $blocks = $layoutRaw ? json_decode($layoutRaw, true) : [];
-            
-            if (empty($blocks)) {
-                $blocks = [
-                    ['id' => uniqid(), 'type' => 'hero_grid', 'title' => 'Featured', 'category_id' => null, 'limit' => 4],
-                    ['id' => uniqid(), 'type' => 'latest_news', 'title' => 'Market Insights', 'category_id' => null, 'limit' => 6]
-                ];
-            }
-        @endphp
+    @php
+        $activeTheme = \App\Models\Setting::get('active_theme', 'minimal');
+        $layoutRaw = \App\Models\Setting::get('theme_blocks_' . $activeTheme);
+        $blocks = $layoutRaw ? json_decode($layoutRaw, true) : [];
+        
+        if (empty($blocks)) {
+            $blocks = [
+                ['id' => uniqid(), 'type' => 'hero_grid', 'title' => 'Featured Properties', 'category_id' => null, 'limit' => 4],
+                ['id' => uniqid(), 'type' => 'latest_news', 'title' => 'Market Insights', 'category_id' => null, 'limit' => 5]
+            ];
+        }
+    @endphp
 
-        <!-- Render Hero Grid if it exists at the top -->
-        @foreach($blocks as $index => $block)
-            @if($block['type'] === 'hero_grid')
-                @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
-                    @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
-                @else
-                    @include("themes.good.components.{$block['type']}", ['block' => $block])
-                @endif
-                @php unset($blocks[$index]); @endphp
+    <!-- Hero Showcase -->
+    @foreach($blocks as $block)
+        @if($block['type'] === 'hero_grid')
+            @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
+                @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
+            @else
+                @include("themes.good.components.{$block['type']}", ['block' => $block])
             @endif
-        @endforeach
+        @endif
+    @endforeach
+
+    <div class="max-w-7xl mx-auto px-4 py-16">
+        
+        <!-- Grid is now part of Hero Component -->
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 mt-12">
             <!-- Latest Articles -->
             <main class="lg:col-span-8 space-y-12">
                 @foreach($blocks as $block)
-                    @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
-                        @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
-                    @else
-                        @include("themes.good.components.{$block['type']}", ['block' => $block])
+                    @if($block['type'] !== 'hero_grid')
+                        @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
+                            @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
+                        @else
+                            @include("themes.good.components.{$block['type']}", ['block' => $block])
+                        @endif
                     @endif
                 @endforeach
             </main>
 
-            <!-- Sidebar -->
             <aside class="lg:col-span-4 space-y-12">
                 @php
                     $sidebarLayoutRaw = \App\Models\Setting::get('theme_sidebar_' . $activeTheme);
@@ -87,8 +91,8 @@
                     
                     if (empty($sidebarBlocks)) {
                         $sidebarBlocks = [
-                            ['id' => uniqid(), 'type' => 'popular_posts', 'title' => 'Trending Areas', 'limit' => 4],
-                            ['id' => uniqid(), 'type' => 'agency_widget', 'title' => 'List With Us']
+                            ['id' => uniqid(), 'type' => 'popular_posts', 'title' => 'Popular Local', 'limit' => 4],
+                            ['id' => uniqid(), 'type' => 'about_agency', 'title' => 'List With Us']
                         ];
                     }
                 @endphp
