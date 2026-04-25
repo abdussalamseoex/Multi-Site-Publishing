@@ -40,6 +40,11 @@ class ThemeOptionsController extends Controller
     {
         switch ($theme) {
             case 'vanguard':
+                return [
+                    ['id' => uniqid(), 'type' => 'hero_grid', 'title' => 'Featured', 'category_id' => null, 'limit' => 3],
+                    ['id' => uniqid(), 'type' => 'latest_news', 'title' => 'Latest Reviews', 'category_id' => null, 'limit' => 6],
+                    ['id' => uniqid(), 'type' => 'category_spotlight', 'title' => 'Deep Dive Blogs', 'category_id' => null, 'limit' => 4]
+                ];
             case 'estate':
             case 'vitality':
                 return [
@@ -78,6 +83,10 @@ class ThemeOptionsController extends Controller
     {
         switch ($theme) {
             case 'vanguard':
+                return [
+                    ['id' => uniqid(), 'type' => 'popular_posts', 'title' => 'Most Popular', 'limit' => 5],
+                    ['id' => uniqid(), 'type' => 'ad_block', 'title' => 'Sidebar Ad']
+                ];
             case 'minimal':
                 return [
                     ['id' => uniqid(), 'type' => 'social_counter', 'title' => 'Stay Connected'],

@@ -1,9 +1,19 @@
 @php
-    $query = \App\Models\Post::where('status', 'published')->where('is_featured', true);
+    $limit = $block['limit'] ?? 5;
+    $query = \App\Models\Post::where('status', 'published');
     if (!empty($block['category_id'])) {
         $query->where('category_id', $block['category_id']);
     }
-    $featuredPosts = $query->latest()->take($block['limit'] ?? 5)->get();
+    
+    // First try to get featured posts
+    $featuredPosts = (clone $query)->where('is_featured', true)->latest()->take($limit)->get();
+    
+    // If not enough featured posts, fill the gap with latest regular posts
+    if ($featuredPosts->count() < $limit) {
+        $remaining = $limit - $featuredPosts->count();
+        $regularPosts = (clone $query)->where('is_featured', false)->latest()->take($remaining)->get();
+        $featuredPosts = $featuredPosts->merge($regularPosts);
+    }
 @endphp
 
 @if($featuredPosts->count() >= 5)
