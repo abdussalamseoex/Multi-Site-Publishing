@@ -48,9 +48,9 @@
 
         <!-- Ad Block -->
         @if($block['type'] === 'ad_block')
-        <div class="bg-gray-50 p-4 border border-gray-200 text-center text-gray-400 font-bold uppercase text-xs tracking-widest min-h-[250px] flex items-center justify-center rounded">
+        <div class="bg-gray-50 p-4 border border-gray-200 text-center text-gray-400 font-bold uppercase text-xs tracking-widest min-h-[250px] flex items-center justify-center rounded overflow-hidden">
             @php
-                $sidebarAd = \App\Models\Setting::get('ad_sidebar', '');
+                $sidebarAd = !empty($block['ad_code']) ? $block['ad_code'] : \App\Models\Setting::get('ad_sidebar', '');
             @endphp
             @if($sidebarAd)
                 {!! $sidebarAd !!}

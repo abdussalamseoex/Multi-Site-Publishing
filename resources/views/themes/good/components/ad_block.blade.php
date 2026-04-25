@@ -1,6 +1,6 @@
 <section class="mb-10 text-center flex justify-center w-full">
     @php
-        $adCode = \App\Models\Setting::get('ad_header', ''); // Using header or specific slot
+        $adCode = !empty($block['ad_code']) ? $block['ad_code'] : \App\Models\Setting::get('ad_header', '');
     @endphp
     
     @if(!empty($adCode))

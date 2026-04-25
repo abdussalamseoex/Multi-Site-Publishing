@@ -113,6 +113,13 @@
                                                     <input type="number" min="1" max="20" x-model="block.limit" class="w-full border-gray-300 rounded shadow-sm text-xs py-1.5">
                                                 </div>
                                             </template>
+
+                                            <template x-if="block.type === 'ad_block'">
+                                                <div class="col-span-1 md:col-span-2">
+                                                    <label class="block text-xs font-bold text-gray-700 mb-1">Ad Code (HTML/JS)</label>
+                                                    <textarea x-model="block.ad_code" rows="3" class="w-full border-gray-300 rounded shadow-sm text-xs py-1.5 font-mono text-purple-700" placeholder="Paste your ad code here..."></textarea>
+                                                </div>
+                                            </template>
                                         </div>
                                     </div>
                                 </template>
@@ -165,6 +172,13 @@
                                                     <input type="number" min="1" max="10" x-model="block.limit" class="w-full border-gray-300 rounded shadow-sm text-xs py-1">
                                                 </div>
                                             </template>
+
+                                            <template x-if="block.type === 'ad_block'">
+                                                <div>
+                                                    <label class="block text-[10px] font-bold text-gray-700 mb-1">Ad Code (HTML/JS)</label>
+                                                    <textarea x-model="block.ad_code" rows="3" class="w-full border-gray-300 rounded shadow-sm text-xs py-1 font-mono text-purple-700" placeholder="Paste 300x250 ad code..."></textarea>
+                                                </div>
+                                            </template>
                                         </div>
                                     </div>
                                 </template>
@@ -205,7 +219,8 @@
                         type: type,
                         title: this.getDefaultTitle(type),
                         category_id: '',
-                        limit: this.getDefaultLimit(type)
+                        limit: this.getDefaultLimit(type),
+                        ad_code: ''
                     };
                     this.blocks.push(newBlock);
                 },
@@ -215,7 +230,8 @@
                         id: Math.random().toString(36).substr(2, 9),
                         type: type,
                         title: this.getSidebarDefaultTitle(type),
-                        limit: this.getSidebarDefaultLimit(type)
+                        limit: this.getSidebarDefaultLimit(type),
+                        ad_code: ''
                     };
                     this.sidebarBlocks.push(newBlock);
                 },
