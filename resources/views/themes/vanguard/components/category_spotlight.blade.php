@@ -3,7 +3,8 @@
     if (!empty($block['category_id'])) {
         $query->where('category_id', $block['category_id']);
     }
-    $deepDivePosts = $query->inRandomOrder()->take($block['limit'] ?? 4)->get();
+    // Use paginate to enable numbered pagination
+    $deepDivePosts = $query->latest()->paginate($block['limit'] ?? 4);
 @endphp
 
 @if($deepDivePosts->count() > 0)
@@ -14,10 +15,10 @@
         <article class="flex flex-col sm:flex-row gap-6 group items-center bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 hover:bg-slate-800 transition relative">
             <a href="{{ route('frontend.post', $post->slug) }}" class="absolute inset-0 z-0"></a>
             <div class="w-full sm:w-40 h-32 shrink-0 rounded-lg overflow-hidden bg-slate-800 relative shadow-inner border border-slate-700">
+                <a href="{{ isset($post->category) ? route('frontend.category', $post->category->slug) : '#' }}" class="absolute top-2 left-2 z-20 hover:opacity-80 transition"><span class="bg-blue-600 text-white px-2 py-0.5 text-[9px] font-black uppercase rounded shadow-lg">{{ $post->category->name ?? 'Blog' }}</span></a>
                 @if($post->featured_image)
-                    <img src="{{ Str::startsWith($post->featured_image, 'http') ? $post->featured_image : url($post->featured_image) }}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition duration-500 group-hover:scale-105">
+                    <img src="{{ Str::startsWith($post->featured_image, 'http') ? $post->featured_image : url($post->featured_image) }}" class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition duration-500 group-hover:scale-105 z-10">
                 @endif
-                <a href="{{ isset($post->category) ? route('frontend.category', $post->category->slug) : '#' }}" class="hover:opacity-80 transition relative z-10"><span class="absolute top-2 left-2 bg-blue-600 text-white px-2 py-0.5 text-[9px] font-black uppercase rounded shadow-lg">{{ $post->category->name ?? 'Blog' }}</span></a>
             </div>
             <div>
                 <h4 class="text-lg font-bold leading-tight mb-2 group-hover:text-blue-400 transition line-clamp-2">{{ $post->title }}</h4>
@@ -27,5 +28,11 @@
         </article>
         @endforeach
     </div>
+    
+    @if($deepDivePosts->hasPages())
+    <div class="mt-10 pagination-wrapper relative z-20">
+        {{ $deepDivePosts->links() }}
+    </div>
+    @endif
 </div>
 @endif

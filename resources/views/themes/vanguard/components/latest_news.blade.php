@@ -18,13 +18,16 @@
         <div class="bg-white rounded-xl shadow border border-slate-200 overflow-hidden group hover:shadow-xl transition flex flex-col h-full">
             <article class="block relative h-56 overflow-hidden relative">
                 <a href="{{ route('frontend.post', $post->slug) }}" class="absolute inset-0 z-0"></a>
+                
+                <a href="{{ isset($post->category) ? route('frontend.category', $post->category->slug) : '#' }}" class="absolute top-3 left-3 z-20 hover:opacity-80 transition"><span class="{{ $badgeClass }} px-3 py-1 text-[11px] font-black uppercase tracking-widest rounded shadow-lg">{{ $post->category->name ?? 'Review' }}</span></a>
+                
                 @if($post->featured_image)
-                    <img src="{{ Str::startsWith($post->featured_image, 'http') ? $post->featured_image : url($post->featured_image) }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    <img src="{{ Str::startsWith($post->featured_image, 'http') ? $post->featured_image : url($post->featured_image) }}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-500 z-10">
                 @else
-                    <div class="w-full h-full bg-slate-200"></div>
+                    <div class="absolute inset-0 w-full h-full bg-slate-200 z-10"></div>
                 @endif
-                <a href="{{ isset($post->category) ? route('frontend.category', $post->category->slug) : '#' }}" class="hover:opacity-80 transition relative z-10"><span class="{{ $badgeClass }} absolute top-3 left-3 px-3 py-1 text-[11px] font-black uppercase tracking-widest rounded shadow-lg">{{ $post->category->name ?? 'Review' }}</span></a>
-                <div class="absolute bottom-0 right-0 bg-gray-900 text-white font-bold text-[11px] px-3 py-1.5 rounded-tl-lg shadow-lg flex items-center gap-1 border-t border-l border-gray-700">
+                
+                <div class="absolute bottom-0 right-0 bg-gray-900 text-white font-bold text-[11px] px-3 py-1.5 rounded-tl-lg shadow-lg flex items-center gap-1 border-t border-l border-gray-700 z-20">
                     <span class="text-yellow-400">★</span> {{ number_format(4 + ($post->id % 10) / 10, 1) }}
                 </div>
             </article>
