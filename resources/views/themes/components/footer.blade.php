@@ -82,8 +82,19 @@
             </ul>
         </div>
 
-        <!-- AdSense / Newsletter Space -->
-        @php $adContent = \App\Models\Setting::get('ad_content_code'); @endphp
+        <!-- Ad Space -->
+        @php 
+            $activeNetwork = \App\Models\Setting::get('active_ad_network', 'adsense');
+            if ($activeNetwork === 'adsense') {
+                $adContent = \App\Models\Setting::get('adsense_content_code');
+            } elseif ($activeNetwork === 'adsterra') {
+                $adContent = \App\Models\Setting::get('adsterra_content_code');
+            } elseif ($activeNetwork === 'medianet') {
+                $adContent = \App\Models\Setting::get('medianet_content_code');
+            } else {
+                $adContent = \App\Models\Setting::get('ad_content_code');
+            }
+        @endphp
         @if($adContent)
             <div class="flex flex-col justify-center items-center text-center overflow-hidden w-full">
                 {!! $adContent !!}
@@ -104,9 +115,14 @@
 
     </div>
 
-    <div class="max-w-7xl mx-auto px-6 mt-16 pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-400 font-medium">
-        <p>&copy; {{ date('Y') }} {{ $siteTitle }}. All rights reserved.</p>
-        <p>Built with ❤️ Modern UI</p>
+    <div class="max-w-7xl mx-auto px-6 mt-16 pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500 font-medium">
+        <p>{!! \App\Models\Setting::get('footer_copyright_text', '&copy; ' . date('Y') . ' ' . $siteTitle . '. All rights reserved.') !!}</p>
+        <p class="flex items-center gap-1">
+            Developed with <span class="text-red-500">❤️</span> by 
+            <a href="{{ \App\Models\Setting::get('footer_credit_url', '#') }}" target="_blank" rel="noopener noreferrer" class="font-bold text-gray-900 hover:text-primary transition-colors ml-1">
+                {{ \App\Models\Setting::get('footer_credit_text', 'Abdus Salam SEO Expert') }}
+            </a>
+        </p>
     </div>
 
     <x-social-contact-widgets />

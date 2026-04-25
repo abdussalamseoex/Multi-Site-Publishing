@@ -64,9 +64,11 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
-    Route::post('/settings', [SettingController::class, 'store'])->name('settings.store');
+    Route::get('/settings/seo', [SettingController::class, 'seoIndex'])->name('settings.seo');
     Route::get('/settings/limits', [SettingController::class, 'limitsIndex'])->name('settings.limits');
     Route::get('/settings/social', [SettingController::class, 'socialIndex'])->name('settings.social');
+    Route::get('/settings/ads', [SettingController::class, 'adsIndex'])->name('settings.ads');
+    Route::post('/settings', [SettingController::class, 'store'])->name('settings.store');
     Route::get('/seo', [SettingController::class, 'seoIndex'])->name('seo.index');
     Route::post('/seo', [SettingController::class, 'store'])->name('seo.store');
 

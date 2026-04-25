@@ -171,26 +171,26 @@
 
 
 
-                    <!-- Advertisement Management -->
+                    <!-- Footer Customization -->
                     <div class="bg-white shadow-sm sm:rounded-lg p-6 col-span-1 border-l-4 border-yellow-400">
                         <div class="flex items-center gap-2 mb-4">
-                            <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg>
-                            <h3 class="text-lg font-medium text-gray-900">Advertisement Management</h3>
+                            <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16"></path></svg>
+                            <h3 class="text-lg font-medium text-gray-900">Footer Customization</h3>
                         </div>
-                        <p class="text-sm text-gray-500 mb-6">Paste your Google AdSense, media.net, or custom HTML banner codes. These will securely replace the placeholders across all active frontend themes.</p>
+                        <p class="text-sm text-gray-500 mb-6">Customize the copyright text and credits shown at the very bottom of the website.</p>
                         
                         <div class="space-y-6">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Sidebar / Widget Area Ad (300x250 / 300x600)</label>
-                                <textarea name="ad_sidebar_code" rows="5" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs" placeholder="<script async src='...'></script>">{{ $settings['ad_sidebar_code'] ?? '' }}</textarea>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Copyright Text</label>
+                                <input type="text" name="footer_copyright_text" value="{{ $settings['footer_copyright_text'] ?? '&copy; ' . date('Y') . ' ' . ($settings['site_title'] ?? env('APP_NAME')) . '. All rights reserved.' }}" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Header / Top Banner Ad (728x90)</label>
-                                <textarea name="ad_header_code" rows="5" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs" placeholder="<script async src='...'></script>">{{ $settings['ad_header_code'] ?? '' }}</textarea>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Credit Name</label>
+                                <input type="text" name="footer_credit_text" value="{{ $settings['footer_credit_text'] ?? 'Abdus Salam SEO Expert' }}" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">In-Article / Bottom of Post Content Ad</label>
-                                <textarea name="ad_content_code" rows="4" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm font-mono text-xs" placeholder="<script async src='...'></script>">{{ $settings['ad_content_code'] ?? '' }}</textarea>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Credit URL (Optional)</label>
+                                <input type="url" name="footer_credit_url" value="{{ $settings['footer_credit_url'] ?? '#' }}" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="https://...">
                             </div>
                         </div>
                     </div>
