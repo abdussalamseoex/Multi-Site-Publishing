@@ -56,6 +56,14 @@
 
         <!-- Search & Mobile Toggle -->
         <div class="flex items-center space-x-5 text-dark">
+            <div class="hidden md:flex items-center space-x-3 border-r border-gray-200 pr-5 mr-1">
+                @auth
+                    <a href="{{ route('dashboard') }}" class="text-xs font-bold uppercase tracking-widest hover:text-primary transition"><i class="fas fa-tachometer-alt mr-1"></i> Dashboard</a>
+                @else
+                    <a href="{{ route('login') }}" class="text-xs font-bold uppercase tracking-widest hover:text-primary transition">Login</a>
+                    <a href="{{ route('register') }}" class="bg-primary text-white text-xs font-bold uppercase tracking-widest px-4 py-2 rounded hover:bg-dark transition">Sign Up</a>
+                @endauth
+            </div>
             <button class="hover:text-primary transition text-lg"><i class="fas fa-search"></i></button>
             <button class="md:hidden hover:text-primary transition text-2xl"><i class="fas fa-bars"></i></button>
         </div>

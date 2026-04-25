@@ -37,12 +37,12 @@ class ThemeOptionsController extends Controller
             } else {
                 // For all other themes, default to their legacy hardcoded layout
                 $homepageLayout = [
-                    ['id' => uniqid(), 'type' => 'legacy_theme_content', 'title' => 'Original Theme Design', 'category_id' => null, 'limit' => null]
+                    ['id' => uniqid(), 'type' => 'legacy_theme_content', 'title' => 'Original ' . ucfirst($activeTheme) . ' Design', 'category_id' => null, 'limit' => null]
                 ];
             }
         }
 
-        if (empty($sidebarLayout) && $activeTheme === 'good') {
+        if (empty($sidebarLayout)) {
             $sidebarLayout = [
                 ['id' => uniqid(), 'type' => 'social_counter', 'title' => 'Stay Connected'],
                 ['id' => uniqid(), 'type' => 'ad_block', 'title' => 'Sidebar Ad'],

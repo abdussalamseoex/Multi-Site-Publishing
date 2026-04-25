@@ -10,7 +10,7 @@
                     <span class="text-4xl font-black tracking-tighter text-white uppercase">{{ \App\Models\Setting::get('site_title', 'GOOD') }}<span class="text-primary">.</span></span>
                 @endif
             </a>
-            <p class="text-[13px] mb-6 leading-relaxed text-gray-500">{{ \App\Models\Setting::get('site_tagline', 'The Ultimate News Experience bringing you the latest updates around the clock. We cover technology, business, lifestyle, and global trends.') }}</p>
+            <p class="text-[13px] mb-6 leading-relaxed text-gray-500">{{ \App\Models\Setting::get('footer_description', \App\Models\Setting::get('site_tagline', 'The Ultimate News Experience bringing you the latest updates around the clock. We cover technology, business, lifestyle, and global trends.')) }}</p>
             
             <div class="flex space-x-3 mt-6">
                 <a href="{{ \App\Models\Setting::get('social_facebook', '#') }}" class="w-8 h-8 rounded bg-[#222] flex items-center justify-center hover:bg-primary text-white transition"><i class="fab fa-facebook-f text-sm"></i></a>

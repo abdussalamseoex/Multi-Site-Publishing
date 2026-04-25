@@ -77,6 +77,10 @@
                                     <input type="text" name="footer_copyright_text" value="{{ $settings['footer_copyright_text'] ?? '&copy; ' . date('Y') . ' ' . env('APP_NAME') . '. All rights reserved.' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
                                 </div>
                                 <div>
+                                    <label class="block text-sm font-medium text-gray-700">Footer Description</label>
+                                    <textarea name="footer_description" rows="2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="Short description about your site for the footer...">{{ $settings['footer_description'] ?? 'The Ultimate News Experience bringing you the latest updates around the clock.' }}</textarea>
+                                </div>
+                                <div>
                                     <label class="block text-sm font-medium text-gray-700">Facebook URL</label>
                                     <input type="url" name="social_facebook" value="{{ $settings['social_facebook'] ?? '' }}" placeholder="https://facebook.com/..." class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
                                 </div>
