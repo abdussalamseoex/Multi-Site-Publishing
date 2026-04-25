@@ -69,7 +69,12 @@
 
                     <!-- Footer & Social Links -->
                     <div class="bg-white shadow-sm sm:rounded-lg p-6 lg:col-span-2">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Footer & Social Links</h3>
+                        <div class="flex items-center gap-2 mb-4">
+                            <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16"></path></svg>
+                            <h3 class="text-lg font-medium text-gray-900">Footer Customization & Social Links</h3>
+                        </div>
+                        <p class="text-sm text-gray-500 mb-6">Customize the copyright text, credits, description, and social media links shown at the very bottom of the website.</p>
+                        
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="space-y-4">
                                 <div>
@@ -77,8 +82,16 @@
                                     <input type="text" name="footer_copyright_text" value="{{ $settings['footer_copyright_text'] ?? '&copy; ' . date('Y') . ' ' . env('APP_NAME') . '. All rights reserved.' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
                                 </div>
                                 <div>
+                                    <label class="block text-sm font-medium text-gray-700">Credit Name</label>
+                                    <input type="text" name="footer_credit_text" value="{{ $settings['footer_credit_text'] ?? 'Abdus Salam SEO Expert' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Credit URL (Optional)</label>
+                                    <input type="url" name="footer_credit_url" value="{{ $settings['footer_credit_url'] ?? '#' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="https://...">
+                                </div>
+                                <div>
                                     <label class="block text-sm font-medium text-gray-700">Footer Description</label>
-                                    <textarea name="footer_description" rows="2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="Short description about your site for the footer...">{{ $settings['footer_description'] ?? 'The Ultimate News Experience bringing you the latest updates around the clock.' }}</textarea>
+                                    <textarea name="footer_description" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="Short description about your site for the footer...">{{ $settings['footer_description'] ?? 'The Ultimate News Experience bringing you the latest updates around the clock.' }}</textarea>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Facebook URL</label>
@@ -206,30 +219,6 @@
                     </div>
 
 
-
-                    <!-- Footer Customization -->
-                    <div class="bg-white shadow-sm sm:rounded-lg p-6 col-span-1 border-l-4 border-yellow-400">
-                        <div class="flex items-center gap-2 mb-4">
-                            <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16"></path></svg>
-                            <h3 class="text-lg font-medium text-gray-900">Footer Customization</h3>
-                        </div>
-                        <p class="text-sm text-gray-500 mb-6">Customize the copyright text and credits shown at the very bottom of the website.</p>
-                        
-                        <div class="space-y-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Copyright Text</label>
-                                <input type="text" name="footer_copyright_text" value="{{ $settings['footer_copyright_text'] ?? '&copy; ' . date('Y') . ' ' . ($settings['site_title'] ?? env('APP_NAME')) . '. All rights reserved.' }}" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Credit Name</label>
-                                <input type="text" name="footer_credit_text" value="{{ $settings['footer_credit_text'] ?? 'Abdus Salam SEO Expert' }}" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Credit URL (Optional)</label>
-                                <input type="url" name="footer_credit_url" value="{{ $settings['footer_credit_url'] ?? '#' }}" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="https://...">
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Custom Scripts & Analytics -->
                     <div class="bg-white shadow-sm sm:rounded-lg p-6 col-span-1 border-l-4 border-purple-400">

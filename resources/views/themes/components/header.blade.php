@@ -10,13 +10,21 @@
         <!-- Logo -->
         <div class="flex-shrink-0">
             @if($logo)
-                <a href="{{ route('home') }}">
+                <a href="{{ route('home') }}" class="flex flex-col justify-center">
                     <img src="{{ Str::startsWith($logo, 'http') ? $logo : url($logo) }}" alt="Logo" style="height: {{ \App\Models\Setting::get('logo_height', '40') }}px; width: auto; object-fit: contain;">
+                    @if(\App\Models\Setting::get('site_tagline'))
+                        <span class="text-[10px] mt-1 opacity-70 font-medium tracking-widest uppercase" style="color: {{ $headerText }};">{{ \App\Models\Setting::get('site_tagline') }}</span>
+                    @endif
                 </a>
             @else
-                <a href="{{ route('home') }}" class="font-extrabold text-2xl tracking-tight flex items-center gap-2" style="color: {{ $headerText }};">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--primary)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                    {{ \App\Models\Setting::get('site_title', 'Publish.') }}
+                <a href="{{ route('home') }}" class="flex flex-col justify-center">
+                    <div class="font-extrabold text-2xl tracking-tight flex items-center gap-2" style="color: {{ $headerText }};">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--primary)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                        {{ \App\Models\Setting::get('site_title', 'Publish.') }}
+                    </div>
+                    @if(\App\Models\Setting::get('site_tagline'))
+                        <span class="text-[10px] mt-0.5 opacity-70 font-medium tracking-widest uppercase" style="color: {{ $headerText }};">{{ \App\Models\Setting::get('site_tagline') }}</span>
+                    @endif
                 </a>
             @endif
         </div>
