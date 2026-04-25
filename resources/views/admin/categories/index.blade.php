@@ -114,16 +114,14 @@
                 </div>
 
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <form action="{{ route('admin.categories.bulk_destroy') }}" method="POST" id="bulk-delete-form">
-                        @csrf
-                        <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                            <div class="flex items-center gap-2">
-                                <input type="checkbox" id="select-all" class="rounded text-indigo-600 border-gray-300 shadow-sm focus:ring-indigo-500 cursor-pointer">
-                                <label for="select-all" class="text-sm text-gray-700 cursor-pointer select-none">Select All</label>
-                            </div>
-                            <button type="submit" class="px-3 py-1.5 bg-red-600 text-white shadow-sm rounded-md text-xs font-bold hover:bg-red-700 transition" onclick="return confirm('Are you sure you want to delete the selected categories?')">Delete Selected</button>
+                    <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="select-all" class="rounded text-indigo-600 border-gray-300 shadow-sm focus:ring-indigo-500 cursor-pointer">
+                            <label for="select-all" class="text-sm text-gray-700 cursor-pointer select-none">Select All</label>
                         </div>
-                        <div class="p-0 text-gray-900 overflow-x-auto">
+                        <button type="button" onclick="submitBulkDelete()" class="px-3 py-1.5 bg-red-600 text-white shadow-sm rounded-md text-xs font-bold hover:bg-red-700 transition">Delete Selected</button>
+                    </div>
+                    <div class="p-0 text-gray-900 overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
@@ -161,12 +159,16 @@
                             </tbody>
                         </table>
                     </div>
-                    </form>
                 </div>
             </div>
 
         </div>
     </div>
+
+    <!-- Hidden form for bulk delete -->
+    <form id="hidden-bulk-delete-form" action="{{ route('admin.categories.bulk_destroy') }}" method="POST" style="display: none;">
+        @csrf
+    </form>
 
     <script>
         document.getElementById('select-all').addEventListener('change', function() {
@@ -185,6 +187,36 @@
                 }
             });
         });
+
+        function submitBulkDelete() {
+            let selected = [];
+            document.querySelectorAll('.category-checkbox:checked').forEach(cb => {
+                selected.push(cb.value);
+            });
+
+            if (selected.length === 0) {
+                alert('Please select at least one category to delete.');
+                return;
+            }
+
+            if (confirm('Are you sure you want to delete the ' + selected.length + ' selected categories?')) {
+                let form = document.getElementById('hidden-bulk-delete-form');
+                
+                // Clear any old inputs just in case
+                form.querySelectorAll('input[name="categories[]"]').forEach(el => el.remove());
+
+                // Add new inputs for each selected ID
+                selected.forEach(id => {
+                    let input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'categories[]';
+                    input.value = id;
+                    form.appendChild(input);
+                });
+
+                form.submit();
+            }
+        }
     </script>
 </x-app-layout>
 
