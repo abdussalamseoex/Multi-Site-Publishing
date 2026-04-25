@@ -38,7 +38,7 @@
 </head>
 <body class="bg-grayLight text-gray-800 antialiased flex flex-col min-h-screen">
 
-    @include('themes.good.components.navbar')
+    @include('themes.components.header')
 
     <main class="flex-grow max-w-[1200px] w-full mx-auto px-4 py-8">
         @php
@@ -93,7 +93,7 @@
         </div>
     </main>
 
-    @include('themes.good.components.footer')
+    @include('themes.components.footer')
     {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
 </body>
 </html>
