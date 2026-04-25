@@ -61,20 +61,38 @@ class CategoryController extends Controller
         ]);
 
         $count = 0;
+        $postCount = 0;
         foreach ($request->input('categories') as $catName) {
             $slug = Str::slug($catName);
             // Check if it already exists to prevent duplicate slugs
             if (!Category::where('slug', $slug)->exists()) {
-                Category::create([
+                $category = Category::create([
                     'name' => $catName,
                     'slug' => $slug,
                     'description' => 'Discussions and insights revolving around ' . strtolower($catName) . ' trends and best practices.',
                 ]);
                 $count++;
+
+                // Generate 3 dummy posts for this new category
+                for ($i = 1; $i <= 3; $i++) {
+                    $postTitle = "Sample Premium Article about " . $catName . " " . $i;
+                    \App\Models\Post::create([
+                        'user_id' => \Illuminate\Support\Facades\Auth::id() ?? 1,
+                        'category_id' => $category->id,
+                        'title' => $postTitle,
+                        'slug' => Str::slug($postTitle) . '-' . rand(1000, 9999),
+                        'summary' => "This is a premium sample article exploring the depths of $catName. Discover the latest trends, expert opinions, and comprehensive analysis in this exclusive piece.",
+                        'content' => "<p>Welcome to this sample article about <strong>$catName</strong>. The industry is rapidly evolving, and staying ahead of the curve is more important than ever.</p><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p><h2>Key Takeaways</h2><ul><li>Insight 1 regarding $catName</li><li>Insight 2 regarding $catName</li><li>Insight 3 regarding $catName</li></ul><p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident.</p>",
+                        'featured_image' => 'https://picsum.photos/seed/' . rand(1, 99999) . '/800/600',
+                        'status' => 'published',
+                        'views' => rand(10, 500),
+                    ]);
+                    $postCount++;
+                }
             }
         }
 
-        return back()->with('status', "Successfully imported $count new categories.");
+        return back()->with('status', "Successfully imported $count new categories and generated $postCount demo posts.");
     }
 
     public function destroy(Category $category)
