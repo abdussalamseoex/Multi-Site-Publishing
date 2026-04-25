@@ -1,61 +1,86 @@
-<footer class="bg-dark text-gray-400 mt-12 py-12 border-t-[10px] border-primary">
-    <div class="max-w-[1200px] mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+<footer class="bg-[#111] text-gray-400 mt-16 pt-16 border-t-[5px] border-primary">
+    <div class="max-w-[1200px] mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-12">
         
-        <!-- About -->
+        <!-- About Column -->
         <div>
-            <a href="{{ url('/') }}" class="inline-block mb-4">
+            <a href="{{ url('/') }}" class="inline-block mb-6">
                 @if(\App\Models\Setting::get('site_logo'))
-                    <img src="{{ url(\App\Models\Setting::get('site_logo')) }}" alt="Logo" class="h-10">
+                    <img src="{{ url(\App\Models\Setting::get('site_logo')) }}" alt="Logo" class="h-12 filter grayscale hover:grayscale-0 transition duration-500">
                 @else
-                    <span class="text-3xl font-black tracking-tight text-white uppercase">{{ \App\Models\Setting::get('site_title', 'GOOD') }}</span>
+                    <span class="text-4xl font-black tracking-tighter text-white uppercase">{{ \App\Models\Setting::get('site_title', 'GOOD') }}<span class="text-primary">.</span></span>
                 @endif
             </a>
-            <p class="text-sm mb-4 leading-relaxed">{{ \App\Models\Setting::get('site_tagline', 'The Ultimate News Experience') }} - bringing you the latest updates around the clock.</p>
-            <p class="text-xs text-gray-500">Contact us: info@example.com</p>
+            <p class="text-[13px] mb-6 leading-relaxed text-gray-500">{{ \App\Models\Setting::get('site_tagline', 'The Ultimate News Experience bringing you the latest updates around the clock. We cover technology, business, lifestyle, and global trends.') }}</p>
+            
+            <div class="flex space-x-3 mt-6">
+                <a href="{{ \App\Models\Setting::get('social_facebook', '#') }}" class="w-8 h-8 rounded bg-[#222] flex items-center justify-center hover:bg-primary text-white transition"><i class="fab fa-facebook-f text-sm"></i></a>
+                <a href="{{ \App\Models\Setting::get('social_twitter', '#') }}" class="w-8 h-8 rounded bg-[#222] flex items-center justify-center hover:bg-primary text-white transition"><i class="fab fa-twitter text-sm"></i></a>
+                <a href="{{ \App\Models\Setting::get('social_instagram', '#') }}" class="w-8 h-8 rounded bg-[#222] flex items-center justify-center hover:bg-primary text-white transition"><i class="fab fa-instagram text-sm"></i></a>
+                <a href="{{ \App\Models\Setting::get('social_youtube', '#') }}" class="w-8 h-8 rounded bg-[#222] flex items-center justify-center hover:bg-primary text-white transition"><i class="fab fa-youtube text-sm"></i></a>
+            </div>
         </div>
 
-        <!-- Latest -->
+        <!-- Editor's Picks Column -->
         <div>
-            <h4 class="text-white font-bold uppercase mb-4 tracking-wide text-sm">Most Popular</h4>
+            <h4 class="text-white font-bold uppercase mb-6 tracking-widest text-[13px] border-b border-[#222] pb-3"><span class="border-b-2 border-primary pb-[13px]">Editor's Picks</span></h4>
             @php
-                $footerPosts = \App\Models\Post::where('status', 'published')->orderBy('views', 'desc')->take(3)->get();
+                // Get featured posts for footer
+                $footerPosts = \App\Models\Post::where('status', 'published')->where('is_featured', true)->take(3)->get();
+                if($footerPosts->isEmpty()) {
+                    $footerPosts = \App\Models\Post::where('status', 'published')->latest()->take(3)->get();
+                }
             @endphp
-            <div class="space-y-4">
+            <div class="space-y-5">
                 @foreach($footerPosts as $fp)
-                <div class="flex gap-3">
+                <div class="flex gap-4 group items-center">
                     @if($fp->featured_image)
-                    <img src="{{ Str::startsWith($fp->featured_image, 'http') ? $fp->featured_image : url($fp->featured_image) }}" class="w-16 h-16 object-cover rounded">
+                    <div class="w-16 h-16 rounded overflow-hidden flex-shrink-0">
+                        <img src="{{ Str::startsWith($fp->featured_image, 'http') ? $fp->featured_image : url($fp->featured_image) }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                    </div>
                     @endif
                     <div>
-                        <a href="{{ route('frontend.post', $fp->slug) }}" class="text-gray-300 font-semibold text-sm hover:text-primary transition line-clamp-2">{{ $fp->title }}</a>
-                        <span class="text-[10px] text-gray-500 uppercase">{{ $fp->created_at->format('M d, Y') }}</span>
+                        <h5 class="text-gray-300 font-bold text-[13px] leading-snug hover:text-primary transition line-clamp-2">
+                            <a href="{{ route('frontend.post', $fp->slug) }}">{{ $fp->title }}</a>
+                        </h5>
+                        <span class="text-[10px] text-gray-500 uppercase mt-1 block font-medium">{{ $fp->created_at->format('M d, Y') }}</span>
                     </div>
                 </div>
                 @endforeach
             </div>
         </div>
 
-        <!-- Social -->
+        <!-- Popular Categories Column -->
         <div>
-            <h4 class="text-white font-bold uppercase mb-4 tracking-wide text-sm">Follow Us</h4>
-            <div class="grid grid-cols-2 gap-2">
-                <a href="{{ \App\Models\Setting::get('social_facebook', '#') }}" class="bg-gray-800 hover:bg-[#3b5998] transition flex items-center p-2 rounded text-xs text-white group"><i class="fab fa-facebook-f w-6 text-center group-hover:text-white"></i> Facebook</a>
-                <a href="{{ \App\Models\Setting::get('social_twitter', '#') }}" class="bg-gray-800 hover:bg-[#1da1f2] transition flex items-center p-2 rounded text-xs text-white group"><i class="fab fa-twitter w-6 text-center group-hover:text-white"></i> Twitter</a>
-                <a href="{{ \App\Models\Setting::get('social_instagram', '#') }}" class="bg-gray-800 hover:bg-[#e1306c] transition flex items-center p-2 rounded text-xs text-white group"><i class="fab fa-instagram w-6 text-center group-hover:text-white"></i> Instagram</a>
-                <a href="{{ \App\Models\Setting::get('social_youtube', '#') }}" class="bg-gray-800 hover:bg-[#ff0000] transition flex items-center p-2 rounded text-xs text-white group"><i class="fab fa-youtube w-6 text-center group-hover:text-white"></i> YouTube</a>
+            <h4 class="text-white font-bold uppercase mb-6 tracking-widest text-[13px] border-b border-[#222] pb-3"><span class="border-b-2 border-primary pb-[13px]">Top Categories</span></h4>
+            <div class="flex flex-wrap gap-2">
+                @php
+                    $footerCategories = \App\Models\Category::withCount(['posts' => function($query) {
+                        $query->where('status', 'published');
+                    }])->orderBy('posts_count', 'desc')->take(8)->get();
+                @endphp
+                @foreach($footerCategories as $cat)
+                <a href="{{ route('frontend.category', $cat->slug) }}" class="bg-[#222] hover:bg-primary hover:text-white transition text-xs font-bold px-3 py-1.5 rounded text-gray-400">
+                    {{ $cat->name }} <span class="opacity-50 ml-1">{{ $cat->posts_count }}</span>
+                </a>
+                @endforeach
             </div>
         </div>
 
     </div>
 
-    <div class="max-w-[1200px] mx-auto px-4 mt-8 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500">
-        <div>
-            {!! \App\Models\Setting::get('footer_copyright_text', '&copy; ' . date('Y') . ' GOOD. All rights reserved.') !!}
-        </div>
-        <div class="mt-4 md:mt-0 flex space-x-4">
-            <a href="#" class="hover:text-white transition">Privacy Policy</a>
-            <a href="#" class="hover:text-white transition">Terms of Service</a>
-            <a href="#" class="hover:text-white transition">Contact</a>
+    <!-- Copyright Bar -->
+    <div class="bg-black mt-12 py-6 border-t border-[#222]">
+        <div class="max-w-[1200px] mx-auto px-4 flex flex-col md:flex-row justify-between items-center text-[11px] text-gray-500 font-medium uppercase tracking-wider">
+            <div>
+                {!! \App\Models\Setting::get('footer_copyright_text', '&copy; ' . date('Y') . ' GOOD THEME. ALL RIGHTS RESERVED.') !!} 
+                DESIGNED WITH <i class="fas fa-heart text-red-500 mx-1"></i> BY <a href="#" class="text-white hover:text-primary transition">YOUR BRAND</a>.
+            </div>
+            <div class="mt-4 md:mt-0 flex space-x-6">
+                <a href="{{ url('/') }}" class="hover:text-primary transition">HOME</a>
+                <a href="#" class="hover:text-primary transition">ABOUT US</a>
+                <a href="#" class="hover:text-primary transition">PRIVACY</a>
+                <a href="#" class="hover:text-primary transition">CONTACT</a>
+            </div>
         </div>
     </div>
 </footer>

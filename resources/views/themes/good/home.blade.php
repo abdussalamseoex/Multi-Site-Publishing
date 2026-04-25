@@ -40,32 +40,56 @@
 
     @include('themes.good.components.navbar')
 
-    <main class="flex-grow max-w-[1200px] w-full mx-auto px-4 py-8 space-y-12">
+    <main class="flex-grow max-w-[1200px] w-full mx-auto px-4 py-8">
         @php
             $layoutRaw = \App\Models\Setting::get('homepage_layout');
             $blocks = $layoutRaw ? json_decode($layoutRaw, true) : [];
+            
+            // Provide a rich default layout if empty so the theme looks "ready" out of the box
+            if (empty($blocks)) {
+                $blocks = [
+                    ['type' => 'hero_grid', 'title' => 'Top Stories', 'limit' => 4],
+                    ['type' => 'latest_news', 'title' => 'Latest Articles', 'limit' => 6],
+                    ['type' => 'ad_block'],
+                    ['type' => 'category_spotlight', 'title' => 'Editorial Choice', 'limit' => 5],
+                    ['type' => 'category_grid', 'title' => 'More News', 'limit' => 6],
+                ];
+            }
+
+            // Separate Hero grid from the rest, because Hero is full width
+            $heroBlocks = array_filter($blocks, fn($b) => $b['type'] === 'hero_grid');
+            $otherBlocks = array_filter($blocks, fn($b) => $b['type'] !== 'hero_grid');
         @endphp
 
-        @if(empty($blocks))
-            <div class="text-center py-20 text-gray-500 bg-white shadow-sm rounded-lg">
-                <h2 class="text-2xl font-bold mb-2">Welcome to the Dynamic Theme Builder!</h2>
-                <p>Please go to the <strong>Admin Panel -> Theme Builder</strong> to add content blocks to your homepage.</p>
+        <!-- Full Width Hero Section -->
+        @foreach($heroBlocks as $block)
+            @include('themes.good.components.hero_grid', ['block' => $block])
+        @endforeach
+
+        <!-- Two Column Layout (Main Content + Sidebar) -->
+        <div class="flex flex-col lg:flex-row gap-8 mt-8">
+            
+            <!-- Left Main Content Area -->
+            <div class="w-full lg:w-2/3 space-y-10">
+                @foreach($otherBlocks as $block)
+                    @if($block['type'] === 'latest_news')
+                        @include('themes.good.components.latest_news', ['block' => $block])
+                    @elseif($block['type'] === 'category_spotlight')
+                        @include('themes.good.components.category_spotlight', ['block' => $block])
+                    @elseif($block['type'] === 'category_grid')
+                        @include('themes.good.components.category_grid', ['block' => $block])
+                    @elseif($block['type'] === 'ad_block')
+                        @include('themes.good.components.ad_block', ['block' => $block])
+                    @endif
+                @endforeach
             </div>
-        @else
-            @foreach($blocks as $block)
-                @if($block['type'] === 'hero_grid')
-                    @include('themes.good.components.hero_grid', ['block' => $block])
-                @elseif($block['type'] === 'latest_news')
-                    @include('themes.good.components.latest_news', ['block' => $block])
-                @elseif($block['type'] === 'category_spotlight')
-                    @include('themes.good.components.category_spotlight', ['block' => $block])
-                @elseif($block['type'] === 'category_grid')
-                    @include('themes.good.components.category_grid', ['block' => $block])
-                @elseif($block['type'] === 'ad_block')
-                    @include('themes.good.components.ad_block', ['block' => $block])
-                @endif
-            @endforeach
-        @endif
+
+            <!-- Right Sidebar Area -->
+            <div class="w-full lg:w-1/3">
+                @include('themes.good.components.sidebar')
+            </div>
+
+        </div>
     </main>
 
     @include('themes.good.components.footer')
