@@ -65,6 +65,21 @@
                     
                     <form action="{{ route('admin.categories.bulk_import') }}" method="POST" x-show="open" style="display: none;" class="mt-2">
                         @csrf
+                        
+                        <div class="mb-3 px-1 border-b border-gray-100 pb-2">
+                            <label class="block text-xs font-bold text-gray-700 mb-2">Import Type</label>
+                            <div class="flex space-x-4">
+                                <label class="flex items-center space-x-1 cursor-pointer">
+                                    <input type="radio" name="import_type" value="category_only" class="text-indigo-600 focus:ring-indigo-500" checked>
+                                    <span class="text-xs text-gray-600">Only Category</span>
+                                </label>
+                                <label class="flex items-center space-x-1 cursor-pointer">
+                                    <input type="radio" name="import_type" value="category_content" class="text-indigo-600 focus:ring-indigo-500">
+                                    <span class="text-xs text-gray-600">Category + Demo Content</span>
+                                </label>
+                            </div>
+                        </div>
+
                         <div class="flex justify-between items-center mb-2 px-1">
                             <span class="text-xs font-bold text-gray-600 uppercase">Available Niches</span>
                             <button type="button" class="text-xs text-indigo-600 hover:underline font-bold" onclick="let cbs = document.querySelectorAll('.niche-checkbox'); let allChecked = Array.from(cbs).every(cb => cb.checked); cbs.forEach(cb => cb.checked = !allChecked);">Select / Deselect All</button>
