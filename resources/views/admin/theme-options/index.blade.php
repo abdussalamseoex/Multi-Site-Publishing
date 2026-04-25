@@ -202,7 +202,8 @@
                     { id: 'latest_news', name: 'Latest Articles List' },
                     { id: 'category_spotlight', name: 'Category Spotlight' },
                     { id: 'category_grid', name: '3-Column Grid' },
-                    { id: 'ad_block', name: 'Advertisement Banner' }
+                    { id: 'ad_block', name: 'Advertisement Banner' },
+                    { id: 'legacy_theme_content', name: 'Legacy Theme Content' }
                 ],
                 
                 sidebarTypes: [
@@ -277,6 +278,7 @@
                         case 'latest_news': return 'Latest Articles';
                         case 'category_spotlight': return 'Editorial Choice';
                         case 'category_grid': return 'More News';
+                        case 'legacy_theme_content': return 'Original Theme Design';
                         default: return '';
                     }
                 },
@@ -287,6 +289,7 @@
                         case 'latest_news': return 6;
                         case 'category_spotlight': return 5;
                         case 'category_grid': return 6;
+                        case 'legacy_theme_content': return null;
                         default: return 4;
                     }
                 },

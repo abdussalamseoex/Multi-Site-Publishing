@@ -67,6 +67,37 @@
                         </div>
                     </div>
 
+                    <!-- Footer & Social Links -->
+                    <div class="bg-white shadow-sm sm:rounded-lg p-6 lg:col-span-2">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Footer & Social Links</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Footer Copyright Text</label>
+                                    <input type="text" name="footer_copyright_text" value="{{ $settings['footer_copyright_text'] ?? '&copy; ' . date('Y') . ' ' . env('APP_NAME') . '. All rights reserved.' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Facebook URL</label>
+                                    <input type="url" name="social_facebook" value="{{ $settings['social_facebook'] ?? '' }}" placeholder="https://facebook.com/..." class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Twitter (X) URL</label>
+                                    <input type="url" name="social_twitter" value="{{ $settings['social_twitter'] ?? '' }}" placeholder="https://twitter.com/..." class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Instagram URL</label>
+                                    <input type="url" name="social_instagram" value="{{ $settings['social_instagram'] ?? '' }}" placeholder="https://instagram.com/..." class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">YouTube URL</label>
+                                    <input type="url" name="social_youtube" value="{{ $settings['social_youtube'] ?? '' }}" placeholder="https://youtube.com/..." class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Appearance Options -->
                     <div class="bg-white shadow-sm sm:rounded-lg p-6">
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Appearance</h3>

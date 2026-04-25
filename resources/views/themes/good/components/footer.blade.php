@@ -73,13 +73,21 @@
         <div class="max-w-[1200px] mx-auto px-4 flex flex-col md:flex-row justify-between items-center text-[11px] text-gray-500 font-medium uppercase tracking-wider">
             <div>
                 {!! \App\Models\Setting::get('footer_copyright_text', '&copy; ' . date('Y') . ' GOOD THEME. ALL RIGHTS RESERVED.') !!} 
-                DESIGNED WITH <i class="fas fa-heart text-red-500 mx-1"></i> BY <a href="#" class="text-white hover:text-primary transition">YOUR BRAND</a>.
+                DESIGNED WITH <i class="fas fa-heart text-red-500 mx-1"></i> BY <a href="{{ url('/') }}" class="text-white hover:text-primary transition">{{ \App\Models\Setting::get('site_title', 'YOUR BRAND') }}</a>.
             </div>
-            <div class="mt-4 md:mt-0 flex space-x-6">
+            <div class="mt-4 md:mt-0 flex flex-wrap gap-4 items-center">
                 <a href="{{ url('/') }}" class="hover:text-primary transition">HOME</a>
                 <a href="#" class="hover:text-primary transition">ABOUT US</a>
-                <a href="#" class="hover:text-primary transition">PRIVACY</a>
                 <a href="#" class="hover:text-primary transition">CONTACT</a>
+                
+                <span class="text-gray-700 hidden md:inline">|</span>
+                
+                @auth
+                    <a href="{{ route('dashboard') }}" class="hover:text-primary text-white transition font-bold"><i class="fas fa-tachometer-alt mr-1"></i> DASHBOARD</a>
+                @else
+                    <a href="{{ route('login') }}" class="hover:text-primary text-white transition font-bold"><i class="fas fa-sign-in-alt mr-1"></i> LOGIN</a>
+                    <a href="{{ route('register') }}" class="hover:text-primary text-white transition font-bold"><i class="fas fa-user-plus mr-1"></i> SIGN UP</a>
+                @endauth
             </div>
         </div>
     </div>
