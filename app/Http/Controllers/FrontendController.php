@@ -99,15 +99,6 @@ class FrontendController extends Controller
             return view($viewName, compact('category', 'posts', 'activeTheme'));
         }
 
-        // Re-use current active theme's home layout as the category page
-        $homeView = "themes.{$activeTheme}.home";
-        if (view()->exists($homeView)) {
-            $featuredPosts = collect(); 
-            $latestPosts = $posts;
-            $isCategory = true;
-            return view($homeView, compact('category', 'latestPosts', 'featuredPosts', 'isCategory', 'activeTheme'));
-        }
-
         return view('themes.category', compact('category', 'posts', 'activeTheme'));
     }
 
