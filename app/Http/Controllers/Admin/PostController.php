@@ -116,11 +116,17 @@ class PostController extends Controller
             $post->featured_image = '/uploads/posts/' . $filename;
         }
 
-        $baseSlug = $request->slug ? \Illuminate\Support\Str::slug($request->slug) : \Illuminate\Support\Str::slug($request->title);
-        $finalSlug = \App\Models\Setting::get('seo_post_slug_code') === 'on' ? $baseSlug . '-' . uniqid() : $baseSlug;
-        
-        // Ensure uniqueness if code is off
-        if (\App\Models\Setting::get('seo_post_slug_code') !== 'on') {
+        $requestedSlug = $request->slug ? \Illuminate\Support\Str::slug($request->slug) : \Illuminate\Support\Str::slug($request->title);
+
+        if ($requestedSlug === $post->slug) {
+            $finalSlug = $post->slug;
+        } else {
+            if (!$request->slug && \App\Models\Setting::get('seo_post_slug_code') === 'on') {
+                $finalSlug = $requestedSlug . '-' . uniqid();
+            } else {
+                $finalSlug = $requestedSlug;
+            }
+
             $originalFinal = $finalSlug;
             $counter = 1;
             while (Post::where('slug', $finalSlug)->where('id', '!=', $post->id)->exists()) {
