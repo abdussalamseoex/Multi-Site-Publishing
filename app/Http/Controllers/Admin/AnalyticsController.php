@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\BlockedIp;
+use App\Models\Visit;
 
 class AnalyticsController extends Controller
 {
@@ -24,86 +25,77 @@ class AnalyticsController extends Controller
         return $query;
     }
 
-    public function index(\Illuminate\Http\Request $request)
+    public function index(Request $request)
     {
-        $filter = $request->input('date_filter', 'all_time');
-        
-        $baseQuery = \App\Models\Visit::query();
-        $query = $this->applyFilter(clone $baseQuery, $filter);
+        // Default to 'today' instead of all_time
+        $filter = $request->input('date_filter', 'today');
 
-        $filteredTotal = (clone $query)->count();
-        $totalVisits = \App\Models\Visit::count();
-        $visitsToday = \App\Models\Visit::whereDate('created_at', today())->count();
-        $liveUsers = \App\Models\Visit::where('created_at', '>=', now()->subMinutes(5))->distinct('ip_address')->count('ip_address');
-        
-        // Unique Users metric
+        // Base query — human visitors only (exclude bots)
+        $humanBase = Visit::where('is_bot', false);
+        $query = $this->applyFilter(clone $humanBase, $filter);
+
+        $filteredTotal  = (clone $query)->count();
+        $totalVisits    = Visit::where('is_bot', false)->count();
+        $visitsToday    = Visit::where('is_bot', false)->whereDate('created_at', today())->count();
+        $liveUsers      = Visit::where('is_bot', false)
+                               ->where('created_at', '>=', now()->subMinutes(5))
+                               ->distinct('ip_address')
+                               ->count('ip_address');
+
+        // Unique real users
         $uniqueUsers = (clone $query)->distinct('ip_address')->count('ip_address');
-        
-        $topCountries = (clone $query)->selectRaw('country, country_code, count(*) as count')
+
+        $topCountries = (clone $query)
+            ->selectRaw('country, country_code, count(*) as count')
             ->whereNotNull('country_code')
             ->groupBy('country', 'country_code')
             ->orderByDesc('count')
             ->take(10)
             ->get();
-            
-        $topReferrers = (clone $query)->selectRaw("referrer, count(*) as count")
+
+        $topReferrers = (clone $query)
+            ->selectRaw("referrer, count(*) as count")
             ->whereNotNull('referrer')
             ->groupBy('referrer')
             ->orderByDesc('count')
             ->take(10)
             ->get();
 
-        $topPages = (clone $query)->selectRaw("url, count(*) as count")
+        $topPages = (clone $query)
+            ->selectRaw("url, count(*) as count")
             ->whereNotNull('url')
             ->groupBy('url')
             ->orderByDesc('count')
             ->take(10)
             ->get();
-            
+
         $recentVisits = (clone $query)->latest()->take(50)->get();
 
-        // Bounce Rate Calculation
+        // Bounce Rate Calculation (human visitors only)
         $bounceRate = 0;
         if ($filteredTotal > 0) {
-            $ipCounts = (clone $query)->selectRaw('ip_address, count(*) as total_visits')
+            $ipCounts = (clone $query)
+                ->selectRaw('ip_address, count(*) as total_visits')
                 ->groupBy('ip_address')
                 ->pluck('total_visits', 'ip_address');
-            
+
             $totalSessions = $ipCounts->count();
-            $bounces = $ipCounts->filter(function ($visits) {
-                return $visits == 1;
-            })->count();
+            $bounces = $ipCounts->filter(fn($v) => $v == 1)->count();
 
             if ($totalSessions > 0) {
                 $bounceRate = round(($bounces / $totalSessions) * 100, 2);
             }
         }
 
-        // Native PHP approach for Devices, Browsers, and Bots (zero external dependencies)
+        // Device / Browser detection (human visitors only)
         $allUserAgents = (clone $query)->pluck('user_agent');
-        
-        $devices = ['Desktop' => 0, 'Mobile' => 0, 'Tablet' => 0];
-        $browsers = [];
-        $goodBots = [];
-        $badBots = [];
 
-        $goodBotRegex = '/(google|bing|yandex|baidu|duckduck|slurp)/i';
-        $badBotRegex = '/(bot|crawl|spider|mediapartners|inspection|scraper)/i';
+        $devices  = ['Desktop' => 0, 'Mobile' => 0, 'Tablet' => 0];
+        $browsers = [];
 
         foreach ($allUserAgents as $ua) {
             if (empty($ua)) continue;
-            
-            // Bot Detection
-            if (preg_match($goodBotRegex, $ua, $matches)) {
-                $robotName = ucfirst(strtolower($matches[1])) . ' Bot';
-                $goodBots[$robotName] = ($goodBots[$robotName] ?? 0) + 1;
-                continue; // Skip device/browser for bots
-            } elseif (preg_match($badBotRegex, $ua, $matches)) {
-                $robotName = ucfirst(strtolower($matches[1])) . ' Bot (Spam)';
-                $badBots[$robotName] = ($badBots[$robotName] ?? 0) + 1;
-                continue; // Skip device/browser for bots
-            }
-            
+
             // Device Detection
             if (preg_match('/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i', $ua)) {
                 $devices['Tablet']++;
@@ -114,80 +106,133 @@ class AnalyticsController extends Controller
             }
 
             // Browser Detection
-            if (preg_match('/Edg/i', $ua)) {
-                $browser = 'Edge';
-            } elseif (preg_match('/OPR/i', $ua) || preg_match('/Opera/i', $ua)) {
-                $browser = 'Opera';
-            } elseif (preg_match('/Chrome/i', $ua)) {
-                $browser = 'Chrome';
-            } elseif (preg_match('/Safari/i', $ua)) {
-                $browser = 'Safari';
-            } elseif (preg_match('/Firefox/i', $ua)) {
-                $browser = 'Firefox';
-            } elseif (preg_match('/MSIE/i', $ua) || preg_match('/Trident/i', $ua)) {
-                $browser = 'Internet Explorer';
-            } else {
-                $browser = 'Other';
-            }
-            
+            if (preg_match('/Edg/i', $ua))                                      $browser = 'Edge';
+            elseif (preg_match('/OPR|Opera/i', $ua))                            $browser = 'Opera';
+            elseif (preg_match('/Chrome/i', $ua))                               $browser = 'Chrome';
+            elseif (preg_match('/Safari/i', $ua))                               $browser = 'Safari';
+            elseif (preg_match('/Firefox/i', $ua))                              $browser = 'Firefox';
+            elseif (preg_match('/MSIE|Trident/i', $ua))                         $browser = 'Internet Explorer';
+            else                                                                 $browser = 'Other';
+
             if ($browser !== 'Other') {
                 $browsers[$browser] = ($browsers[$browser] ?? 0) + 1;
             }
         }
 
         arsort($browsers);
+        $browsers = array_slice($browsers, 0, 5);
+
+        // ---- Bot Traffic (separate from human metrics) ----
+        $botQuery = $this->applyFilter(Visit::where('is_bot', true), $filter);
+
+        $goodBotRaw = (clone $botQuery)
+            ->where('bot_type', 'good')
+            ->selectRaw('user_agent, count(*) as count')
+            ->groupBy('user_agent')
+            ->orderByDesc('count')
+            ->take(10)
+            ->get();
+
+        $badBotRaw = (clone $botQuery)
+            ->where('bot_type', 'bad')
+            ->selectRaw('user_agent, count(*) as count')
+            ->groupBy('user_agent')
+            ->orderByDesc('count')
+            ->take(10)
+            ->get();
+
+        // For display: aggregate into readable bot names
+        $goodBots = [];
+        foreach ($goodBotRaw as $row) {
+            $name = $this->extractBotName($row->user_agent);
+            $goodBots[$name] = ($goodBots[$name] ?? 0) + $row->count;
+        }
+
+        $badBots = [];
+        foreach ($badBotRaw as $row) {
+            $name = $this->extractBotName($row->user_agent);
+            $badBots[$name] = ($badBots[$name] ?? 0) + $row->count;
+        }
+
         arsort($goodBots);
         arsort($badBots);
-        $browsers = array_slice($browsers, 0, 5);
-        $goodBots = array_slice($goodBots, 0, 5);
-        $badBots = array_slice($badBots, 0, 5);
 
-        $blockedIps = BlockedIp::latest()->get();
-        $blockedIpList = $blockedIps->pluck('ip_address')->toArray();
+        // Recent bot visits for the Bot Traffic tab
+        $recentBotVisits = (clone $botQuery)->latest()->take(30)->get();
+        $totalGoodBots   = Visit::where('is_bot', true)->where('bot_type', 'good')->count();
+        $totalBadBots    = Visit::where('is_bot', true)->where('bot_type', 'bad')->count();
+
+        $blockedIps     = BlockedIp::latest()->get();
+        $blockedIpList  = $blockedIps->pluck('ip_address')->toArray();
 
         return view('admin.analytics.index', compact(
             'totalVisits', 'visitsToday', 'filteredTotal', 'uniqueUsers',
-            'topCountries', 'topReferrers', 'topPages', 
+            'topCountries', 'topReferrers', 'topPages',
             'recentVisits', 'filter', 'liveUsers', 'blockedIps', 'blockedIpList',
-            'bounceRate', 'devices', 'browsers', 'goodBots', 'badBots'
+            'bounceRate', 'devices', 'browsers',
+            'goodBots', 'badBots', 'recentBotVisits', 'totalGoodBots', 'totalBadBots'
         ));
+    }
+
+    /**
+     * AJAX endpoint: returns live metrics for real-time polling.
+     */
+    public function apiStats()
+    {
+        $liveUsers = Visit::where('is_bot', false)
+            ->where('created_at', '>=', now()->subMinutes(5))
+            ->distinct('ip_address')
+            ->count('ip_address');
+
+        $recentVisits = Visit::where('is_bot', false)
+            ->latest()
+            ->take(10)
+            ->get(['ip_address', 'url', 'country', 'country_code', 'created_at']);
+
+        return response()->json([
+            'live_users'    => $liveUsers,
+            'recent_visits' => $recentVisits,
+        ]);
+    }
+
+    /**
+     * Extract a readable bot name from a user-agent string.
+     */
+    private function extractBotName(string $ua): string
+    {
+        if (preg_match('/(googlebot|bingbot|yandexbot|baiduspider|duckduckbot|semrushbot|ahrefsbot)/i', $ua, $m)) {
+            return ucfirst(strtolower($m[1]));
+        }
+        if (preg_match('/\(compatible;\s*([^;)]+)/i', $ua, $m)) {
+            return trim($m[1]);
+        }
+        return strlen($ua) > 60 ? substr($ua, 0, 60) . '…' : $ua;
     }
 
     public function blockIp(Request $request)
     {
-        $request->validate([
-            'ip_address' => 'required|ip'
-        ]);
+        $request->validate(['ip_address' => 'required|ip']);
 
         BlockedIp::firstOrCreate(['ip_address' => $request->ip_address], [
             'reason' => $request->reason ?? 'Blocked manually from Analytics Dashboard'
         ]);
-
-        // Delete recent visits for this IP to prevent displaying banned IP logic loop (Optional)
-        // \App\Models\Visit::where('ip_address', $request->ip_address)->delete();
 
         return back()->with('status', 'IP Address has been successfully blocked.');
     }
 
     public function unblockIp(Request $request)
     {
-        $request->validate([
-            'ip_address' => 'required|ip'
-        ]);
-
+        $request->validate(['ip_address' => 'required|ip']);
         BlockedIp::where('ip_address', $request->ip_address)->delete();
-
         return back()->with('status', 'IP Address has been unblocked.');
     }
 
     public function export(Request $request)
     {
-        $filter = $request->input('date_filter', 'all_time');
-        
-        $query = \App\Models\Visit::query();
-        $query = $this->applyFilter($query, $filter);
-        
-        $visits = $query->latest()->get();
+        $filter  = $request->input('date_filter', 'today');
+        $query   = Visit::where('is_bot', false);
+        $query   = $this->applyFilter($query, $filter);
+        $visits  = $query->latest()->get();
 
         $headers = [
             "Content-type"        => "text/csv",
@@ -197,7 +242,7 @@ class AnalyticsController extends Controller
             "Expires"             => "0"
         ];
 
-        $callback = function() use($visits) {
+        $callback = function () use ($visits) {
             $file = fopen('php://output', 'w');
             fputcsv($file, ['ID', 'IP Address', 'URL', 'Referrer', 'User Agent', 'Country', 'Country Code', 'Date']);
 

@@ -80,6 +80,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/seo', [SettingController::class, 'store'])->name('seo.store');
 
     Route::get('/analytics', [\App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('analytics.index');
+    Route::get('/analytics/api-stats', [\App\Http\Controllers\Admin\AnalyticsController::class, 'apiStats'])->name('analytics.api');
     Route::get('/analytics/export', [\App\Http\Controllers\Admin\AnalyticsController::class, 'export'])->name('analytics.export');
     Route::post('/analytics/block-ip', [\App\Http\Controllers\Admin\AnalyticsController::class, 'blockIp'])->name('analytics.blockIp');
     Route::post('/analytics/unblock-ip', [\App\Http\Controllers\Admin\AnalyticsController::class, 'unblockIp'])->name('analytics.unblockIp');

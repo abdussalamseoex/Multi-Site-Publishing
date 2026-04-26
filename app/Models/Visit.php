@@ -13,5 +13,7 @@ class Visit extends Model
         'user_agent',
         'country',
         'country_code',
+        'is_bot',
+        'bot_type',
     ];
 }

@@ -42,7 +42,7 @@
                             <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
                             Live Now
                         </div>
-                        <div class="text-4xl font-black">{{ number_format($liveUsers) }}</div>
+                        <div class="text-4xl font-black" id="live-user-count">{{ number_format($liveUsers) }}</div>
                     </div>
                     <div class="p-3 bg-white/20 rounded-lg backdrop-blur-sm">
                         <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
@@ -88,7 +88,7 @@
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
                     <div>
                         <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Bot Traffic</div>
-                        <div class="text-3xl font-black text-gray-800">{{ number_format(array_sum($badBots) + array_sum($goodBots)) }}</div>
+                        <div class="text-3xl font-black text-gray-800">{{ number_format($totalGoodBots + $totalBadBots) }}</div>
                     </div>
                     <div class="p-3 bg-gray-100 rounded-lg text-gray-500">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
@@ -263,7 +263,11 @@
 
             <!-- Recent Visits Logs -->
             <div class="bg-white rounded-xl shadow border border-gray-100 p-6 overflow-hidden">
-                <h3 class="text-lg font-bold text-gray-800 border-b pb-3 mb-4">Live Real-time Log (Last 50 Visitors)</h3>
+                <h3 class="text-lg font-bold text-gray-800 border-b pb-3 mb-4 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block"></span>
+                    Live Real-time Log (Last 50 Human Visitors)
+                </h3>
+                <div id="live-log-updated" class="text-xs text-gray-400 mb-2"></div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
@@ -363,6 +367,64 @@
             </div>
             @endif
 
+            {{-- ====== BOT TRAFFIC TAB ====== --}}
+            <div class="bg-white rounded-xl shadow border border-orange-200 p-6 overflow-hidden">
+                <h3 class="text-lg font-bold text-orange-700 border-b border-orange-100 pb-3 mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    Bot Traffic Log
+                    <span class="ml-2 text-xs font-normal text-orange-500">(Good: {{ number_format($totalGoodBots) }} &nbsp;|&nbsp; Bad/Spam: {{ number_format($totalBadBots) }})</span>
+                </h3>
+
+                @if($recentBotVisits->isEmpty())
+                    <p class="text-gray-400 text-sm">No bot visits recorded in this period.</p>
+                @else
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-orange-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-orange-800 uppercase">Time</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-orange-800 uppercase">Type</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-orange-800 uppercase">IP</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-orange-800 uppercase">Page</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-orange-800 uppercase">User Agent</th>
+                                    <th class="px-4 py-3 text-right text-xs font-bold text-orange-800 uppercase">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-100">
+                                @foreach($recentBotVisits as $bv)
+                                <tr class="hover:bg-orange-50 transition-colors">
+                                    <td class="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">{{ $bv->created_at->diffForHumans() }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        @if($bv->bot_type === 'good')
+                                            <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-bold">✓ Search Engine</span>
+                                        @else
+                                            <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs font-bold">⚠ Scraper/Spam</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 font-mono text-xs text-orange-700">{{ $bv->ip_address }}</td>
+                                    <td class="px-4 py-3 text-xs text-gray-600 max-w-xs truncate">
+                                        <a href="{{ $bv->url }}" target="_blank" class="hover:text-indigo-600">{{ str_replace(url('/'), '', $bv->url) ?: '/' }}</a>
+                                    </td>
+                                    <td class="px-4 py-3 text-xs text-gray-400 max-w-xs truncate">{{ Str::limit($bv->user_agent, 50) }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-right">
+                                        @if(in_array($bv->ip_address, $blockedIpList))
+                                            <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs font-bold">Blocked</span>
+                                        @else
+                                            <form method="POST" action="{{ route('admin.analytics.blockIp') }}" class="inline">
+                                                @csrf
+                                                <input type="hidden" name="ip_address" value="{{ $bv->ip_address }}">
+                                                <button type="submit" onclick="return confirm('Block {{ $bv->ip_address }}?')" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1 rounded text-xs font-bold transition-colors">Block</button>
+                                            </form>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+
         </div>
     </div>
 </x-app-layout>
@@ -414,4 +476,30 @@
             });
         }
     });
+</script>
+
+<script>
+    // ===== Real-time polling every 10 seconds =====
+    const API_URL = '{{ route('admin.analytics.api') }}';
+
+    function updateLiveStats() {
+        fetch(API_URL)
+            .then(res => res.json())
+            .then(data => {
+                // Update live counter
+                const counter = document.getElementById('live-user-count');
+                if (counter) counter.textContent = data.live_users;
+
+                // Update log timestamp
+                const logUpdated = document.getElementById('live-log-updated');
+                if (logUpdated) {
+                    const now = new Date();
+                    logUpdated.textContent = 'Last updated: ' + now.toLocaleTimeString();
+                }
+            })
+            .catch(() => {}); // fail silently
+    }
+
+    // Start polling after 10s
+    setInterval(updateLiveStats, 10000);
 </script>
