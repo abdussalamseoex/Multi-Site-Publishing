@@ -33,7 +33,30 @@
                 </div>
             @endif
 
-            <!-- Key Metrics Grid -->
+                        <!-- Tabs Menu -->
+            <div class="border-b border-gray-200 mb-6 bg-white rounded-t-lg shadow-sm overflow-x-auto">
+                <nav class="-mb-px flex space-x-8 px-6 min-w-max" aria-label="Tabs">
+                    <button onclick="openTab('tab-overview', this)" class="tab-btn active-tab border-indigo-500 text-indigo-600 whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm">
+                        Overview
+                    </button>
+                    <button onclick="openTab('tab-sources', this)" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                        Traffic Sources
+                    </button>
+                    <button onclick="openTab('tab-pages', this)" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                        Top Content
+                    </button>
+                    <button onclick="openTab('tab-live', this)" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block"></span> Live Log
+                    </button>
+                    <button onclick="openTab('tab-bots', this)" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                        Bot Traffic & Security
+                    </button>
+                </nav>
+            </div>
+
+            <!-- TAB: OVERVIEW -->
+            <div id="tab-overview" class="tab-pane block space-y-6">
+                <!-- Key Metrics Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 <!-- Live Traffic -->
                 <div class="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-xl shadow-lg border border-indigo-400 text-white flex items-center justify-between transform transition hover:scale-105">
@@ -140,10 +163,12 @@
                 </div>
             </div>
 
-            <!-- More Widgets -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
+                        </div> <!-- End tab-overview -->
+
+            <!-- TAB: TOP CONTENT -->
+            <div id="tab-pages" class="tab-pane hidden space-y-6">
                 <!-- Top Pages -->
+                
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 lg:col-span-2">
                     <h3 class="text-lg font-bold text-gray-800 border-b pb-3 mb-4">Top Pages Visited</h3>
                     @if($topPages->isEmpty())
@@ -174,49 +199,12 @@
                     @endif
                 </div>
 
-                <!-- Bot Segments -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col gap-6">
-                    <div>
-                        <h3 class="text-sm font-bold text-green-600 uppercase tracking-wider border-b pb-2 mb-3 flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            Good Bots (SEO)
-                        </h3>
-                        @if(empty($goodBots))
-                            <p class="text-gray-400 text-xs">None detected.</p>
-                        @else
-                            <div class="space-y-2">
-                                @foreach($goodBots as $bot => $count)
-                                <div class="flex items-center justify-between text-sm bg-green-50 px-3 py-2 rounded-lg border border-green-100">
-                                    <span class="font-bold text-green-700">{{ $bot }}</span>
-                                    <span class="bg-white text-green-600 px-2 py-0.5 rounded text-xs font-bold shadow-sm">{{ number_format($count) }}</span>
-                                </div>
-                                @endforeach
-                            </div>
-                        @endif
-                    </div>
-
-                    <div>
-                        <h3 class="text-sm font-bold text-red-600 uppercase tracking-wider border-b pb-2 mb-3 flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                            Bad Bots / Spammers
-                        </h3>
-                        @if(empty($badBots))
-                            <p class="text-gray-400 text-xs">None detected.</p>
-                        @else
-                            <div class="space-y-2">
-                                @foreach($badBots as $bot => $count)
-                                <div class="flex items-center justify-between text-sm bg-red-50 px-3 py-2 rounded-lg border border-red-100">
-                                    <span class="font-bold text-red-700">{{ $bot }}</span>
-                                    <span class="bg-white text-red-600 px-2 py-0.5 rounded text-xs font-bold shadow-sm">{{ number_format($count) }}</span>
-                                </div>
-                                @endforeach
-                            </div>
-                        @endif
-                    </div>
-                </div>
+                
             </div>
 
-            <!-- Traffic Sources & Referrers Grid -->
+            <!-- TAB: TRAFFIC SOURCES -->
+            <div id="tab-sources" class="tab-pane hidden space-y-6">
+                <!-- Traffic Sources & Referrers Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Top Countries -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -261,7 +249,11 @@
                 </div>
             </div>
 
-            <!-- Recent Visits Logs -->
+                        </div>
+
+            <!-- TAB: LIVE LOG -->
+            <div id="tab-live" class="tab-pane hidden space-y-6">
+                <!-- Recent Visits Logs -->
             <div class="bg-white rounded-xl shadow border border-gray-100 p-6 overflow-hidden">
                 <h3 class="text-lg font-bold text-gray-800 border-b pb-3 mb-4 flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block"></span>
@@ -324,7 +316,56 @@
                 </div>
             </div>
 
-            <!-- Blocked IPs Management -->
+                        </div>
+
+            <!-- TAB: BOT TRAFFIC & SECURITY -->
+            <div id="tab-bots" class="tab-pane hidden space-y-6">
+                <!-- Bot Segments -->
+                
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col gap-6">
+                    <div>
+                        <h3 class="text-sm font-bold text-green-600 uppercase tracking-wider border-b pb-2 mb-3 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Good Bots (SEO)
+                        </h3>
+                        @if(empty($goodBots))
+                            <p class="text-gray-400 text-xs">None detected.</p>
+                        @else
+                            <div class="space-y-2">
+                                @foreach($goodBots as $bot => $count)
+                                <div class="flex items-center justify-between text-sm bg-green-50 px-3 py-2 rounded-lg border border-green-100">
+                                    <span class="font-bold text-green-700">{{ $bot }}</span>
+                                    <span class="bg-white text-green-600 px-2 py-0.5 rounded text-xs font-bold shadow-sm">{{ number_format($count) }}</span>
+                                </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+
+                    <div>
+                        <h3 class="text-sm font-bold text-red-600 uppercase tracking-wider border-b pb-2 mb-3 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            Bad Bots / Spammers
+                        </h3>
+                        @if(empty($badBots))
+                            <p class="text-gray-400 text-xs">None detected.</p>
+                        @else
+                            <div class="space-y-2">
+                                @foreach($badBots as $bot => $count)
+                                <div class="flex items-center justify-between text-sm bg-red-50 px-3 py-2 rounded-lg border border-red-100">
+                                    <span class="font-bold text-red-700">{{ $bot }}</span>
+                                    <span class="bg-white text-red-600 px-2 py-0.5 rounded text-xs font-bold shadow-sm">{{ number_format($count) }}</span>
+                                </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            
+                
+                <!-- Blocked IPs Management -->
             @if($blockedIps->isNotEmpty())
             <div class="bg-white rounded-xl shadow border border-red-200 p-6 overflow-hidden mt-6">
                 <h3 class="text-lg font-bold text-red-700 border-b border-red-100 pb-3 mb-4 flex items-center gap-2">
@@ -425,9 +466,34 @@
                 @endif
             </div>
 
+                    </div>
         </div>
     </div>
 </x-app-layout>
+
+<script>
+    function openTab(tabId, element) {
+        // Hide all panes
+        document.querySelectorAll('.tab-pane').forEach(pane => {
+            pane.classList.remove('block');
+            pane.classList.add('hidden');
+        });
+        
+        // Remove active class from all buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('border-indigo-500', 'text-indigo-600', 'font-bold');
+            btn.classList.add('border-transparent', 'text-gray-500', 'font-medium');
+        });
+        
+        // Show current pane
+        document.getElementById(tabId).classList.remove('hidden');
+        document.getElementById(tabId).classList.add('block');
+        
+        // Set active class to current button
+        element.classList.remove('border-transparent', 'text-gray-500', 'font-medium');
+        element.classList.add('border-indigo-500', 'text-indigo-600', 'font-bold');
+    }
+</script>
 
 <!-- Load jsVectorMap CSS and Scripts -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap/dist/css/jsvectormap.min.css" />

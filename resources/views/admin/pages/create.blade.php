@@ -8,9 +8,11 @@
     <div class="py-12">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white shadow sm:rounded-lg p-6">
-                <!-- Quill CSS -->
-                <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-                
+                <!-- Summernote Lite CSS/JS -->
+                <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
+                <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
+
                 <form action="{{ route('admin.pages.store') }}" method="POST" id="page-form">
                     @csrf
                     
@@ -26,8 +28,7 @@
 
                     <div class="mb-6">
                         <label class="block text-sm font-bold text-gray-700 mb-2">Page Content</label>
-                        <div id="editor-container" class="h-64 bg-white"></div>
-                        <input type="hidden" name="content" id="content">
+                        <textarea id="summernote" name="content"></textarea>
                     </div>
 
                     <div class="mb-6 bg-gray-50 p-4 border rounded">
@@ -53,33 +54,31 @@
                     </div>
                 </form>
 
-                <!-- Quill JS -->
-                <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
                 <script>
-                    var quill = new Quill('#editor-container', {
-                        theme: 'snow',
-                        placeholder: 'Write the page content here...',
-                        modules: {
+                    $(document).ready(function() {
+                        $('#summernote').summernote({
+                            placeholder: 'Write your page content here... Use the </> button for custom HTML code.',
+                            tabsize: 2,
+                            height: 400,
                             toolbar: [
-                                [{ 'header': [2, 3, false] }],
-                                ['bold', 'italic', 'underline'],
-                                ['link', 'image', 'video'],
-                                [{'list': 'ordered'}, {'list': 'bullet'}],
-                                ['clean']
+                                ['style', ['style']],
+                                ['font', ['bold', 'italic', 'underline', 'clear']],
+                                ['color', ['color']],
+                                ['para', ['ul', 'ol', 'paragraph']],
+                                ['table', ['table']],
+                                ['insert', ['link', 'picture', 'video']],
+                                ['view', ['fullscreen', 'codeview', 'help']]
                             ]
-                        }
+                        });
                     });
 
-                    var form = document.getElementById('page-form');
-                    form.onsubmit = function() {
-                        var content = document.querySelector('input[name=content]');
-                        content.value = quill.root.innerHTML;
-                        if(quill.getText().trim().length === 0) {
+                    $('#page-form').on('submit', function() {
+                        if ($('#summernote').summernote('isEmpty')) {
                             alert('Content cannot be empty');
                             return false;
                         }
                         return true;
-                    };
+                    });
                 </script>
             </div>
         </div>
