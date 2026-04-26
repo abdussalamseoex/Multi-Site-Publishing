@@ -58,6 +58,7 @@
                                 <td class="px-6 py-4 text-sm text-gray-500">/{{ $page->slug }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $page->created_at->format('M d, Y') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                    <a href="{{ route('frontend.post', $page->slug) }}" target="_blank" class="text-blue-600 hover:text-blue-900 font-bold mr-4">Live Link</a>
                                     <a href="{{ route('admin.pages.edit', $page->id) }}" class="text-indigo-600 hover:text-indigo-900 font-bold">Edit</a>
                                     <form action="{{ route('admin.pages.destroy', $page->id) }}" method="POST" class="inline">
                                         @csrf

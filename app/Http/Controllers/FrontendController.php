@@ -60,8 +60,18 @@ class FrontendController extends Controller
         
         if (!$post) {
             // Check legacy imported original_slug
-            $post = Post::where('original_slug', $slug)->firstOrFail();
-            return redirect()->route('frontend.post', $post->slug, 301);
+            $post = Post::where('original_slug', $slug)->first();
+            if ($post) {
+                return redirect()->route('frontend.post', $post->slug, 301);
+            }
+
+            // Check if it is a static page instead of a post
+            $page = \App\Models\Page::where('slug', $slug)->first();
+            if ($page) {
+                return $this->page($slug);
+            }
+
+            abort(404);
         }
         
         if ($post->status !== 'published') {
