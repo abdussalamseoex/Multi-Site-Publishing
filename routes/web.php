@@ -9,6 +9,7 @@ Route::get('/', [FrontendController::class, 'index'])->name('home');
 
 Route::get('/p/{slug}', [FrontendController::class, 'page'])->name('frontend.page');
 Route::get('/category/{slug}', [FrontendController::class, 'category'])->name('frontend.category');
+Route::get('/search', [FrontendController::class, 'search'])->name('frontend.search');
 
 Route::get('/dashboard', function () {
     $user = \Illuminate\Support\Facades\Auth::user();

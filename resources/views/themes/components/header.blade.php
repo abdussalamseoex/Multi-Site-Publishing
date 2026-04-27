@@ -51,21 +51,94 @@
                 @endforeach
             @endif
         </div>
-        
-        <!-- Auth Buttons -->
-        <div class="flex items-center gap-4">
+
+        <!-- Right: Search icon + Auth buttons -->
+        <div class="flex items-center gap-3">
+
+            <!-- Search toggle -->
+            <button id="hdr-search-btn"
+                    aria-label="Toggle search"
+                    onclick="toggleHeaderSearch()"
+                    class="p-2 rounded-lg hover:bg-black/5 transition-colors flex-shrink-0"
+                    style="color: {{ $headerText }};">
+                <svg id="hdr-search-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+                </svg>
+                <svg id="hdr-close-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+
             @auth
                 <a href="{{ url('/dashboard') }}" class="px-5 py-2.5 bg-gray-900 text-white rounded-lg font-bold hover:bg-gray-800 transition shadow-sm text-sm">Dashboard</a>
             @else
-                <a href="{{ route('login') }}" class="hidden md:inline-block font-bold text-sm text-gray-700 hover:opacity-80 transition" style="color: {{ $headerText }};">Log In</a>
+                <a href="{{ route('login') }}" class="hidden md:inline-block font-bold text-sm hover:opacity-80 transition" style="color: {{ $headerText }};">Log In</a>
                 @if(\App\Models\Setting::get('enable_registration', '1') == '1')
                     <a href="{{ route('register') }}" class="px-5 py-2.5 bg-primary text-white rounded-lg font-bold hover:opacity-90 transition shadow-md shadow-primary/30 text-sm">Sign Up</a>
                 @endif
             @endauth
         </div>
     </nav>
+
+    <!-- Slide-down search bar -->
+    <div id="hdr-search-panel"
+         style="max-height:0; overflow:hidden; transition:max-height .3s ease;">
+        <div class="max-w-7xl mx-auto px-6 pb-4 pt-1">
+            <form action="{{ route('frontend.search') }}" method="GET" class="flex gap-2">
+                <input
+                    id="hdr-search-input"
+                    type="text"
+                    name="q"
+                    value="{{ request('q') }}"
+                    placeholder="Search articles, topics&hellip;"
+                    autocomplete="off"
+                    class="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none transition-all"
+                    onkeydown="if(event.key==='Escape'){toggleHeaderSearch(false);}"
+                >
+                <button type="submit"
+                        class="px-5 py-2.5 rounded-lg font-bold text-sm text-white transition-opacity"
+                        style="background-color:var(--primary);">
+                    Search
+                </button>
+            </form>
+        </div>
+    </div>
 </header>
 
 <!-- Header Ad Slot -->
 <x-ad-slot placement="header" class="max-w-7xl mx-auto px-4 mt-4" />
 
+<script>
+(function () {
+    var open = {{ request()->routeIs('frontend.search') ? 'true' : 'false' }};
+    function applyState() {
+        var panel = document.getElementById('hdr-search-panel');
+        var si    = document.getElementById('hdr-search-icon');
+        var ci    = document.getElementById('hdr-close-icon');
+        if (!panel) return;
+        panel.style.maxHeight = open ? '80px' : '0';
+        if (si) si.classList.toggle('hidden', open);
+        if (ci) ci.classList.toggle('hidden', !open);
+        if (open) {
+            setTimeout(function () {
+                var inp = document.getElementById('hdr-search-input');
+                if (inp) inp.focus();
+            }, 320);
+        }
+    }
+    window.toggleHeaderSearch = function (force) {
+        open = (typeof force !== 'undefined') ? !!force : !open;
+        applyState();
+    };
+    document.addEventListener('DOMContentLoaded', applyState);
+    document.addEventListener('click', function (e) {
+        if (!open) return;
+        var btn   = document.getElementById('hdr-search-btn');
+        var panel = document.getElementById('hdr-search-panel');
+        if (btn && !btn.contains(e.target) && panel && !panel.contains(e.target)) {
+            open = false;
+            applyState();
+        }
+    });
+})();
+</script>

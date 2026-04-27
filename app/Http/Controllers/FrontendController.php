@@ -118,4 +118,28 @@ class FrontendController extends Controller
         $activeTheme = \App\Models\Setting::get('active_theme', 'minimal');
         return view('themes.page', compact('page', 'activeTheme'));
     }
+
+    public function search(Request $request)
+    {
+        $query = trim($request->input('q', ''));
+        $activeTheme = Setting::get('active_theme', 'minimal');
+
+        $posts = Post::where('status', 'published')
+            ->where(function ($q) use ($query) {
+                $q->where('title', 'like', "%{$query}%")
+                  ->orWhere('summary', 'like', "%{$query}%")
+                  ->orWhere('content', 'like', "%{$query}%");
+            })
+            ->latest()
+            ->paginate(12)
+            ->withQueryString();
+
+        // Try theme-specific search view first, fallback to global
+        $viewName = "themes.{$activeTheme}.search";
+        if (!view()->exists($viewName)) {
+            $viewName = 'themes.search';
+        }
+
+        return view($viewName, compact('posts', 'query', 'activeTheme'));
+    }
 }
