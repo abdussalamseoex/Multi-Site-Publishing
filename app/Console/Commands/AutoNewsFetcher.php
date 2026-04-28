@@ -17,7 +17,7 @@ class AutoNewsFetcher extends Command
      *
      * @var string
      */
-    protected $signature = 'news:fetch-auto';
+    protected $signature = 'news:fetch-auto {source_id?}';
 
     /**
      * The console command description.
@@ -31,11 +31,18 @@ class AutoNewsFetcher extends Command
      */
     public function handle()
     {
-        $sources = AutoNewsSource::where('is_active', true)->get();
+        $sourceId = $this->argument('source_id');
+        $isManual = $sourceId !== null;
+
+        if ($isManual) {
+            $sources = AutoNewsSource::where('id', $sourceId)->get();
+        } else {
+            $sources = AutoNewsSource::where('is_active', true)->get();
+        }
 
         foreach ($sources as $source) {
-            // Check if it's time to run
-            if ($source->last_run_at) {
+            // Check if it's time to run (skip if manual)
+            if (!$isManual && $source->last_run_at) {
                 $hoursSinceLastRun = $source->last_run_at->diffInHours(now());
                 if ($hoursSinceLastRun < $source->fetch_interval_hours) {
                     continue; // Skip, not time yet
@@ -187,17 +194,24 @@ class AutoNewsFetcher extends Command
                 
                 // Featured Image
                 $featuredImageUrl = null;
+                $featuredImageCredit = null;
                 if ($source->featured_image_source !== 'none') {
-                    $featuredImageUrl = $this->fetchImage($keyword, $source->featured_image_source);
+                    $imgData = $this->fetchImage($keyword, $source->featured_image_source);
+                    if ($imgData) {
+                        $featuredImageUrl = $imgData['url'];
+                        $featuredImageCredit = $imgData['credit'];
+                    }
                 }
 
                 // In-Content Images
                 $content = $contentData['content'];
                 if ($imageCount > 0 && $source->in_content_image_source !== 'none') {
                     for ($i = 0; $i < $imageCount; $i++) {
-                        $imgUrl = $this->fetchImage($keyword . ' part ' . ($i+1), $source->in_content_image_source);
-                        if ($imgUrl) {
-                            $imageTag = '<figure><img src="' . $imgUrl . '" alt="' . htmlspecialchars($keyword) . '" class="w-full h-auto rounded-lg shadow-md my-4"></figure>';
+                        $imgData = $this->fetchImage($keyword . ' part ' . ($i+1), $source->in_content_image_source);
+                        if ($imgData) {
+                            $imgUrl = $imgData['url'];
+                            $credit = $imgData['credit'];
+                            $imageTag = '<figure class="my-6"><img src="' . $imgUrl . '" alt="' . htmlspecialchars($keyword) . '" class="w-full h-auto rounded-lg shadow-md"><figcaption class="text-center text-sm text-gray-500 mt-2">Image Source: ' . $credit . '</figcaption></figure>';
                             if (strpos($content, '[IMAGE_PLACEHOLDER]') !== false) {
                                 $content = preg_replace('/\[IMAGE_PLACEHOLDER\]/', $imageTag, $content, 1);
                             } else {
@@ -208,6 +222,10 @@ class AutoNewsFetcher extends Command
                             }
                         }
                     }
+                }
+
+                if ($featuredImageCredit) {
+                    $content .= '<p class="text-sm text-gray-500 mt-8 border-t pt-4"><em>Featured Image Source: ' . $featuredImageCredit . '</em></p>';
                 }
 
                 $content = str_replace('[IMAGE_PLACEHOLDER]', '', $content);
@@ -264,7 +282,9 @@ class AutoNewsFetcher extends Command
             if ($response->successful()) {
                 $data = $response->json();
                 if (isset($data['photos'][0]['src']['large'])) {
-                    return $data['photos'][0]['src']['large'];
+                    $photographer = $data['photos'][0]['photographer'] ?? 'Pexels';
+                    $url = $data['photos'][0]['url'] ?? 'https://www.pexels.com';
+                    return ['url' => $data['photos'][0]['src']['large'], 'credit' => "<a href='{$url}' target='_blank' rel='nofollow'>{$photographer} on Pexels</a>"];
                 }
             }
         } elseif ($sourceName === 'unsplash') {
@@ -282,7 +302,9 @@ class AutoNewsFetcher extends Command
             if ($response->successful()) {
                 $data = $response->json();
                 if (isset($data['results'][0]['urls']['regular'])) {
-                    return $data['results'][0]['urls']['regular'];
+                    $photographer = $data['results'][0]['user']['name'] ?? 'Unsplash';
+                    $url = $data['results'][0]['links']['html'] ?? 'https://unsplash.com';
+                    return ['url' => $data['results'][0]['urls']['regular'], 'credit' => "<a href='{$url}' target='_blank' rel='nofollow'>{$photographer} on Unsplash</a>"];
                 }
             }
         } elseif ($sourceName === 'dalle') {
@@ -311,7 +333,7 @@ class AutoNewsFetcher extends Command
                             mkdir(public_path('uploads/posts'), 0777, true);
                         }
                         file_put_contents($path, $imageContent);
-                        return '/uploads/posts/' . $filename;
+                        return ['url' => '/uploads/posts/' . $filename, 'credit' => "AI Generated by DALL-E 3"];
                     }
                 }
             }

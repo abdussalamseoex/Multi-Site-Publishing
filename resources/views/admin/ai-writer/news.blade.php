@@ -127,11 +127,17 @@
                                             {{ $source->last_run_at ? $source->last_run_at->diffForHumans() : 'Never' }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <form action="{{ route('admin.ai-writer.news.destroy', $source->id) }}" method="POST" onsubmit="return confirm('Delete this source?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
-                                            </form>
+                                            <div class="flex items-center justify-end space-x-2">
+                                                <form action="{{ route('admin.ai-writer.news.fetch', $source->id) }}" method="POST" onsubmit="return confirm('Trigger manual fetch for this source now? This might take a few minutes.');">
+                                                    @csrf
+                                                    <button type="submit" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-2 py-1 rounded">Fetch Now</button>
+                                                </form>
+                                                <form action="{{ route('admin.ai-writer.news.destroy', $source->id) }}" method="POST" onsubmit="return confirm('Delete this source?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-red-600 hover:text-red-900 px-2 py-1">Delete</button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                     @endforeach

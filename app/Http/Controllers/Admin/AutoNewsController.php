@@ -53,4 +53,17 @@ class AutoNewsController extends Controller
 
         return back()->with('status', 'Auto News Source deleted.');
     }
+
+    public function fetchNow($id)
+    {
+        $source = AutoNewsSource::findOrFail($id);
+        
+        try {
+            \Illuminate\Support\Facades\Artisan::call('news:fetch-auto', ['source_id' => $source->id]);
+            return back()->with('status', 'Fetch triggered successfully for source: ' . $source->name);
+        } catch (\Exception $e) {
+            \Log::error("Manual Fetch Error: " . $e->getMessage());
+            return back()->withErrors(['error' => 'Failed to run fetch. Check logs.']);
+        }
+    }
 }
