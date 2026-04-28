@@ -95,6 +95,14 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/update', [\App\Http\Controllers\Admin\UpdateController::class, 'index'])->name('update.index');
     Route::post('/update', [\App\Http\Controllers\Admin\UpdateController::class, 'process'])->name('update.process');
 
+    // AI Automation
+    Route::get('/ai-writer', [\App\Http\Controllers\Admin\AIWriterController::class, 'index'])->name('ai-writer.index');
+    Route::post('/ai-writer/generate', [\App\Http\Controllers\Admin\AIWriterController::class, 'generate'])->name('ai-writer.generate');
+    
+    Route::get('/ai-writer/news', [\App\Http\Controllers\Admin\AutoNewsController::class, 'index'])->name('ai-writer.news');
+    Route::post('/ai-writer/news', [\App\Http\Controllers\Admin\AutoNewsController::class, 'store'])->name('ai-writer.news.store');
+    Route::delete('/ai-writer/news/{id}', [\App\Http\Controllers\Admin\AutoNewsController::class, 'destroy'])->name('ai-writer.news.destroy');
+
     Route::post('/posts/bulk-action', [AdminPostController::class, 'bulkAction'])->name('posts.bulk-action');
     Route::resource('/posts', AdminPostController::class)->except(['show']);
     Route::post('/posts/{post}/status', [AdminPostController::class, 'updateStatus'])->name('posts.status');

@@ -218,7 +218,31 @@
                         </div>
                     </div>
 
+                    <!-- AI API Keys Settings -->
+                    <div class="bg-white shadow-sm sm:rounded-lg p-6 border-l-4 border-teal-400">
+                        <div class="flex items-center gap-2 mb-4">
+                            <svg class="w-6 h-6 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            <h3 class="text-lg font-medium text-gray-900">AI & Auto Writer Settings</h3>
+                        </div>
+                        <p class="text-sm text-gray-500 mb-6">Configure the API keys required for AI Content Generation and Auto Image Fetching.</p>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">OpenAI API Key (ChatGPT/DALL-E)</label>
+                                <input type="password" name="openai_api_key" value="{{ $settings['openai_api_key'] ?? '' }}" placeholder="sk-..." class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Pexels API Key (Free Stock Images)</label>
+                                <input type="password" name="pexels_api_key" value="{{ $settings['pexels_api_key'] ?? '' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                            </div>
 
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Unsplash API Key (Optional Alternative)</label>
+                                <input type="password" name="unsplash_api_key" value="{{ $settings['unsplash_api_key'] ?? '' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- Custom Scripts & Analytics -->
                     <div class="bg-white shadow-sm sm:rounded-lg p-6 col-span-1 border-l-4 border-purple-400">

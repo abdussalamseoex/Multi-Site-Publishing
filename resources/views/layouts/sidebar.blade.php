@@ -61,6 +61,16 @@
         @endif
 
         @if(auth()->user()->role === 'admin')
+        <p class="px-3 text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6">AI Automation</p>
+        <a href="{{ route('admin.ai-writer.index') }}" class="{{ request()->routeIs('admin.ai-writer.index') ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white' }} flex items-center px-3 py-2 text-sm font-medium rounded-md transition transition-colors">
+            <svg class="mr-3 flex-shrink-0 h-5 w-5 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            AI Bulk Writer
+        </a>
+        <a href="{{ route('admin.ai-writer.news') }}" class="{{ request()->routeIs('admin.ai-writer.news') ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white' }} flex items-center px-3 py-2 text-sm font-medium rounded-md transition transition-colors mt-1">
+            <svg class="mr-3 flex-shrink-0 h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5L16.5 5.5M9 11l3 3L22 4"></path></svg>
+            Auto News Fetcher
+        </a>
+
         <p class="px-3 text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6">Design & Pages</p>
         <a href="{{ route('admin.theme.options') }}" class="{{ request()->routeIs('admin.theme.options*') ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white' }} flex items-center px-3 py-2 text-sm font-medium rounded-md transition transition-colors">
             <svg class="mr-3 flex-shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path></svg>
