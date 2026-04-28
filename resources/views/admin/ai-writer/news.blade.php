@@ -251,9 +251,9 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div class="flex items-center justify-end space-x-2">
-                                                <form action="{{ route('admin.ai-writer.news.fetch', $source->id) }}" method="POST" onsubmit="return confirm('Trigger manual fetch for this source now? This might take a few minutes.');">
+                                                <form action="{{ route('admin.ai-writer.news.fetch', $source->id) }}" method="POST" onsubmit="if(confirm('Trigger manual fetch for this source now? This might take a few minutes.')) { var btn = this.querySelector('button'); btn.innerHTML = 'Fetching...'; btn.classList.add('opacity-75', 'cursor-not-allowed'); btn.disabled = true; return true; } return false;">
                                                     @csrf
-                                                    <button type="submit" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-2 py-1 rounded">Fetch Now</button>
+                                                    <button type="submit" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-2 py-1 rounded transition-opacity">Fetch Now</button>
                                                 </form>
                                                 <form action="{{ route('admin.ai-writer.news.destroy', $source->id) }}" method="POST" onsubmit="return confirm('Delete this source?');">
                                                     @csrf

@@ -59,6 +59,9 @@ class AutoNewsController extends Controller
         $source = AutoNewsSource::findOrFail($id);
         
         try {
+            // Increase execution time since fetching and AI rewriting can take minutes
+            set_time_limit(600); // 10 minutes max
+            
             \Illuminate\Support\Facades\Artisan::call('news:fetch-auto', ['source_id' => $source->id]);
             return back()->with('status', 'Fetch triggered successfully for source: ' . $source->name);
         } catch (\Exception $e) {

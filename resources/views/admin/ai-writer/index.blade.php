@@ -109,11 +109,27 @@
 
                     <!-- Progress Area -->
                     <div id="progress-area" class="mt-8 hidden border-t pt-6">
-                        <h3 class="font-bold text-lg mb-2">Generation Progress <span id="progress-text" class="text-indigo-600">0/0</span></h3>
-                        <div class="w-full bg-gray-200 rounded-full h-4 mb-4">
-                            <div class="bg-indigo-600 h-4 rounded-full transition-all duration-500" id="progress-bar" style="width: 0%"></div>
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-bold text-lg text-gray-900">Generation Progress <span id="progress-text" class="text-indigo-600 font-bold ml-2">0/0</span></h3>
+                            <div class="text-right">
+                                <span class="text-xs font-medium text-gray-500 uppercase tracking-wider block">Est. Time Per Post</span>
+                                <span id="estimated-time" class="text-sm font-bold text-indigo-600 block">~45-60 seconds</span>
+                            </div>
                         </div>
-                        <ul id="log" class="text-sm text-gray-600 bg-gray-50 p-4 rounded border h-64 overflow-y-auto space-y-2 font-mono">
+                        <div class="w-full bg-gray-200 rounded-full h-3 mb-4 overflow-hidden">
+                            <div id="progress-bar" class="bg-indigo-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center bg-indigo-50 border border-indigo-100 rounded-lg p-3 mb-4">
+                            <div class="flex items-center space-x-2">
+                                <svg class="animate-spin w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                <span class="text-sm font-semibold text-indigo-900">Current Post Processing Time:</span>
+                            </div>
+                            <span id="live-timer" class="text-lg font-mono font-bold text-indigo-700">00:00</span>
+                        </div>
+
+                        <ul id="log" class="bg-gray-900 text-green-400 font-mono text-sm p-4 rounded-lg h-64 overflow-y-auto space-y-1 shadow-inner leading-relaxed">
+                            <li>Waiting for initialization...</li>
                         </ul>
                     </div>
 
@@ -194,11 +210,22 @@
             const schedule_interval = parseInt(document.getElementById('schedule_interval').value);
             
             let currentTime = new Date();
+            let timerInterval;
 
             for (let i = 0; i < keywords.length; i++) {
                 const keyword = keywords[i];
-                logArea.innerHTML += `<li>[${new Date().toLocaleTimeString()}] Starting: ${keyword}...</li>`;
+                logArea.innerHTML += `<li>[${new Date().toLocaleTimeString()}] Starting: <strong>${keyword}</strong>...</li>`;
                 logArea.scrollTop = logArea.scrollHeight;
+
+                // Start Live Timer
+                let secondsElapsed = 0;
+                document.getElementById('live-timer').innerText = '00:00';
+                timerInterval = setInterval(() => {
+                    secondsElapsed++;
+                    let m = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                    let s = (secondsElapsed % 60).toString().padStart(2, '0');
+                    document.getElementById('live-timer').innerText = `${m}:${s}`;
+                }, 1000);
 
                 let scheduleTime = null;
                 if (status === 'scheduled') {
@@ -228,6 +255,8 @@
                         })
                     });
 
+                    clearInterval(timerInterval);
+
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
@@ -235,13 +264,14 @@
                     const result = await response.json();
                     
                     if (result.success) {
-                        logArea.innerHTML += `<li class="text-green-600">[${new Date().toLocaleTimeString()}] Success: ${result.message}</li>`;
+                        logArea.innerHTML += `<li class="text-green-300">[${new Date().toLocaleTimeString()}] Success: ${result.message} (Took ${secondsElapsed}s)</li>`;
                     } else {
-                        logArea.innerHTML += `<li class="text-red-600">[${new Date().toLocaleTimeString()}] Failed: ${result.message}</li>`;
+                        logArea.innerHTML += `<li class="text-red-400">[${new Date().toLocaleTimeString()}] Failed: ${result.message}</li>`;
                     }
                 } catch (error) {
+                    clearInterval(timerInterval);
                     console.error("AI Writer Error:", error);
-                    logArea.innerHTML += `<li class="text-red-600">[${new Date().toLocaleTimeString()}] Error: ${error.message}. Please check Developer Console (F12) for details.</li>`;
+                    logArea.innerHTML += `<li class="text-red-400">[${new Date().toLocaleTimeString()}] Error: ${error.message}. Please check Developer Console (F12) for details.</li>`;
                 }
 
                 // Update Progress
