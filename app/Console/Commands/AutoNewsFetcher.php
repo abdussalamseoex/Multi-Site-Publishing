@@ -154,13 +154,13 @@ class AutoNewsFetcher extends Command
             $imageCount = $source->in_content_images_count;
             $imageInstruction = $imageCount > 0 ? "Also, insert the exact text '[IMAGE_PLACEHOLDER]' at appropriate places in the content $imageCount times." : "";
 
-            $defaultPrompt = "Rewrite the following news article to be unique, SEO-friendly, and highly engaging.\nFollow Google's EEAT guidelines. Make it look like a human journalist wrote it.\nOriginal Title: {title}\nOriginal Context: {context}\n\nFormat the output as a valid JSON object with three keys:\n- 'title': A catchy, unique, SEO-friendly title.\n- 'meta_description': A 150-160 character meta description.\n- 'content': The main rewritten article formatted in HTML (use <h2>, <h3>, <p>, <ul>). Add a small 'Source' link at the very bottom pointing to {link}. Do NOT include <h1> or ```html wrappers.\n{image_instruction}";
+            $defaultPrompt = "Rewrite the following news article to be unique, SEO-friendly, and highly engaging. The current year is {current_year}, ensure content is up-to-date.\nFollow Google's EEAT guidelines. Make it look like a human journalist wrote it.\nOriginal Title: {title}\nOriginal Context: {context}\n\nFormat the output as a valid JSON object with four keys:\n- 'title': A catchy, unique, SEO-friendly title without the year unless necessary.\n- 'meta_description': A 150-160 character meta description.\n- 'meta_keywords': A comma-separated string of 5-8 SEO keywords.\n- 'content': The main rewritten article formatted in HTML (use <p>, <h2>, <h3>, <ul>). Do NOT start the content with an 'Introduction' heading. Start directly with the first paragraph. Add a small 'Source' link at the very bottom pointing to {link}. Do NOT include <h1> or ```html wrappers.\n{image_instruction}";
             
             $promptTemplate = Setting::get('ai_news_prompt', $defaultPrompt);
             
             $prompt = str_replace(
-                ['{title}', '{context}', '{link}', '{image_instruction}'],
-                [$article['title'], $text, $article['link'], $imageInstruction],
+                ['{title}', '{context}', '{link}', '{image_instruction}', '{current_year}'],
+                [$article['title'], $text, $article['link'], $imageInstruction, date('Y')],
                 $promptTemplate
             );
 
@@ -211,8 +211,12 @@ class AutoNewsFetcher extends Command
                 }
 
                 $content = str_replace('[IMAGE_PLACEHOLDER]', '', $content);
+                // Remove Introduction header if AI still includes it
+                $content = preg_replace('/<h2[^>]*>(Introduction|ভূমিকা|परिचय|Introducción)<\/h2>/i', '', $content);
+                $content = trim($content);
 
-                $slug = Str::slug($contentData['title']);
+                $cleanTitle = str_replace(['"', '\''], '', $contentData['title']);
+                $slug = Str::slug($cleanTitle);
                 if (Post::where('slug', $slug)->exists()) {
                     $slug = $slug . '-' . time();
                 }
@@ -224,12 +228,13 @@ class AutoNewsFetcher extends Command
                 $post->category_id = $source->category_id;
                 $post->title = $contentData['title'];
                 $post->slug = $slug;
-                $post->summary = $contentData['meta_description'];
+                $post->summary = $contentData['meta_description'] ?? '';
                 $post->content = $content;
                 $post->featured_image = $featuredImageUrl;
                 $post->status = 'published';
                 $post->meta_title = $contentData['title'];
-                $post->meta_description = $contentData['meta_description'];
+                $post->meta_description = $contentData['meta_description'] ?? '';
+                $post->meta_keywords = $contentData['meta_keywords'] ?? '';
                 $post->save();
 
                 return true;
