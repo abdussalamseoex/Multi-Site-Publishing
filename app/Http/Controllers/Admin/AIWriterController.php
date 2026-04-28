@@ -70,6 +70,11 @@ class AIWriterController extends Controller
                 return response()->json(['success' => false, 'message' => 'Failed to generate content from OpenAI.']);
             }
 
+            // 1b. Hard-sanitize the AI title — remove colons and cliché openers
+            if (!empty($contentData['title']) && $request->generate_title !== 'no') {
+                $contentData['title'] = $this->sanitizeTitle($contentData['title']);
+            }
+
             // 2. Handle Featured Image
             $featuredImageUrl = null;
             $featuredImageCredit = null;
@@ -307,5 +312,48 @@ class AIWriterController extends Controller
         $before = trim($before);
 
         return $before . $after;
+    }
+
+    /**
+     * Hard-sanitize AI-generated title:
+     * 1. Remove colons — split at colon and keep the longer/more meaningful half.
+     * 2. Strip cliché opening words.
+     */
+    private function sanitizeTitle(string $title): string
+    {
+        $title = trim($title);
+
+        // 1. Remove leading/trailing quotes
+        $title = trim($title, '"\'');
+
+        // 2. Handle colons — keep the part after the colon if it's longer (subtitle-style),
+        //    otherwise keep the part before.
+        if (strpos($title, ':') !== false) {
+            $parts = explode(':', $title, 2);
+            $before = trim($parts[0]);
+            $after  = trim($parts[1] ?? '');
+            // Keep the longer, more descriptive part; prefer "after" for subtitle patterns
+            $title = strlen($after) >= strlen($before) ? $after : $before;
+        }
+
+        // 3. Strip cliché opener words at the start of the title
+        $cliches = [
+            'Unlocking', 'Discovering', 'Unveiling', 'Exploring', 'Mastering',
+            'Navigating', 'Revolutionizing', 'Transforming', 'Harnessing',
+            'The Secret to', 'The Secrets of', 'The Secret Behind',
+            'The Ultimate Guide to', 'The Ultimate Guide',
+            'A Comprehensive Guide to', 'A Guide to',
+            'Everything You Need to Know About',
+            'Why You Should', 'How to Achieve',
+        ];
+
+        foreach ($cliches as $cliche) {
+            if (stripos($title, $cliche) === 0) {
+                $title = trim(substr($title, strlen($cliche)));
+                break;
+            }
+        }
+
+        return ucfirst(trim($title, ' ,;'));
     }
 }
