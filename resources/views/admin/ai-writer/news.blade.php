@@ -21,14 +21,27 @@
                     
                     <form action="{{ route('admin.ai-writer.news.store') }}" method="POST" class="space-y-6">
                         @csrf
+                        <!-- Preset Options -->
+                        <div class="mb-4 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                            <label class="block font-medium text-sm text-blue-800 mb-2">Or Choose from Top Global Sources (Auto-fill):</label>
+                            <select id="preset_source" class="block w-full rounded-md border-blue-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                <option value="">-- Select a Top Source --</option>
+                                <option value="http://feeds.bbci.co.uk/news/world/rss.xml" data-name="BBC News (World)">BBC News (World)</option>
+                                <option value="http://rss.cnn.com/rss/edition.rss" data-name="CNN (Top Stories)">CNN (Top Stories)</option>
+                                <option value="https://rss.nytimes.com/services/xml/rss/nyt/World.xml" data-name="New York Times (World)">New York Times (World)</option>
+                                <option value="https://www.theguardian.com/world/rss" data-name="The Guardian (World)">The Guardian (World)</option>
+                                <option value="https://www.aljazeera.com/xml/rss/all.xml" data-name="Al Jazeera (English)">Al Jazeera (English)</option>
+                            </select>
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block font-medium text-sm text-gray-700">Source Name</label>
-                                <input type="text" name="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required placeholder="e.g. BBC Technology">
+                                <input type="text" name="name" id="source_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required placeholder="e.g. BBC Technology">
                             </div>
                             <div>
                                 <label class="block font-medium text-sm text-gray-700">RSS Feed URL or Target URL</label>
-                                <input type="url" name="source_url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required placeholder="https://feeds.bbci.co.uk/news/technology/rss.xml">
+                                <input type="url" name="source_url" id="source_url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required placeholder="https://feeds.bbci.co.uk/news/technology/rss.xml">
                             </div>
                         </div>
 
@@ -159,3 +172,22 @@
         </div>
     </div>
 </x-app-layout>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const presetSource = document.getElementById('preset_source');
+        const sourceName = document.getElementById('source_name');
+        const sourceUrl = document.getElementById('source_url');
+
+        if (presetSource) {
+            presetSource.addEventListener('change', function() {
+                if (this.value) {
+                    sourceUrl.value = this.value;
+                    sourceName.value = this.options[this.selectedIndex].getAttribute('data-name');
+                }
+            });
+        }
+    });
+</script>
+@endpush

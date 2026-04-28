@@ -150,7 +150,17 @@ class AutoNewsFetcher extends Command
             if (!$response->successful()) return false;
 
             $html = $response->body();
-            // Basic extraction (can be improved with DOMDocument or Readability)
+            
+            // Extract original featured image (og:image)
+            $originalImage = null;
+            if (preg_match('/<meta\s+(?:property|name)=["\']og:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $matches) || 
+                preg_match('/<meta\s+content=["\']([^"\']+)["\']\s+(?:property|name)=["\']og:image["\']/i', $html, $matches)) {
+                $originalImage = $matches[1];
+            } elseif (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $html, $matches)) {
+                $originalImage = $matches[1];
+            }
+
+            // Basic extraction
             $text = strip_tags(preg_replace('#<script(.*?)>(.*?)</script>#is', '', $html));
             $text = preg_replace('/\s+/', ' ', $text);
             $text = substr($text, 0, 5000); // Limit context for OpenAI
@@ -161,7 +171,7 @@ class AutoNewsFetcher extends Command
             $imageCount = $source->in_content_images_count;
             $imageInstruction = $imageCount > 0 ? "Also, insert the exact text '[IMAGE_PLACEHOLDER]' at appropriate places in the content $imageCount times." : "";
 
-            $defaultPrompt = "Rewrite the following news article to be unique, SEO-friendly, and highly engaging. The current year is {current_year}, ensure content is up-to-date.\nFollow Google's EEAT guidelines. Make it look like a human journalist wrote it.\nOriginal Title: {title}\nOriginal Context: {context}\n\nFormat the output as a valid JSON object with four keys:\n- 'title': A catchy, unique, SEO-friendly title without the year unless necessary.\n- 'meta_description': A 150-160 character meta description.\n- 'meta_keywords': A comma-separated string of 5-8 SEO keywords.\n- 'content': The main rewritten article formatted in HTML (use <p>, <h2>, <h3>, <ul>). Do NOT start the content with an 'Introduction' heading. Start directly with the first paragraph. Add a small 'Source' link at the very bottom pointing to {link}. Do NOT include <h1> or ```html wrappers.\n{image_instruction}";
+            $defaultPrompt = "Rewrite the following news article to be highly engaging, professional, and unique. Write in the authoritative, objective, and gripping style of a top-tier news agency (like Reuters, AP News, or BBC). The current year is {current_year}, ensure context is up-to-date.\nFollow Google's EEAT guidelines.\nOriginal Title: {title}\nOriginal Context: {context}\n\nFormat the output as a valid JSON object with four keys:\n- 'title': A catchy, unique, journalistic SEO-friendly title without the year unless necessary.\n- 'meta_description': A 150-160 character meta description summarizing the news.\n- 'meta_keywords': A comma-separated string of 5-8 SEO keywords.\n- 'content': The main rewritten news article formatted in HTML (use <p>, <h2>, <h3>). Do NOT start with an 'Introduction' heading. Start the first paragraph directly with a strong journalistic hook (the lead). Add a small 'Source' link at the very bottom pointing to {link}. Do NOT include <h1> or ```html wrappers.\n{image_instruction}";
             
             $promptTemplate = Setting::get('ai_news_prompt', $defaultPrompt);
             
@@ -201,6 +211,8 @@ class AutoNewsFetcher extends Command
                         $featuredImageUrl = $imgData['url'];
                         $featuredImageCredit = $imgData['credit'];
                     }
+                } else {
+                    $featuredImageUrl = $originalImage;
                 }
 
                 // In-Content Images
@@ -229,8 +241,9 @@ class AutoNewsFetcher extends Command
                 }
 
                 $content = str_replace('[IMAGE_PLACEHOLDER]', '', $content);
-                // Remove Introduction header if AI still includes it
-                $content = preg_replace('/<h2[^>]*>(Introduction|ভূমিকা|परिचय|Introducción)<\/h2>/i', '', $content);
+                // Remove Introduction header more aggressively
+                $content = preg_replace('/<h[1-4][^>]*>\s*(Introduction|ভূমিকা|परिचय|Introducción|Overview|Background|সারসংক্ষেপ)\s*<\/h[1-4]>/i', '', $content);
+                $content = preg_replace('/^\s*(Introduction|ভূমিকা|परिचय|Introducción|Overview|Background|সারসংক্ষেপ)\s*<br[^>]*>/i', '', $content);
                 $content = trim($content);
 
                 $cleanTitle = str_replace(['"', '\''], '', $contentData['title']);
