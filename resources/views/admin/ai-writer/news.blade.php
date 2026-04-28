@@ -98,7 +98,11 @@
                                         'aljazeera': {
                                             name: 'Al Jazeera',
                                             categories: {
-                                                'Top Stories': 'https://www.aljazeera.com/xml/rss/all.xml'
+                                                'Top Stories': 'https://www.aljazeera.com/xml/rss/all.xml',
+                                                'Middle East': 'https://www.aljazeera.com/xml/rss/middle-east.xml',
+                                                'World News': 'https://www.aljazeera.com/xml/rss/world.xml',
+                                                'Sports': 'https://www.aljazeera.com/xml/rss/sport.xml',
+                                                'Economy / Business': 'https://www.aljazeera.com/xml/rss/economy.xml'
                                             }
                                         }
                                     };
@@ -199,6 +203,36 @@
                             </div>
                         </div>
 
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-amber-50 border border-amber-100 p-4 rounded-lg">
+                            <div>
+                                <label class="block font-medium text-sm text-amber-800">⏱ Run Duration (Days)</label>
+                                <p class="text-xs text-amber-600 mb-2">Set 1–30 days. After this period, the source will auto-stop. Leave blank for unlimited.</p>
+                                <div class="flex items-center gap-4">
+                                    <input type="range" name="duration_days" id="duration_days" min="1" max="30" value="7"
+                                           class="flex-1 accent-amber-500"
+                                           oninput="document.getElementById('duration_days_val').innerText = this.value + ' days'">
+                                    <span id="duration_days_val" class="text-amber-800 font-bold text-sm w-20 text-center bg-amber-100 rounded px-2 py-1">7 days</span>
+                                </div>
+                                <div class="flex items-center mt-2 gap-2">
+                                    <input type="checkbox" id="unlimited_duration" onchange="
+                                        var inp = document.getElementById('duration_days');
+                                        var val = document.getElementById('duration_days_val');
+                                        if(this.checked){ inp.disabled=true; inp.name=''; val.innerText='Unlimited'; }
+                                        else{ inp.disabled=false; inp.name='duration_days'; val.innerText=inp.value+' days'; }
+                                    " class="rounded border-amber-300 text-amber-600">
+                                    <label for="unlimited_duration" class="text-xs text-amber-700">Run indefinitely (no expiry)</label>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="bg-amber-100 rounded-lg p-3 text-xs text-amber-700 leading-relaxed">
+                                    <strong>Example:</strong><br>
+                                    • 7 days = fetch daily for 1 week<br>
+                                    • 30 days = fetch daily for 1 month<br>
+                                    • Unlimited = fetch forever (until manually deleted)
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="flex items-center">
                             <input type="checkbox" name="is_active" id="is_active" value="1" checked class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                             <label for="is_active" class="ml-2 block text-sm text-gray-900">
@@ -253,6 +287,16 @@
                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
                                             @else
                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Inactive</span>
+                                            @endif
+
+                                            @if($source->expires_at)
+                                                <div class="mt-1 text-[10px] font-bold uppercase tracking-tighter {{ $source->expires_at->isPast() ? 'text-red-500' : 'text-amber-600' }}">
+                                                    @if($source->expires_at->isPast())
+                                                        Expired
+                                                    @else
+                                                        Ends in: {{ now()->diffInDays($source->expires_at) }} days
+                                                    @endif
+                                                </div>
                                             @endif
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

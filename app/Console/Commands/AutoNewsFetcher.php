@@ -41,6 +41,14 @@ class AutoNewsFetcher extends Command
         }
 
         foreach ($sources as $source) {
+            // Auto-expire: deactivate if expires_at has passed
+            if (!$isManual && $source->expires_at && $source->expires_at->isPast()) {
+                $source->is_active = false;
+                $source->save();
+                $this->info("Source '{$source->name}' has expired and has been deactivated.");
+                continue;
+            }
+
             // Check if it's time to run (skip if manual)
             if (!$isManual && $source->last_run_at) {
                 $hoursSinceLastRun = $source->last_run_at->diffInHours(now());

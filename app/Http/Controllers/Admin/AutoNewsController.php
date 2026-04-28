@@ -20,30 +20,41 @@ class AutoNewsController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'source_url' => 'required|url',
-            'category_id' => 'nullable|exists:categories,id',
-            'posts_per_run' => 'required|integer|min:1|max:20',
-            'fetch_interval_hours' => 'required|integer|min:1|max:168',
-            'featured_image_source' => 'required|string',
+            'name'                    => 'required|string|max:255',
+            'source_url'              => 'required|url',
+            'category_id'             => 'nullable|exists:categories,id',
+            'posts_per_run'           => 'required|integer|min:1|max:20',
+            'fetch_interval_hours'    => 'required|integer|min:1|max:168',
+            'duration_days'           => 'nullable|integer|min:1|max:30',
+            'featured_image_source'   => 'required|string',
             'in_content_images_count' => 'required|integer|min:0|max:5',
             'in_content_image_source' => 'required|string',
-            'is_active' => 'boolean',
+            'is_active'               => 'boolean',
         ]);
+
+        $durationDays = $request->duration_days ? (int) $request->duration_days : null;
+        $expiresAt    = $durationDays ? now()->addDays($durationDays) : null;
 
         AutoNewsSource::create([
-            'name' => $request->name,
-            'source_url' => $request->source_url,
-            'category_id' => $request->category_id,
-            'posts_per_run' => $request->posts_per_run,
-            'fetch_interval_hours' => $request->fetch_interval_hours,
-            'featured_image_source' => $request->featured_image_source,
+            'name'                    => $request->name,
+            'source_url'              => $request->source_url,
+            'category_id'             => $request->category_id,
+            'posts_per_run'           => $request->posts_per_run,
+            'fetch_interval_hours'    => $request->fetch_interval_hours,
+            'duration_days'           => $durationDays,
+            'expires_at'              => $expiresAt,
+            'featured_image_source'   => $request->featured_image_source,
             'in_content_images_count' => $request->in_content_images_count,
             'in_content_image_source' => $request->in_content_image_source,
-            'is_active' => $request->has('is_active') ? true : false,
+            'is_active'               => $request->has('is_active') ? true : false,
         ]);
 
-        return back()->with('status', 'Auto News Source added successfully. Cron Job will process it based on the interval.');
+        $msg = 'Auto News Source added successfully.';
+        if ($durationDays) {
+            $msg .= " It will run for {$durationDays} day(s) and auto-stop on " . $expiresAt->format('M d, Y') . '.';
+        }
+
+        return back()->with('status', $msg);
     }
 
     public function destroy($id)

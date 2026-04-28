@@ -12,6 +12,8 @@ class AutoNewsSource extends Model
         'category_id',
         'posts_per_run',
         'fetch_interval_hours',
+        'duration_days',
+        'expires_at',
         'last_run_at',
         'featured_image_source',
         'in_content_images_count',
@@ -21,7 +23,8 @@ class AutoNewsSource extends Model
 
     protected $casts = [
         'last_run_at' => 'datetime',
-        'is_active' => 'boolean',
+        'expires_at'  => 'datetime',
+        'is_active'   => 'boolean',
     ];
 
     public function category()
