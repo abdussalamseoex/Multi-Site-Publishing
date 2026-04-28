@@ -171,7 +171,7 @@ class AutoNewsFetcher extends Command
             $imageCount = $source->in_content_images_count;
             $imageInstruction = $imageCount > 0 ? "Also, insert the exact text '[IMAGE_PLACEHOLDER]' at appropriate places in the content $imageCount times." : "";
 
-            $defaultPrompt = "Rewrite the following news article to be highly engaging, professional, and unique. Write in the authoritative, objective, and gripping style of a top-tier news agency (like Reuters, AP News, or BBC). The current year is {current_year}, ensure context is up-to-date.\nFollow Google's EEAT guidelines.\nOriginal Title: {title}\nOriginal Context: {context}\n\nFormat the output as a valid JSON object with four keys:\n- 'title': A catchy, unique, journalistic SEO-friendly title without the year unless necessary.\n- 'meta_description': A 150-160 character meta description summarizing the news.\n- 'meta_keywords': A comma-separated string of 5-8 SEO keywords.\n- 'content': The main rewritten news article formatted in HTML (use <p>, <h2>, <h3>). Do NOT start with an 'Introduction' heading. Start the first paragraph directly with a strong journalistic hook (the lead). Do NOT add any Source links manually. Do NOT include <h1> or ```html wrappers.\n{image_instruction}";
+            $defaultPrompt = "Rewrite the following news article to be highly engaging, professional, and unique. Write in the authoritative, objective, and gripping style of a top-tier news agency (like Reuters, AP News, or BBC). The current year is {current_year}, ensure context is up-to-date.\nFollow Google's EEAT guidelines.\nOriginal Title: {title}\nOriginal Context: {context}\n\nFormat the output as a valid JSON object with four keys:\n- 'title': A catchy, unique, journalistic SEO-friendly title without the year unless necessary.\n- 'meta_description': A 150-160 character meta description summarizing the news.\n- 'meta_keywords': A comma-separated string of 5-8 SEO keywords.\n- 'content': The main rewritten news article formatted in HTML (use <p>, <h2>, <h3>). Do NOT start with an 'Introduction' heading. Start the first paragraph directly with a strong journalistic hook (the lead). STRICTLY FORBIDDEN: Do NOT add any 'Source', 'Source:', 'Read more', or attribution links anywhere in the content. Do NOT include <h1> or ```html wrappers.\n{image_instruction}";
             
             $promptTemplate = Setting::get('ai_news_prompt', $defaultPrompt);
             
@@ -248,6 +248,13 @@ class AutoNewsFetcher extends Command
                 $content .= $sourceBlock;
 
                 $content = str_replace('[IMAGE_PLACEHOLDER]', '', $content);
+
+                // Remove any plain AI-generated "Source" links (e.g. <a href="...">Source</a> or <p>Source: <a...)</p>)
+                $content = preg_replace('/<p[^>]*>\s*<a[^>]*>\s*Source\s*<\/a>\s*<\/p>/i', '', $content);
+                $content = preg_replace('/<a[^>]*>\s*Source\s*<\/a>/i', '', $content);
+                $content = preg_replace('/<p[^>]*>\s*Source[:\s]*<\/p>/i', '', $content);
+                $content = preg_replace('/\[Source:[^\]]*\]/i', '', $content);
+                $content = preg_replace('/\(Source:[^)]*\)/i', '', $content);
 
                 // Strip known intro headings anywhere in the content
                 $content = preg_replace('/<h[1-6][^>]*>.*?(Introduction|ভূমিকা|परिचय|Introducción|Overview|Background|সারসংক্ষেপ).*?<\/h[1-6]>/is', '', $content);
