@@ -145,6 +145,9 @@ class AutoNewsFetcher extends Command
     private function processArticle($article, $source)
     {
         try {
+            // Strip tracking/UTM parameters from the article link before any use
+            $article['link'] = $this->cleanUrl($article['link']);
+
             // First, fetch the article content
             $response = Http::timeout(15)->get($article['link']);
             if (!$response->successful()) return false;
@@ -376,5 +379,43 @@ class AutoNewsFetcher extends Command
         }
 
         return null;
+    }
+
+    /**
+     * Strip tracking/UTM query parameters from a URL, keeping only the clean canonical path.
+     * Removes: utm_*, at_medium, at_campaign, at_format, fbclid, gclid, ref, source, etc.
+     */
+    private function cleanUrl(string $url): string
+    {
+        $parsed = parse_url($url);
+        if (!$parsed || empty($parsed['host'])) {
+            return $url;
+        }
+
+        $trackingParams = [
+            'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+            'at_medium', 'at_campaign', 'at_format', 'at_custom1', 'at_custom2',
+            'fbclid', 'gclid', 'msclkid', 'ref', 'source', 'mc_cid', 'mc_eid',
+            'yclid', 'twclid', '_ga', 'igshid',
+        ];
+
+        $query = [];
+        if (!empty($parsed['query'])) {
+            parse_str($parsed['query'], $query);
+            foreach ($trackingParams as $param) {
+                unset($query[$param]);
+            }
+        }
+
+        $clean  = ($parsed['scheme'] ?? 'https') . '://' . $parsed['host'];
+        $clean .= $parsed['path'] ?? '/';
+        if (!empty($query)) {
+            $clean .= '?' . http_build_query($query);
+        }
+        if (!empty($parsed['fragment'])) {
+            $clean .= '#' . $parsed['fragment'];
+        }
+
+        return $clean;
     }
 }
