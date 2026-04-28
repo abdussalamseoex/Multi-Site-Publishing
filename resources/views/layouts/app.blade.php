@@ -49,7 +49,8 @@
             </div>
         </div>
         {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
-</body>
+        @stack('scripts')
+    </body>
 </html>
 
 
