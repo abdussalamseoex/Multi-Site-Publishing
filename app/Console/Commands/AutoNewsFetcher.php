@@ -246,7 +246,6 @@ class AutoNewsFetcher extends Command
                 $sourceBlock = '<div class="mt-8 pt-6 border-t border-gray-200"><div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4"><div class="flex items-center space-x-3"><div class="bg-indigo-100 p-2 rounded-full"><svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2.5 2.5 0 00-2.5-2.5H14"></path></svg></div><div><p class="text-xs text-indigo-400 font-bold uppercase tracking-wider">Source Article</p><p class="text-base font-semibold text-indigo-900">' . htmlspecialchars($sourceName) . '</p></div></div><a href="' . $article['link'] . '" target="_blank" rel="nofollow noopener" class="inline-flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"><span>Read Original</span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a></div></div>';
 
                 $content .= $sourceBlock;
-                }
 
                 $content = str_replace('[IMAGE_PLACEHOLDER]', '', $content);
                 // Remove Introduction header more aggressively
