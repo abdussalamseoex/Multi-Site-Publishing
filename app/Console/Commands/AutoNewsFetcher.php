@@ -154,16 +154,15 @@ class AutoNewsFetcher extends Command
             $imageCount = $source->in_content_images_count;
             $imageInstruction = $imageCount > 0 ? "Also, insert the exact text '[IMAGE_PLACEHOLDER]' at appropriate places in the content $imageCount times." : "";
 
-            $prompt = "Rewrite the following news article to be unique, SEO-friendly, and highly engaging. 
-Follow Google's EEAT guidelines. Make it look like a human journalist wrote it.
-Original Title: {$article['title']}
-Original Context: {$text}
-
-Format the output as a valid JSON object with three keys:
-- 'title': A catchy, unique, SEO-friendly title.
-- 'meta_description': A 150-160 character meta description.
-- 'content': The main rewritten article formatted in HTML (use <h2>, <h3>, <p>, <ul>). Add a small 'Source' link at the very bottom pointing to {$article['link']}. Do NOT include <h1> or ```html wrappers.
-$imageInstruction";
+            $defaultPrompt = "Rewrite the following news article to be unique, SEO-friendly, and highly engaging.\nFollow Google's EEAT guidelines. Make it look like a human journalist wrote it.\nOriginal Title: {title}\nOriginal Context: {context}\n\nFormat the output as a valid JSON object with three keys:\n- 'title': A catchy, unique, SEO-friendly title.\n- 'meta_description': A 150-160 character meta description.\n- 'content': The main rewritten article formatted in HTML (use <h2>, <h3>, <p>, <ul>). Add a small 'Source' link at the very bottom pointing to {link}. Do NOT include <h1> or ```html wrappers.\n{image_instruction}";
+            
+            $promptTemplate = Setting::get('ai_news_prompt', $defaultPrompt);
+            
+            $prompt = str_replace(
+                ['{title}', '{context}', '{link}', '{image_instruction}'],
+                [$article['title'], $text, $article['link'], $imageInstruction],
+                $promptTemplate
+            );
 
             $aiResponse = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $openaiKey,

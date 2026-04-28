@@ -103,6 +103,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/ai-writer/news', [\App\Http\Controllers\Admin\AutoNewsController::class, 'store'])->name('ai-writer.news.store');
     Route::delete('/ai-writer/news/{id}', [\App\Http\Controllers\Admin\AutoNewsController::class, 'destroy'])->name('ai-writer.news.destroy');
 
+    Route::get('/ai-writer/settings', [\App\Http\Controllers\Admin\AIWriterController::class, 'settings'])->name('ai-writer.settings');
+    Route::post('/ai-writer/settings', [\App\Http\Controllers\Admin\AIWriterController::class, 'storeSettings'])->name('ai-writer.settings.store');
+
     Route::post('/posts/bulk-action', [AdminPostController::class, 'bulkAction'])->name('posts.bulk-action');
     Route::resource('/posts', AdminPostController::class)->except(['show']);
     Route::post('/posts/{post}/status', [AdminPostController::class, 'updateStatus'])->name('posts.status');
