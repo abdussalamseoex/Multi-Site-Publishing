@@ -230,7 +230,7 @@
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     @foreach($sources as $source)
-                                    <tr>
+                                    <tr id="source-row-{{ $source->id }}">
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="text-sm font-medium text-gray-900">{{ $source->name }}</div>
                                             <div class="text-sm text-gray-500">{{ Str::limit($source->source_url, 40) }}</div>
@@ -251,10 +251,13 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div class="flex items-center justify-end space-x-2">
-                                                <form action="{{ route('admin.ai-writer.news.fetch', $source->id) }}" method="POST" onsubmit="if(confirm('Trigger manual fetch for this source now? This might take a few minutes.')) { var btn = this.querySelector('button'); btn.innerHTML = 'Fetching...'; btn.classList.add('opacity-75', 'cursor-not-allowed'); btn.disabled = true; return true; } return false;">
-                                                    @csrf
-                                                    <button type="submit" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-2 py-1 rounded transition-opacity">Fetch Now</button>
-                                                </form>
+                                                <button
+                                                    type="button"
+                                                    onclick="triggerFetch({{ $source->id }}, '{{ addslashes($source->name) }}', '{{ route('admin.ai-writer.news.fetch', $source->id) }}')"
+                                                    id="fetch-btn-{{ $source->id }}"
+                                                    class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded font-semibold text-xs transition-all">
+                                                    Fetch Now
+                                                </button>
                                                 <form action="{{ route('admin.ai-writer.news.destroy', $source->id) }}" method="POST" onsubmit="return confirm('Delete this source?');">
                                                     @csrf
                                                     @method('DELETE')
@@ -266,6 +269,20 @@
                                     @endforeach
                                 </tbody>
                             </table>
+                        </div>
+
+                        {{-- Live Fetch Log Panel --}}
+                        <div id="fetch-log-panel" class="hidden mt-6 border border-indigo-200 rounded-xl overflow-hidden shadow-sm">
+                            <div class="bg-indigo-600 px-4 py-3 flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <svg id="fetch-spinner" class="animate-spin w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                    <span id="fetch-log-title" class="text-white font-semibold text-sm">Fetching...</span>
+                                </div>
+                                <span id="fetch-timer" class="font-mono font-bold text-indigo-100 text-sm">00:00</span>
+                            </div>
+                            <ul id="fetch-log-body" class="bg-gray-900 text-green-400 font-mono text-sm p-4 h-48 overflow-y-auto space-y-1 leading-relaxed">
+                                <li>Initializing fetch...</li>
+                            </ul>
                         </div>
                     @else
                         <p class="text-gray-500">No auto news sources added yet.</p>
@@ -281,6 +298,95 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+    var fetchCsrfToken = '{{ csrf_token() }}';
+
+    function triggerFetch(sourceId, sourceName, fetchUrl) {
+        var btn = document.getElementById('fetch-btn-' + sourceId);
+        var logPanel = document.getElementById('fetch-log-panel');
+        var logTitle = document.getElementById('fetch-log-title');
+        var logBody = document.getElementById('fetch-log-body');
+        var timerEl = document.getElementById('fetch-timer');
+        var spinner = document.getElementById('fetch-spinner');
+
+        if (!confirm('Trigger manual fetch for "' + sourceName + '" now? This might take a few minutes.')) return;
+
+        // Disable all fetch buttons during processing
+        document.querySelectorAll('[id^="fetch-btn-"]').forEach(function(b) {
+            b.disabled = true;
+            b.classList.add('opacity-50', 'cursor-not-allowed');
+        });
+        btn.innerHTML = '<span class="animate-pulse">Fetching...</span>';
+
+        // Show log panel
+        logPanel.classList.remove('hidden');
+        logPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        logTitle.innerText = 'Fetching: ' + sourceName;
+        logBody.innerHTML = '<li class="text-yellow-300">[' + new Date().toLocaleTimeString() + '] Connecting to server...</li>';
+        spinner.classList.remove('hidden');
+        spinner.classList.add('animate-spin');
+
+        // Start timer
+        var seconds = 0;
+        var timer = setInterval(function() {
+            seconds++;
+            var m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            var s = (seconds % 60).toString().padStart(2, '0');
+            timerEl.innerText = m + ':' + s;
+        }, 1000);
+
+        // AJAX fetch
+        fetch(fetchUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': fetchCsrfToken
+            },
+            body: JSON.stringify({})
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            clearInterval(timer);
+            spinner.classList.remove('animate-spin');
+
+            if (data.success) {
+                logTitle.innerText = '✅ Completed: ' + sourceName;
+                logBody.innerHTML += '<li class="text-green-300">[' + new Date().toLocaleTimeString() + '] ' + data.message + '</li>';
+                if (data.output) {
+                    data.output.split('\n').forEach(function(line) {
+                        if (line.trim()) logBody.innerHTML += '<li class="text-gray-300">' + line + '</li>';
+                    });
+                }
+                logBody.innerHTML += '<li class="text-green-400 font-bold">Done in ' + timerEl.innerText + '. Refreshing page...</li>';
+                setTimeout(function() { window.location.reload(); }, 2500);
+            } else {
+                logTitle.innerText = '❌ Error: ' + sourceName;
+                logBody.innerHTML += '<li class="text-red-400">[' + new Date().toLocaleTimeString() + '] ' + data.message + '</li>';
+                // Re-enable buttons
+                document.querySelectorAll('[id^="fetch-btn-"]').forEach(function(b) {
+                    b.disabled = false;
+                    b.classList.remove('opacity-50', 'cursor-not-allowed');
+                    b.innerHTML = 'Fetch Now';
+                });
+            }
+        })
+        .catch(function(err) {
+            clearInterval(timer);
+            spinner.classList.remove('animate-spin');
+            logTitle.innerText = '❌ Failed: ' + sourceName;
+            logBody.innerHTML += '<li class="text-red-400">[' + new Date().toLocaleTimeString() + '] Network error: ' + err.message + '</li>';
+            document.querySelectorAll('[id^="fetch-btn-"]').forEach(function(b) {
+                b.disabled = false;
+                b.classList.remove('opacity-50', 'cursor-not-allowed');
+                b.innerHTML = 'Fetch Now';
+            });
+        });
+    }
+    </script>
+    @endpush
 </x-app-layout>
 
 
