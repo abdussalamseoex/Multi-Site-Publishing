@@ -41,6 +41,14 @@
                             </div>
 
                             <div>
+                                <label class="block font-medium text-sm text-gray-700">Generate Title from Keyword?</label>
+                                <select id="generate_title" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                    <option value="yes">Yes (AI Generates Title)</option>
+                                    <option value="no">No (Use Keyword as Title)</option>
+                                </select>
+                            </div>
+
+                            <div>
                                 <label class="block font-medium text-sm text-gray-700">Article Length</label>
                                 <select id="article_length" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                                     <option value="500">Short (~500 Words)</option>
@@ -177,6 +185,7 @@
             
             const category_id = document.getElementById('category_id').value;
             const language = document.getElementById('language').value;
+            const generate_title = document.getElementById('generate_title').value;
             const article_length = parseInt(document.getElementById('article_length').value);
             const featured_image_source = document.getElementById('featured_image_source').value;
             const in_content_images_count = document.getElementById('in_content_images_count').value;
@@ -209,6 +218,7 @@
                             keyword,
                             category_id,
                             language,
+                            generate_title,
                             article_length,
                             featured_image_source,
                             in_content_images_count,

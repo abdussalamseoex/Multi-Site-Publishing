@@ -22,7 +22,7 @@ class AIWriterController extends Controller
     public function settings()
     {
         $settings = Setting::all()->pluck('value', 'key')->toArray();
-        $defaultWriterPrompt = "Write a comprehensive, SEO-optimized, and highly engaging article about '{keyword}' in {language}. The article length should be approximately {article_length} words. The current year is {current_year}, ensure content is up-to-date.\nFollow Google's EEAT (Experience, Expertise, Authoritativeness, Trustworthiness) guidelines.\nFormat the output as a valid JSON object with four keys:\n- 'title': A catchy, SEO-friendly title without the year unless necessary.\n- 'meta_description': A 150-160 character meta description.\n- 'meta_keywords': A comma-separated string of 5-8 SEO keywords.\n- 'content': The main article content formatted in HTML (use <p> for paragraphs with logical spacing, <h2> for main sections, <h3> for sub-sections. Do NOT use <h1>). Do NOT start the content with an 'Introduction' heading. Start directly with the first paragraph.\n{image_instruction}\nMake the content sound natural, human-written, and provide deep value to the reader. Do not sound like an AI robot.";
+        $defaultWriterPrompt = "Write a comprehensive, SEO-optimized, and highly engaging article about '{keyword}' in {language}. The article length should be approximately {article_length} words. The current year is {current_year}, ensure content is up-to-date.\nFollow Google's EEAT (Experience, Expertise, Authoritativeness, Trustworthiness) guidelines.\nFormat the output as a valid JSON object with four keys:\n- 'title': A catchy, SEO-friendly title without the year unless necessary. DO NOT use colons (:) in the title. DO NOT start the title with clichés like 'Unlocking', 'Discovering', 'The Secret', or 'Guide'.\n- 'meta_description': A 150-160 character meta description.\n- 'meta_keywords': A comma-separated string of 5-8 SEO keywords.\n- 'content': The main article content formatted in HTML (use <p> for paragraphs with logical spacing, <h2> for main sections, <h3> for sub-sections. Do NOT use <h1>). Do NOT start the content with an 'Introduction' heading. Start directly with the first paragraph and NO heading above it.\n{image_instruction}\nMake the content sound natural, human-written, and provide deep value to the reader. Do not sound like an AI robot.";
         
         $defaultNewsPrompt = "Rewrite the following news article to be highly engaging, professional, and unique. Write in the authoritative, objective, and gripping style of a top-tier news agency (like Reuters, AP News, or BBC). The current year is {current_year}, ensure context is up-to-date.\nFollow Google's EEAT guidelines.\nOriginal Title: {title}\nOriginal Context: {context}\n\nFormat the output as a valid JSON object with four keys:\n- 'title': A catchy, unique, journalistic SEO-friendly title without the year unless necessary.\n- 'meta_description': A 150-160 character meta description summarizing the news.\n- 'meta_keywords': A comma-separated string of 5-8 SEO keywords.\n- 'content': The main rewritten news article formatted in HTML (use <p>, <h2>, <h3>). Do NOT start with an 'Introduction' heading. Start the first paragraph directly with a strong journalistic hook (the lead). Add a small 'Source' link at the very bottom pointing to {link}. Do NOT include <h1> or ```html wrappers.\n{image_instruction}";
 
@@ -65,7 +65,7 @@ class AIWriterController extends Controller
             $articleLength = $request->article_length ?? 800;
             
             // 1. Generate Content via OpenAI
-            $contentData = $this->generateContentFromOpenAI($keyword, $language, $request->in_content_images_count, $articleLength, $openaiKey);
+            $contentData = $this->generateContentFromOpenAI($keyword, $language, $request->in_content_images_count, $articleLength, $openaiKey, $request->generate_title);
             if (!$contentData) {
                 return response()->json(['success' => false, 'message' => 'Failed to generate content from OpenAI.']);
             }
@@ -111,8 +111,13 @@ class AIWriterController extends Controller
 
             // Clean up remaining placeholders
             $content = str_replace('[IMAGE_PLACEHOLDER]', '', $content);
-            // Remove Introduction header if AI still includes it
-            $content = preg_replace('/<h2[^>]*>(Introduction|ভূমিকা|परिचय|Introducción)<\/h2>/i', '', $content);
+            
+            // Aggressively remove any heading that contains "Introduction" or its translated equivalents
+            $content = preg_replace('/<h[1-6][^>]*>.*?(Introduction|ভূমিকা|परिचय|Introducción|Overview|Background|সারসংক্ষেপ).*?<\/h[1-6]>/is', '', $content);
+            
+            // Additionally, ensure there is NO heading before the very first paragraph
+            $content = preg_replace('/^\s*<h[1-6][^>]*>.*?<\/h[1-6]>\s*/is', '', $content);
+            
             $content = trim($content);
 
             // 4. Save Post
@@ -158,12 +163,21 @@ class AIWriterController extends Controller
         }
     }
 
-    private function generateContentFromOpenAI($keyword, $language, $imageCount, $articleLength, $apiKey)
+    private function generateContentFromOpenAI($keyword, $language, $imageCount, $articleLength, $apiKey, $generateTitle = 'yes')
     {
         $imageInstruction = $imageCount > 0 ? "Also, insert the exact text '[IMAGE_PLACEHOLDER]' at appropriate places in the content $imageCount times." : "";
 
-        $defaultPrompt = "Write a comprehensive, SEO-optimized, and highly engaging article about '{keyword}' in {language}. The article length should be approximately {article_length} words. The current year is {current_year}, ensure content is up-to-date.\nFollow Google's EEAT (Experience, Expertise, Authoritativeness, Trustworthiness) guidelines.\nFormat the output as a valid JSON object with four keys:\n- 'title': A catchy, SEO-friendly title without the year unless necessary.\n- 'meta_description': A 150-160 character meta description.\n- 'meta_keywords': A comma-separated string of 5-8 SEO keywords.\n- 'content': The main article content formatted in HTML (use <p> for paragraphs with logical spacing, <h2> for main sections, <h3> for sub-sections. Do NOT use <h1>). Do NOT start the content with an 'Introduction' heading. Start directly with the first paragraph.\n{image_instruction}\nMake the content sound natural, human-written, and provide deep value to the reader. Do not sound like an AI robot.";
+        $titleInstruction = $generateTitle === 'no' 
+            ? "- 'title': MUST BE EXACTLY THE STRING '{keyword}' without any modifications."
+            : "- 'title': A catchy, SEO-friendly title without the year unless necessary. DO NOT use colons (:) in the title. DO NOT start the title with clichés like 'Unlocking', 'Discovering', 'The Secret', or 'Guide'.";
+
+        $defaultPrompt = "Write a comprehensive, SEO-optimized, and highly engaging article about '{keyword}' in {language}. The article length should be approximately {article_length} words. The current year is {current_year}, ensure content is up-to-date.\nFollow Google's EEAT (Experience, Expertise, Authoritativeness, Trustworthiness) guidelines.\nFormat the output as a valid JSON object with four keys:\n$titleInstruction\n- 'meta_description': A 150-160 character meta description.\n- 'meta_keywords': A comma-separated string of 5-8 SEO keywords.\n- 'content': The main article content formatted in HTML (use <p> for paragraphs with logical spacing, <h2> for main sections, <h3> for sub-sections. Do NOT use <h1>). Do NOT start the content with an 'Introduction' heading. Start directly with the first paragraph and NO heading above it.\n{image_instruction}\nMake the content sound natural, human-written, and provide deep value to the reader. Do not sound like an AI robot.";
         $promptTemplate = Setting::get('ai_writer_prompt', $defaultPrompt);
+
+        // If using a custom prompt from DB but generateTitle is 'no', aggressively override the title rule
+        if ($generateTitle === 'no') {
+            $promptTemplate = preg_replace('/-\s*\'title\':[^\n]+/', "- 'title': MUST BE EXACTLY THE STRING '{keyword}' without any modifications.", $promptTemplate);
+        }
 
         $prompt = str_replace(
             ['{keyword}', '{language}', '{article_length}', '{image_instruction}', '{current_year}'],
