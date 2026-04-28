@@ -224,7 +224,7 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Run</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Run / Next Fetch</th>
                                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                                     </tr>
                                 </thead>
@@ -246,8 +246,52 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {{ $source->posts_per_run }} posts / {{ $source->fetch_interval_hours }}h
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ $source->last_run_at ? $source->last_run_at->diffForHumans() : 'Never' }}
+                                        <td class="px-6 py-4 text-sm">
+                                            @php
+                                                $lastRun   = $source->last_run_at;
+                                                $intervalH = $source->fetch_interval_hours;
+                                                if ($lastRun) {
+                                                    $nextRun     = $lastRun->copy()->addHours($intervalH);
+                                                    $isDue       = $nextRun->isPast();
+                                                    $totalSecs   = $intervalH * 3600;
+                                                    $elapsedSecs = min($lastRun->diffInSeconds(now()), $totalSecs);
+                                                    $pct         = round(($elapsedSecs / $totalSecs) * 100);
+                                                    $remainSecs  = max(0, $nextRun->diffInSeconds(now(), false) * -1);
+                                                } else {
+                                                    $isDue      = true;
+                                                    $pct        = 100;
+                                                    $nextRun    = null;
+                                                    $remainSecs = 0;
+                                                }
+                                            @endphp
+
+                                            {{-- Last run label --}}
+                                            <div class="text-xs text-gray-500 mb-1">
+                                                @if($lastRun)
+                                                    Last: {{ $lastRun->diffForHumans() }}
+                                                @else
+                                                    <span class="text-orange-500 font-semibold">Never run — ready to fetch!</span>
+                                                @endif
+                                            </div>
+
+                                            {{-- Progress bar --}}
+                                            <div class="w-full bg-gray-200 rounded-full h-2 mb-1 overflow-hidden">
+                                                <div class="h-2 rounded-full transition-all {{ $isDue ? 'bg-green-500' : 'bg-indigo-500' }}"
+                                                     style="width: {{ $pct }}%"></div>
+                                            </div>
+
+                                            {{-- Countdown / status --}}
+                                            @if($isDue)
+                                                <div class="text-xs font-semibold text-green-600 flex items-center gap-1">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                    Ready — awaiting next Cron run
+                                                </div>
+                                            @else
+                                                <div class="text-xs text-indigo-600 font-mono" id="countdown-{{ $source->id }}"
+                                                     data-seconds="{{ $remainSecs }}">
+                                                    Next in: calculating...
+                                                </div>
+                                            @endif
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div class="flex items-center justify-end space-x-2">
@@ -385,6 +429,39 @@
             });
         });
     }
+    // Live countdown timers for each source
+    (function() {
+        var countdowns = document.querySelectorAll('[id^="countdown-"]');
+        if (!countdowns.length) return;
+
+        function formatCountdown(totalSecs) {
+            if (totalSecs <= 0) return '✅ Ready — awaiting Cron';
+            var h = Math.floor(totalSecs / 3600);
+            var m = Math.floor((totalSecs % 3600) / 60);
+            var s = totalSecs % 60;
+            var parts = [];
+            if (h > 0) parts.push(h + 'h');
+            if (m > 0 || h > 0) parts.push(m + 'm');
+            parts.push(s + 's');
+            return 'Next fetch in: ' + parts.join(' ');
+        }
+
+        countdowns.forEach(function(el) {
+            var remaining = parseInt(el.dataset.seconds, 10);
+            el.innerText = formatCountdown(remaining);
+            var interval = setInterval(function() {
+                remaining--;
+                if (remaining <= 0) {
+                    el.innerText = '✅ Ready — awaiting Cron';
+                    el.classList.remove('text-indigo-600');
+                    el.classList.add('text-green-600', 'font-semibold');
+                    clearInterval(interval);
+                } else {
+                    el.innerText = formatCountdown(remaining);
+                }
+            }, 1000);
+        });
+    })();
     </script>
     @endpush
 </x-app-layout>
