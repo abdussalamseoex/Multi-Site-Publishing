@@ -248,9 +248,21 @@ class AutoNewsFetcher extends Command
                 $content .= $sourceBlock;
 
                 $content = str_replace('[IMAGE_PLACEHOLDER]', '', $content);
-                // Remove Introduction header more aggressively
-                $content = preg_replace('/<h[1-4][^>]*>\s*(Introduction|ভূমিকা|परिचय|Introducción|Overview|Background|সারসংক্ষেপ)\s*<\/h[1-4]>/i', '', $content);
-                $content = preg_replace('/^\s*(Introduction|ভূমিকা|परिचय|Introducción|Overview|Background|সারসংক্ষেপ)\s*<br[^>]*>/i', '', $content);
+
+                // Strip known intro headings anywhere in the content
+                $content = preg_replace('/<h[1-6][^>]*>.*?(Introduction|ভূমিকা|परिचय|Introducción|Overview|Background|সারসংক্ষেপ).*?<\/h[1-6]>/is', '', $content);
+
+                // Strip ALL headings before the very first <p> tag
+                $firstPPos = stripos($content, '<p');
+                if ($firstPPos !== false) {
+                    $before = substr($content, 0, $firstPPos);
+                    $after  = substr($content, $firstPPos);
+                    $before = preg_replace('/<h[1-6][^>]*>.*?<\/h[1-6]>/is', '', $before);
+                    $content = trim($before) . $after;
+                } else {
+                    $content = preg_replace('/^\s*(<h[1-6][^>]*>.*?<\/h[1-6]>\s*)+/is', '', $content);
+                }
+
                 $content = trim($content);
 
                 $cleanTitle = str_replace(['"', '\''], '', $contentData['title']);

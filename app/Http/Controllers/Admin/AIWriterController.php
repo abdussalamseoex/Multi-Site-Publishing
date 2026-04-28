@@ -113,11 +113,11 @@ class AIWriterController extends Controller
             // Clean up remaining placeholders
             $content = str_replace('[IMAGE_PLACEHOLDER]', '', $content);
             
-            // Aggressively remove any heading that contains "Introduction" or its translated equivalents
+            // Strip known intro headings anywhere in the content
             $content = preg_replace('/<h[1-6][^>]*>.*?(Introduction|ভূমিকা|परिचय|Introducción|Overview|Background|সারসংক্ষেপ).*?<\/h[1-6]>/is', '', $content);
             
-            // Additionally, ensure there is NO heading before the very first paragraph
-            $content = preg_replace('/^\s*<h[1-6][^>]*>.*?<\/h[1-6]>\s*/is', '', $content);
+            // Strip ALL headings that appear before the very first <p> tag
+            $content = $this->stripHeadingsBeforeFirstParagraph($content);
             
             $content = trim($content);
 
@@ -285,5 +285,27 @@ class AIWriterController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Remove any heading tags (h1-h6) that appear BEFORE the first <p> tag.
+     * This prevents AI-generated duplicate titles or intro headings from showing.
+     */
+    private function stripHeadingsBeforeFirstParagraph(string $content): string
+    {
+        $firstPPos = stripos($content, '<p');
+        if ($firstPPos === false) {
+            // No paragraph found — strip all leading headings anyway
+            return preg_replace('/^\s*(<h[1-6][^>]*>.*?<\/h[1-6]>\s*)+/is', '', $content);
+        }
+
+        $before = substr($content, 0, $firstPPos);
+        $after  = substr($content, $firstPPos);
+
+        // Remove all h1-h6 tags from the section before the first <p>
+        $before = preg_replace('/<h[1-6][^>]*>.*?<\/h[1-6]>/is', '', $before);
+        $before = trim($before);
+
+        return $before . $after;
     }
 }
