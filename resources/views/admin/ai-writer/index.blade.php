@@ -20,7 +20,7 @@
                             <textarea id="keywords" rows="5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required placeholder="Best laptops 2024&#10;How to lose weight fast&#10;Top 10 travel destinations"></textarea>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
                                 <label class="block font-medium text-sm text-gray-700">Category</label>
                                 <select id="category_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
@@ -37,6 +37,16 @@
                                     <option value="Bengali">Bengali</option>
                                     <option value="Hindi">Hindi</option>
                                     <option value="Spanish">Spanish</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block font-medium text-sm text-gray-700">Article Length</label>
+                                <select id="article_length" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                    <option value="500">Short (~500 Words)</option>
+                                    <option value="800" selected>Medium (~800 Words)</option>
+                                    <option value="1200">Long (~1200 Words)</option>
+                                    <option value="1500">Very Long (~1500 Words)</option>
                                 </select>
                             </div>
                         </div>
@@ -90,13 +100,54 @@
                     </form>
 
                     <!-- Progress Area -->
-                    <div id="progress-area" class="mt-8 hidden">
+                    <div id="progress-area" class="mt-8 hidden border-t pt-6">
                         <h3 class="font-bold text-lg mb-2">Generation Progress <span id="progress-text" class="text-indigo-600">0/0</span></h3>
                         <div class="w-full bg-gray-200 rounded-full h-4 mb-4">
                             <div class="bg-indigo-600 h-4 rounded-full transition-all duration-500" id="progress-bar" style="width: 0%"></div>
                         </div>
                         <ul id="log" class="text-sm text-gray-600 bg-gray-50 p-4 rounded border h-64 overflow-y-auto space-y-2 font-mono">
                         </ul>
+                    </div>
+
+                    <!-- History Area -->
+                    <div class="mt-10 border-t pt-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-lg">Recently Generated Posts</h3>
+                            <a href="{{ route('posts.index') }}" class="text-indigo-600 text-sm hover:underline">Manage All Posts &rarr;</a>
+                        </div>
+                        
+                        @if($recentPosts && count($recentPosts) > 0)
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200 border text-sm">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-500 uppercase">Title</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-500 uppercase">Category</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-500 uppercase">Status</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-500 uppercase">Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        @foreach($recentPosts as $p)
+                                        <tr>
+                                            <td class="px-4 py-2">
+                                                <a href="{{ route('posts.edit', $p->id) }}" class="text-indigo-600 hover:underline">{{ $p->title }}</a>
+                                            </td>
+                                            <td class="px-4 py-2 text-gray-500">{{ $p->category->name ?? 'N/A' }}</td>
+                                            <td class="px-4 py-2">
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $p->status === 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                                    {{ ucfirst($p->status) }}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-2 text-gray-500">{{ $p->created_at->format('M d, Y h:i A') }}</td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <p class="text-gray-500 text-sm">No recent posts found.</p>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -126,6 +177,7 @@
             
             const category_id = document.getElementById('category_id').value;
             const language = document.getElementById('language').value;
+            const article_length = parseInt(document.getElementById('article_length').value);
             const featured_image_source = document.getElementById('featured_image_source').value;
             const in_content_images_count = document.getElementById('in_content_images_count').value;
             const in_content_image_source = document.getElementById('in_content_image_source').value;
@@ -157,6 +209,7 @@
                             keyword,
                             category_id,
                             language,
+                            article_length,
                             featured_image_source,
                             in_content_images_count,
                             in_content_image_source,
@@ -164,6 +217,10 @@
                             schedule_time: scheduleTime
                         })
                     });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
 
                     const result = await response.json();
                     
@@ -173,7 +230,8 @@
                         logArea.innerHTML += `<li class="text-red-600">[${new Date().toLocaleTimeString()}] Failed: ${result.message}</li>`;
                     }
                 } catch (error) {
-                    logArea.innerHTML += `<li class="text-red-600">[${new Date().toLocaleTimeString()}] Error: Server Timeout or Network issue.</li>`;
+                    console.error("AI Writer Error:", error);
+                    logArea.innerHTML += `<li class="text-red-600">[${new Date().toLocaleTimeString()}] Error: ${error.message}. Please check Developer Console (F12) for details.</li>`;
                 }
 
                 // Update Progress

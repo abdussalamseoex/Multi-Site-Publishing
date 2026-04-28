@@ -15,13 +15,14 @@ class AIWriterController extends Controller
     public function index()
     {
         $categories = Category::all();
-        return view('admin.ai-writer.index', compact('categories'));
+        $recentPosts = Post::orderBy('created_at', 'desc')->take(10)->get();
+        return view('admin.ai-writer.index', compact('categories', 'recentPosts'));
     }
 
     public function settings()
     {
         $settings = Setting::all()->pluck('value', 'key')->toArray();
-        $defaultWriterPrompt = "Write a comprehensive, SEO-optimized, and highly engaging article about '{keyword}' in {language}.\nFollow Google's EEAT (Experience, Expertise, Authoritativeness, Trustworthiness) guidelines.\nFormat the output as a valid JSON object with three keys:\n- 'title': A catchy, SEO-friendly title.\n- 'meta_description': A 150-160 character meta description.\n- 'content': The main article content formatted in HTML (use <h2>, <h3>, <p>, <ul>, <li> tags appropriately. Do NOT include <h1> or ```html wrappers).\n{image_instruction}\nMake the content sound natural, human-written, and provide deep value to the reader. Do not sound like an AI robot.";
+        $defaultWriterPrompt = "Write a comprehensive, SEO-optimized, and highly engaging article about '{keyword}' in {language}. The article length should be approximately {article_length} words.\nFollow Google's EEAT (Experience, Expertise, Authoritativeness, Trustworthiness) guidelines.\nFormat the output as a valid JSON object with three keys:\n- 'title': A catchy, SEO-friendly title.\n- 'meta_description': A 150-160 character meta description.\n- 'content': The main article content formatted in HTML (use <h2>, <h3>, <p>, <ul>, <li> tags appropriately. Do NOT include <h1> or ```html wrappers).\n{image_instruction}\nMake the content sound natural, human-written, and provide deep value to the reader. Do not sound like an AI robot.";
         
         $defaultNewsPrompt = "Rewrite the following news article to be unique, SEO-friendly, and highly engaging.\nFollow Google's EEAT guidelines. Make it look like a human journalist wrote it.\nOriginal Title: {title}\nOriginal Context: {context}\n\nFormat the output as a valid JSON object with three keys:\n- 'title': A catchy, unique, SEO-friendly title.\n- 'meta_description': A 150-160 character meta description.\n- 'content': The main rewritten article formatted in HTML (use <h2>, <h3>, <p>, <ul>). Add a small 'Source' link at the very bottom pointing to {link}. Do NOT include <h1> or ```html wrappers.\n{image_instruction}";
 
@@ -50,6 +51,7 @@ class AIWriterController extends Controller
             'in_content_image_source' => 'required|string',
             'status' => 'required|string',
             'schedule_time' => 'nullable|date',
+            'article_length' => 'nullable|integer',
         ]);
 
         $openaiKey = Setting::get('openai_api_key');
@@ -60,9 +62,10 @@ class AIWriterController extends Controller
         try {
             $keyword = $request->keyword;
             $language = $request->language;
+            $articleLength = $request->article_length ?? 800;
             
             // 1. Generate Content via OpenAI
-            $contentData = $this->generateContentFromOpenAI($keyword, $language, $request->in_content_images_count, $openaiKey);
+            $contentData = $this->generateContentFromOpenAI($keyword, $language, $request->in_content_images_count, $articleLength, $openaiKey);
             if (!$contentData) {
                 return response()->json(['success' => false, 'message' => 'Failed to generate content from OpenAI.']);
             }
@@ -140,16 +143,16 @@ class AIWriterController extends Controller
         }
     }
 
-    private function generateContentFromOpenAI($keyword, $language, $imageCount, $apiKey)
+    private function generateContentFromOpenAI($keyword, $language, $imageCount, $articleLength, $apiKey)
     {
         $imageInstruction = $imageCount > 0 ? "Also, insert the exact text '[IMAGE_PLACEHOLDER]' at appropriate places in the content $imageCount times." : "";
 
-        $defaultPrompt = "Write a comprehensive, SEO-optimized, and highly engaging article about '{keyword}' in {language}.\nFollow Google's EEAT (Experience, Expertise, Authoritativeness, Trustworthiness) guidelines.\nFormat the output as a valid JSON object with three keys:\n- 'title': A catchy, SEO-friendly title.\n- 'meta_description': A 150-160 character meta description.\n- 'content': The main article content formatted in HTML (use <h2>, <h3>, <p>, <ul>, <li> tags appropriately. Do NOT include <h1> or ```html wrappers).\n{image_instruction}\nMake the content sound natural, human-written, and provide deep value to the reader. Do not sound like an AI robot.";
+        $defaultPrompt = "Write a comprehensive, SEO-optimized, and highly engaging article about '{keyword}' in {language}. The article length should be approximately {article_length} words.\nFollow Google's EEAT (Experience, Expertise, Authoritativeness, Trustworthiness) guidelines.\nFormat the output as a valid JSON object with three keys:\n- 'title': A catchy, SEO-friendly title.\n- 'meta_description': A 150-160 character meta description.\n- 'content': The main article content formatted in HTML (use <h2>, <h3>, <p>, <ul>, <li> tags appropriately. Do NOT include <h1> or ```html wrappers).\n{image_instruction}\nMake the content sound natural, human-written, and provide deep value to the reader. Do not sound like an AI robot.";
         $promptTemplate = Setting::get('ai_writer_prompt', $defaultPrompt);
 
         $prompt = str_replace(
-            ['{keyword}', '{language}', '{image_instruction}'],
-            [$keyword, $language, $imageInstruction],
+            ['{keyword}', '{language}', '{article_length}', '{image_instruction}'],
+            [$keyword, $language, $articleLength, $imageInstruction],
             $promptTemplate
         );
 
