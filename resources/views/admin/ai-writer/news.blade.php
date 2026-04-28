@@ -43,6 +43,107 @@
                             </div>
                         </div>
 
+                        <script>
+                            (function() {
+                                var bindEvents = function() {
+                                    var presetSource = document.getElementById('preset_source');
+                                    var presetCategory = document.getElementById('preset_category');
+                                    var sourceName = document.getElementById('source_name');
+                                    var sourceUrl = document.getElementById('source_url');
+
+                                    if (!presetSource || !presetCategory) return;
+
+                                    var sourcesData = {
+                                        'bbc': {
+                                            name: 'BBC News',
+                                            categories: {
+                                                'World': 'http://feeds.bbci.co.uk/news/world/rss.xml',
+                                                'Technology': 'http://feeds.bbci.co.uk/news/technology/rss.xml',
+                                                'Business': 'http://feeds.bbci.co.uk/news/business/rss.xml',
+                                                'Health': 'http://feeds.bbci.co.uk/news/health/rss.xml',
+                                                'Entertainment': 'http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml',
+                                                'Sports': 'http://feeds.bbci.co.uk/sport/rss.xml'
+                                            }
+                                        },
+                                        'cnn': {
+                                            name: 'CNN',
+                                            categories: {
+                                                'Top Stories': 'http://rss.cnn.com/rss/edition.rss',
+                                                'World': 'http://rss.cnn.com/rss/edition_world.rss',
+                                                'Technology': 'http://rss.cnn.com/rss/edition_technology.rss',
+                                                'Business': 'http://rss.cnn.com/rss/money_news_international.rss',
+                                                'Entertainment': 'http://rss.cnn.com/rss/edition_entertainment.rss'
+                                            }
+                                        },
+                                        'nyt': {
+                                            name: 'New York Times',
+                                            categories: {
+                                                'World': 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',
+                                                'Technology': 'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml',
+                                                'Business': 'https://rss.nytimes.com/services/xml/rss/nyt/Business.xml',
+                                                'Sports': 'https://rss.nytimes.com/services/xml/rss/nyt/Sports.xml',
+                                                'Health': 'https://rss.nytimes.com/services/xml/rss/nyt/Health.xml'
+                                            }
+                                        },
+                                        'guardian': {
+                                            name: 'The Guardian',
+                                            categories: {
+                                                'World': 'https://www.theguardian.com/world/rss',
+                                                'Technology': 'https://www.theguardian.com/technology/rss',
+                                                'Business': 'https://www.theguardian.com/business/rss',
+                                                'Sports': 'https://www.theguardian.com/sport/rss',
+                                                'Culture': 'https://www.theguardian.com/culture/rss'
+                                            }
+                                        },
+                                        'aljazeera': {
+                                            name: 'Al Jazeera',
+                                            categories: {
+                                                'Top Stories': 'https://www.aljazeera.com/xml/rss/all.xml'
+                                            }
+                                        }
+                                    };
+
+                                    presetSource.addEventListener('change', function() {
+                                        var siteId = this.value;
+                                        presetCategory.innerHTML = '<option value="">-- Select a Category --</option>';
+                                        
+                                        if (siteId && sourcesData[siteId]) {
+                                            presetCategory.disabled = false;
+                                            var cats = sourcesData[siteId].categories;
+                                            for (var catName in cats) {
+                                                if (cats.hasOwnProperty(catName)) {
+                                                    var option = document.createElement('option');
+                                                    option.value = cats[catName];
+                                                    option.textContent = catName;
+                                                    presetCategory.appendChild(option);
+                                                }
+                                            }
+                                        } else {
+                                            presetCategory.disabled = true;
+                                            presetCategory.innerHTML = '<option value="">-- First Select a Site --</option>';
+                                        }
+                                    });
+
+                                    presetCategory.addEventListener('change', function() {
+                                        var feedUrl = this.value;
+                                        if (feedUrl && presetSource.value) {
+                                            var siteName = sourcesData[presetSource.value].name;
+                                            var catName = this.options[this.selectedIndex].text;
+                                            
+                                            sourceUrl.value = feedUrl;
+                                            sourceName.value = siteName + ' - ' + catName;
+                                        }
+                                    });
+                                };
+                                
+                                if (document.readyState === 'loading') {
+                                    document.addEventListener('DOMContentLoaded', bindEvents);
+                                } else {
+                                    bindEvents();
+                                }
+                            })();
+                        </script>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block font-medium text-sm text-gray-700">Source Name</label>
@@ -182,95 +283,4 @@
     </div>
 </x-app-layout>
 
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const presetSource = document.getElementById('preset_source');
-        const presetCategory = document.getElementById('preset_category');
-        const sourceName = document.getElementById('source_name');
-        const sourceUrl = document.getElementById('source_url');
 
-        const sourcesData = {
-            'bbc': {
-                name: 'BBC News',
-                categories: {
-                    'World': 'http://feeds.bbci.co.uk/news/world/rss.xml',
-                    'Technology': 'http://feeds.bbci.co.uk/news/technology/rss.xml',
-                    'Business': 'http://feeds.bbci.co.uk/news/business/rss.xml',
-                    'Health': 'http://feeds.bbci.co.uk/news/health/rss.xml',
-                    'Entertainment': 'http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml',
-                    'Sports': 'http://feeds.bbci.co.uk/sport/rss.xml'
-                }
-            },
-            'cnn': {
-                name: 'CNN',
-                categories: {
-                    'Top Stories': 'http://rss.cnn.com/rss/edition.rss',
-                    'World': 'http://rss.cnn.com/rss/edition_world.rss',
-                    'Technology': 'http://rss.cnn.com/rss/edition_technology.rss',
-                    'Business': 'http://rss.cnn.com/rss/money_news_international.rss',
-                    'Entertainment': 'http://rss.cnn.com/rss/edition_entertainment.rss'
-                }
-            },
-            'nyt': {
-                name: 'New York Times',
-                categories: {
-                    'World': 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',
-                    'Technology': 'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml',
-                    'Business': 'https://rss.nytimes.com/services/xml/rss/nyt/Business.xml',
-                    'Sports': 'https://rss.nytimes.com/services/xml/rss/nyt/Sports.xml',
-                    'Health': 'https://rss.nytimes.com/services/xml/rss/nyt/Health.xml'
-                }
-            },
-            'guardian': {
-                name: 'The Guardian',
-                categories: {
-                    'World': 'https://www.theguardian.com/world/rss',
-                    'Technology': 'https://www.theguardian.com/technology/rss',
-                    'Business': 'https://www.theguardian.com/business/rss',
-                    'Sports': 'https://www.theguardian.com/sport/rss',
-                    'Culture': 'https://www.theguardian.com/culture/rss'
-                }
-            },
-            'aljazeera': {
-                name: 'Al Jazeera',
-                categories: {
-                    'Top Stories': 'https://www.aljazeera.com/xml/rss/all.xml'
-                }
-            }
-        };
-
-        if (presetSource && presetCategory) {
-            presetSource.addEventListener('change', function() {
-                const siteId = this.value;
-                presetCategory.innerHTML = '<option value="">-- Select a Category --</option>';
-                
-                if (siteId && sourcesData[siteId]) {
-                    presetCategory.disabled = false;
-                    const cats = sourcesData[siteId].categories;
-                    for (const [catName, feedUrl] of Object.entries(cats)) {
-                        const option = document.createElement('option');
-                        option.value = feedUrl;
-                        option.textContent = catName;
-                        presetCategory.appendChild(option);
-                    }
-                } else {
-                    presetCategory.disabled = true;
-                    presetCategory.innerHTML = '<option value="">-- First Select a Site --</option>';
-                }
-            });
-
-            presetCategory.addEventListener('change', function() {
-                const feedUrl = this.value;
-                if (feedUrl && presetSource.value) {
-                    const siteName = sourcesData[presetSource.value].name;
-                    const catName = this.options[this.selectedIndex].text;
-                    
-                    sourceUrl.value = feedUrl;
-                    sourceName.value = siteName + ' - ' + catName;
-                }
-            });
-        }
-    });
-</script>
-@endpush
