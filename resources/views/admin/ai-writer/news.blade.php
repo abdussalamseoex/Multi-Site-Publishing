@@ -214,8 +214,23 @@
             <!-- Existing Sources -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
-                    <h3 class="font-bold text-lg mb-4">Active Sources</h3>
-                    
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+                        <h3 class="font-bold text-lg">Active Sources</h3>
+
+                        {{-- Global Cron Countdown Banner --}}
+                        <div class="flex items-center gap-3 bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3">
+                            <div class="flex-shrink-0 bg-indigo-100 p-2 rounded-full">
+                                <svg class="w-5 h-5 text-indigo-600 animate-spin" style="animation-duration:4s" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-xs text-indigo-400 font-bold uppercase tracking-wider">Next Auto-Fetch (Cron)</p>
+                                <p id="global-cron-countdown" class="text-base font-mono font-bold text-indigo-800">Calculating...</p>
+                            </div>
+                        </div>
+                    </div>
+
                     @if($sources->count() > 0)
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200 border">
@@ -284,7 +299,7 @@
                                             @if($isDue)
                                                 <div class="text-xs font-semibold text-green-600 flex items-center gap-1">
                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                                    Ready — awaiting next Cron run
+                                                    Ready — next fetch in: <span class="cron-sync-countdown font-mono ml-1">...</span>
                                                 </div>
                                             @else
                                                 <div class="text-xs text-indigo-600 font-mono" id="countdown-{{ $source->id }}"
@@ -452,7 +467,7 @@
             var interval = setInterval(function() {
                 remaining--;
                 if (remaining <= 0) {
-                    el.innerText = '✅ Ready — awaiting Cron';
+                    el.innerText = '✅ Next Cron run imminent';
                     el.classList.remove('text-indigo-600');
                     el.classList.add('text-green-600', 'font-semibold');
                     clearInterval(interval);
@@ -461,6 +476,43 @@
                 }
             }, 1000);
         });
+    })();
+
+    // Global Cron countdown — Laravel runs schedule:run every minute, but news:fetch-auto is hourly.
+    // We show time until next top-of-hour.
+    (function() {
+        var globalEl  = document.getElementById('global-cron-countdown');
+        var syncSpans = document.querySelectorAll('.cron-sync-countdown');
+        if (!globalEl) return;
+
+        function secsUntilNextHour() {
+            var now = new Date();
+            var nextHour = new Date(now);
+            nextHour.setHours(now.getHours() + 1, 0, 0, 0);
+            return Math.max(0, Math.floor((nextHour - now) / 1000));
+        }
+
+        function fmtHMS(s) {
+            if (s <= 0) return '⚡ Running now!';
+            var h = Math.floor(s / 3600);
+            var m = Math.floor((s % 3600) / 60);
+            var sec = s % 60;
+            var parts = [];
+            if (h > 0) parts.push(h + 'h');
+            parts.push(String(m).padStart(2,'0') + 'm');
+            parts.push(String(sec).padStart(2,'0') + 's');
+            return parts.join(' ');
+        }
+
+        function tick() {
+            var secs = secsUntilNextHour();
+            var formatted = fmtHMS(secs);
+            globalEl.innerText = formatted;
+            syncSpans.forEach(function(sp) { sp.innerText = formatted; });
+        }
+
+        tick();
+        setInterval(tick, 1000);
     })();
     </script>
     @endpush
