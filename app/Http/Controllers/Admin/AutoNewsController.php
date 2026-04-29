@@ -11,10 +11,11 @@ class AutoNewsController extends Controller
 {
     public function index()
     {
-        $sources = AutoNewsSource::with('category')->get();
+        $sources = AutoNewsSource::with(['category', 'user'])->get();
         $categories = Category::all();
+        $users = \App\Models\User::all(); // Load all users to show in the dropdown
         
-        return view('admin.ai-writer.news', compact('sources', 'categories'));
+        return view('admin.ai-writer.news', compact('sources', 'categories', 'users'));
     }
 
     public function store(Request $request)
@@ -30,6 +31,7 @@ class AutoNewsController extends Controller
             'in_content_images_count' => 'required|integer|min:0|max:5',
             'in_content_image_source' => 'required|string',
             'is_active'               => 'boolean',
+            'user_id'                 => 'nullable|exists:users,id',
         ]);
 
         $durationDays = $request->duration_days ? (int) $request->duration_days : null;
@@ -47,6 +49,7 @@ class AutoNewsController extends Controller
             'in_content_images_count' => $request->in_content_images_count,
             'in_content_image_source' => $request->in_content_image_source,
             'is_active'               => $request->has('is_active') ? true : false,
+            'user_id'                 => $request->user_id,
         ]);
 
         $msg = 'Auto News Source added successfully.';

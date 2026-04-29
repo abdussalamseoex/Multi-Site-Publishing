@@ -19,6 +19,7 @@ class AutoNewsSource extends Model
         'in_content_images_count',
         'in_content_image_source',
         'is_active',
+        'user_id',
     ];
 
     protected $casts = [
@@ -30,5 +31,10 @@ class AutoNewsSource extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

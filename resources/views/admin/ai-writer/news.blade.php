@@ -171,12 +171,21 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                             <div>
                                 <label class="block font-medium text-sm text-gray-700">Target Category</label>
                                 <select name="category_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
                                     @foreach($categories as $category)
                                         <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block font-medium text-sm text-gray-700">Author</label>
+                                <select name="user_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                    <option value="">-- Default Admin --</option>
+                                    @foreach($users ?? [] as $user)
+                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -283,7 +292,7 @@
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category & Author</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Run / Next Fetch</th>
                                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
@@ -311,8 +320,11 @@
                                                 </div>
                                             @endif
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ $source->category ? $source->category->name : 'N/A' }}
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900 font-bold">{{ $source->category ? $source->category->name : 'N/A' }}</div>
+                                            <div class="text-xs text-gray-500 mt-1">
+                                                <span class="font-medium text-gray-400">Author:</span> {{ $source->user ? $source->user->name : 'Admin (Default)' }}
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {{ $source->posts_per_run }} posts / {{ $source->fetch_interval_hours }}h

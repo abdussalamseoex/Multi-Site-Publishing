@@ -114,6 +114,22 @@ class AutoNewsFetcher extends Command
                         foreach ($xml->channel->item as $item) {
                             if (count($articles) >= $limit) break;
 
+                            // --- Skip articles older than 30 days ---
+                            $pubDateStr = (string)$item->pubDate;
+                            if (!empty($pubDateStr)) {
+                                try {
+                                    $pubDate = \Carbon\Carbon::parse($pubDateStr);
+                                    if ($pubDate->diffInDays(now()) > 30) {
+                                        \Log::info("AutoNewsFetcher: Skipping old article from {$pubDateStr}: " . (string)$item->title);
+                                        continue;
+                                    }
+                                } catch (\Exception $e) { /* ignore parse errors */ }
+                            }
+
+                            // --- Validate link ---
+                            $link = trim((string)$item->link);
+                            if (empty($link) || !filter_var($link, FILTER_VALIDATE_URL)) continue;
+
                             // Get description / content:encoded
                             $desc = '';
                             if (isset($namespaces['content'])) {
@@ -138,9 +154,10 @@ class AutoNewsFetcher extends Command
 
                             $articles[] = [
                                 'title'       => (string)$item->title,
-                                'link'        => (string)$item->link,
+                                'link'        => $link,
                                 'description' => strip_tags($desc),
                                 'image'       => $image,
+                                'pub_date'    => $pubDateStr,
                             ];
                         }
                     }
@@ -148,6 +165,16 @@ class AutoNewsFetcher extends Command
                     elseif (isset($xml->entry)) {
                         foreach ($xml->entry as $entry) {
                             if (count($articles) >= $limit) break;
+
+                            // --- Skip old articles ---
+                            $pubDateStr = isset($entry->published) ? (string)$entry->published : (isset($entry->updated) ? (string)$entry->updated : '');
+                            if (!empty($pubDateStr)) {
+                                try {
+                                    $pubDate = \Carbon\Carbon::parse($pubDateStr);
+                                    if ($pubDate->diffInDays(now()) > 30) continue;
+                                } catch (\Exception $e) { }
+                            }
+
                             $link = '';
                             foreach ($entry->link as $l) {
                                 if ((string)$l['rel'] == 'alternate' || !(string)$l['rel']) {
@@ -156,6 +183,7 @@ class AutoNewsFetcher extends Command
                                 }
                             }
                             if (!$link) $link = (string)$entry->link['href'];
+                            if (empty($link) || !filter_var($link, FILTER_VALIDATE_URL)) continue;
 
                             $desc = '';
                             if (isset($namespaces['content'])) {
@@ -169,6 +197,7 @@ class AutoNewsFetcher extends Command
                                 'link'        => $link,
                                 'description' => strip_tags($desc),
                                 'image'       => null,
+                                'pub_date'    => $pubDateStr,
                             ];
                         }
                     }
@@ -414,9 +443,13 @@ class AutoNewsFetcher extends Command
                 }
 
                 $post = new Post();
-                // Find admin user or use first user
-                $admin = \App\Models\User::where('role', 'admin')->first();
-                $post->user_id = $admin ? $admin->id : 1;
+                if ($source->user_id) {
+                    $post->user_id = $source->user_id;
+                } else {
+                    // Find admin user or use first user
+                    $admin = \App\Models\User::where('role', 'admin')->first();
+                    $post->user_id = $admin ? $admin->id : 1;
+                }
                 $post->category_id = $source->category_id;
                 $post->title = $contentData['title'];
                 $post->slug = $slug;
