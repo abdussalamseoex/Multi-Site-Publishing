@@ -56,6 +56,9 @@ Route::middleware('auth')->group(function () {
 Route::get('/sitemap.xml', [\App\Http\Controllers\SeoController::class, 'sitemap'])->name('sitemap');
 Route::get('/robots.txt', [\App\Http\Controllers\SeoController::class, 'robots'])->name('robots');
 
+// Pseudo-Cron for background tasks without cPanel (publicly accessible)
+Route::get('/system/pseudo-cron', [\App\Http\Controllers\Admin\SettingController::class, 'pseudoCron'])->name('pseudo.cron');
+
 require __DIR__.'/auth.php';
 
 // Admin Routes
@@ -119,9 +122,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Point Top-up Requests
     Route::get('/topup-requests', [\App\Http\Controllers\Admin\TopupRequestController::class, 'index'])->name('topup.requests');
     Route::patch('/topup-requests/{topupRequest}', [\App\Http\Controllers\Admin\TopupRequestController::class, 'update'])->name('topup.update');
-
-    // Pseudo-Cron for background tasks without cPanel
-    Route::get('/system/pseudo-cron', [\App\Http\Controllers\Admin\SettingController::class, 'pseudoCron'])->name('pseudo.cron');
 
     Route::get('/menus', [\App\Http\Controllers\Admin\MenuController::class, 'index'])->name('menus.index');
     Route::post('/menus/{menu}/items', [\App\Http\Controllers\Admin\MenuController::class, 'storeItem'])->name('menus.items.store');
