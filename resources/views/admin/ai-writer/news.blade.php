@@ -33,6 +33,7 @@
                                         <option value="nyt">New York Times</option>
                                         <option value="guardian">The Guardian</option>
                                         <option value="aljazeera">Al Jazeera</option>
+                                        <option value="cointelegraph">CoinTelegraph (Crypto)</option>
                                     </select>
                                 </div>
                                 <div>
@@ -103,6 +104,12 @@
                                                 'World News': 'https://www.aljazeera.com/xml/rss/world.xml',
                                                 'Sports': 'https://www.aljazeera.com/xml/rss/sport.xml',
                                                 'Economy / Business': 'https://www.aljazeera.com/xml/rss/economy.xml'
+                                            }
+                                        },
+                                        'cointelegraph': {
+                                            name: 'CoinTelegraph',
+                                            categories: {
+                                                'Cryptocurrency & Web3': 'https://cointelegraph.com/rss'
                                             }
                                         }
                                     };
