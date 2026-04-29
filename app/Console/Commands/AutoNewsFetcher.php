@@ -213,59 +213,79 @@ class AutoNewsFetcher extends Command
             }
 
             // -----------------------------------------------------------------------
-            // STRATEGY: Use RSS description first (avoids paywall/bot-detection).
-            // Only fetch the article page if the RSS gave no useful description.
+            // STRATEGY: Always attempt to fetch the article page with browser-like
+            // headers (Google referrer tricks many paywalls). Extract og:image and
+            // og:description from <head> (available even on paywalled pages).
+            // Combine ALL available text: og:description + RSS desc + body text.
             // -----------------------------------------------------------------------
             $rssDescription = trim($article['description'] ?? '');
-            $originalImage   = $article['image'] ?? null;
+            $originalImage   = $article['image'] ?? null; // Start with RSS media image
             $html            = '';
+            $text            = '';
 
-            if (strlen($rssDescription) > 150) {
-                // RSS has enough content — use it directly, skip page fetch
-                $text = $rssDescription;
-                \Log::info("AutoNewsFetcher: Using RSS description for: " . $article['link']);
-            } else {
-                // Fallback: try fetching the article page
+            try {
                 $response = Http::withoutVerifying()->withHeaders([
-                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept'     => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                ])->timeout(15)->get($article['link']);
+                    'User-Agent'      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                    'Accept'          => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                    'Accept-Language' => 'en-US,en;q=0.9',
+                    'Accept-Encoding' => 'gzip, deflate, br',
+                    'Referer'         => 'https://www.google.com/',
+                    'DNT'             => '1',
+                    'Connection'      => 'keep-alive',
+                    'Upgrade-Insecure-Requests' => '1',
+                ])->timeout(20)->get($article['link']);
 
-                if (!$response->successful()) {
-                    // Even if page fails, use RSS description if available
-                    if (!empty($rssDescription)) {
-                        $text = $rssDescription;
-                        \Log::info("AutoNewsFetcher: Page fetch failed ({$response->status()}), falling back to RSS description for: " . $article['link']);
-                    } else {
-                        \Log::warning("AutoNewsFetcher: Failed to fetch article content for {$article['link']}. Status: " . $response->status());
-                        return false;
-                    }
-                } else {
+                if ($response->successful()) {
                     $html = $response->body();
 
-                    // Extract og:image if we don't have one from RSS
+                    // --- Extract og:image (works even on paywalled pages) ---
                     if (!$originalImage) {
-                        if (preg_match('/<meta\s+(?:property|name)=["\']og:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $m) ||
-                            preg_match('/<meta\s+content=["\']([^"\']+)["\']\s+(?:property|name)=["\']og:image["\']/i', $html, $m)) {
-                            $originalImage = $m[1];
-                        } elseif (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $html, $m)) {
+                        if (preg_match('/<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']/i', $html, $m) ||
+                            preg_match('/<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']/i', $html, $m) ||
+                            preg_match('/<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\']([^"\']+)["\']/i', $html, $m)) {
                             $originalImage = $m[1];
                         }
                     }
 
-                    // Extract text from page
-                    $text = strip_tags(preg_replace('#<script(.*?)>(.*?)</script>#is', '', $html));
+                    // --- Extract og:description (richer than RSS description) ---
+                    $ogDescription = '';
+                    if (preg_match('/<meta[^>]+property=["\']og:description["\'][^>]+content=["\']([^"\']+)["\']/i', $html, $m) ||
+                        preg_match('/<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:description["\']/i', $html, $m) ||
+                        preg_match('/<meta[^>]+name=["\']description["\'][^>]+content=["\']([^"\']+)["\']/i', $html, $m)) {
+                        $ogDescription = trim($m[1]);
+                    }
+
+                    // --- Extract body text (strips scripts, styles, nav) ---
+                    $bodyText = $html;
+                    $bodyText = preg_replace('#<(script|style|nav|header|footer|aside|form|iframe)[^>]*>.*?</\1>#is', '', $bodyText);
+                    $bodyText = strip_tags($bodyText);
+                    $bodyText = preg_replace('/\s+/', ' ', $bodyText);
+                    $bodyText = trim($bodyText);
+
+                    // Build best possible context: og:description + RSS desc + body
+                    $contextParts = array_filter([
+                        $ogDescription,
+                        $rssDescription,
+                        strlen($bodyText) > 200 ? $bodyText : '',
+                    ]);
+                    $text = implode(' ', $contextParts);
                     $text = preg_replace('/\s+/', ' ', $text);
 
-                    // Prefer RSS description if page text is very short (paywall/JS-only)
-                    if (strlen(trim($text)) < 300 && !empty($rssDescription)) {
-                        $text = $rssDescription;
-                        \Log::info("AutoNewsFetcher: Page content too short, using RSS description for: " . $article['link']);
-                    }
+                } else {
+                    \Log::info("AutoNewsFetcher: Page fetch returned {$response->status()} for {$article['link']}, using RSS description as fallback.");
+                    $text = $rssDescription;
                 }
+            } catch (\Exception $fetchEx) {
+                \Log::info("AutoNewsFetcher: Page fetch exception for {$article['link']}: " . $fetchEx->getMessage() . ". Using RSS description.");
+                $text = $rssDescription;
             }
 
-            $text = substr($text, 0, 5000);
+            // Final fallback
+            if (empty(trim($text))) {
+                $text = $article['title'];
+            }
+
+            $text = substr($text, 0, 6000);
 
             $openaiKey = Setting::get('openai_api_key');
             if (!$openaiKey) {
