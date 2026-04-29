@@ -120,6 +120,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/topup-requests', [\App\Http\Controllers\Admin\TopupRequestController::class, 'index'])->name('topup.requests');
     Route::patch('/topup-requests/{topupRequest}', [\App\Http\Controllers\Admin\TopupRequestController::class, 'update'])->name('topup.update');
 
+    // Pseudo-Cron for background tasks without cPanel
+    Route::get('/system/pseudo-cron', [\App\Http\Controllers\Admin\SettingController::class, 'pseudoCron'])->name('pseudo.cron');
+
     Route::get('/menus', [\App\Http\Controllers\Admin\MenuController::class, 'index'])->name('menus.index');
     Route::post('/menus/{menu}/items', [\App\Http\Controllers\Admin\MenuController::class, 'storeItem'])->name('menus.items.store');
     Route::post('/menus/{menu}/import-categories', [\App\Http\Controllers\Admin\MenuController::class, 'importCategories'])->name('menus.import_categories');

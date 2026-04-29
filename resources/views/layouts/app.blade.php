@@ -50,6 +50,12 @@
         </div>
         {!! \App\Models\Setting::get('custom_footer_scripts', '') !!}
         @stack('scripts')
+        <script>
+            // Pseudo-cron to trigger scheduled tasks (like Auto News) in the background without needing cPanel Cron
+            setTimeout(function() {
+                fetch('{{ route('pseudo.cron') }}').catch(function() {});
+            }, 3000);
+        </script>
     </body>
 </html>
 

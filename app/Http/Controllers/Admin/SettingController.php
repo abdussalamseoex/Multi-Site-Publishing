@@ -107,4 +107,19 @@ class SettingController extends Controller
             return back()->with('error', 'Migration failed: ' . $e->getMessage());
         }
     }
+
+    public function pseudoCron()
+    {
+        // Try to obtain a lock for 5 minutes so it doesn't run concurrently on many requests
+        if (\Illuminate\Support\Facades\Cache::add('pseudo_cron_lock', true, 300)) {
+            try {
+                // Call the scheduled commands
+                \Illuminate\Support\Facades\Artisan::call('schedule:run');
+            } catch (\Exception $e) {
+                \Log::error('Pseudo Cron Error: ' . $e->getMessage());
+            }
+            \Illuminate\Support\Facades\Cache::forget('pseudo_cron_lock');
+        }
+        return response()->json(['status' => 'ok']);
+    }
 }
