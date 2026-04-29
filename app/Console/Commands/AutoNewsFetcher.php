@@ -78,15 +78,26 @@ class AutoNewsFetcher extends Command
             $source->last_run_at = now();
             $source->save();
 
-            $this->info("Completed {$source->name}: generated {$successCount} posts.");
+            if ($successCount == 0) {
+                $this->warn("Completed {$source->name}: ran successfully but generated 0 new posts (could be duplicates or errors). Check laravel.log.");
+            } else {
+                $this->info("Completed {$source->name}: generated {$successCount} posts.");
+            }
         }
     }
 
     private function extractLinksFromSource($url, $limit)
     {
         try {
-            $response = Http::timeout(15)->get($url);
-            if (!$response->successful()) return [];
+            $response = Http::withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            ])->timeout(15)->get($url);
+            
+            if (!$response->successful()) {
+                \Log::warning("AutoNewsFetcher: Failed to fetch source URL {$url}. Status: " . $response->status());
+                return [];
+            }
 
             $content = $response->body();
             $articles = [];
@@ -156,9 +167,22 @@ class AutoNewsFetcher extends Command
             // Strip tracking/UTM parameters from the article link before any use
             $article['link'] = $this->cleanUrl($article['link']);
 
+            // Duplicate Check: Check if we already posted this exact article link
+            if (Post::where('content', 'LIKE', '%' . $article['link'] . '%')->exists()) {
+                \Log::info("AutoNewsFetcher: Skipping duplicate article. Already posted: " . $article['link']);
+                return false;
+            }
+
             // First, fetch the article content
-            $response = Http::timeout(15)->get($article['link']);
-            if (!$response->successful()) return false;
+            $response = Http::withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            ])->timeout(15)->get($article['link']);
+            
+            if (!$response->successful()) {
+                \Log::warning("AutoNewsFetcher: Failed to fetch article content for {$article['link']}. Status: " . $response->status());
+                return false;
+            }
 
             $html = $response->body();
             
@@ -176,8 +200,16 @@ class AutoNewsFetcher extends Command
             $text = preg_replace('/\s+/', ' ', $text);
             $text = substr($text, 0, 5000); // Limit context for OpenAI
 
+            if (empty(trim($text))) {
+                \Log::warning("AutoNewsFetcher: Article content empty after stripping tags for {$article['link']}");
+                return false;
+            }
+
             $openaiKey = Setting::get('openai_api_key');
-            if (!$openaiKey) return false;
+            if (!$openaiKey) {
+                \Log::error("AutoNewsFetcher: OpenAI API Key is missing.");
+                return false;
+            }
 
             $imageCount = $source->in_content_images_count;
             $imageInstruction = $imageCount > 0 ? "Also, insert the exact text '[IMAGE_PLACEHOLDER]' at appropriate places in the content $imageCount times." : "";
@@ -207,9 +239,22 @@ class AutoNewsFetcher extends Command
             if ($aiResponse->successful()) {
                 $result = $aiResponse->json();
                 $contentStr = $result['choices'][0]['message']['content'] ?? '';
+                
+                // Clean up any potential markdown formatting in case the model ignored response_format
+                $contentStr = preg_replace('/^```json\s*/', '', $contentStr);
+                $contentStr = preg_replace('/```$/', '', trim($contentStr));
+                
                 $contentData = json_decode($contentStr, true);
 
-                if (!$contentData) return false;
+                if (!$contentData) {
+                    \Log::error("AutoNewsFetcher: Failed to decode OpenAI JSON response. Raw output: " . $contentStr);
+                    return false;
+                }
+
+                if (empty($contentData['title']) || empty($contentData['content'])) {
+                    \Log::error("AutoNewsFetcher: OpenAI response missing 'title' or 'content'. Data: " . json_encode($contentData));
+                    return false;
+                }
 
                 $keyword = $contentData['title'];
                 
@@ -303,6 +348,8 @@ class AutoNewsFetcher extends Command
                 $post->save();
 
                 return true;
+            } else {
+                \Log::error("AutoNewsFetcher: OpenAI API Request Failed. Status: " . $aiResponse->status() . " Body: " . $aiResponse->body());
             }
 
             return false;
