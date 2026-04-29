@@ -53,7 +53,7 @@
         <script>
             // Pseudo-cron to trigger scheduled tasks (like Auto News) in the background without needing cPanel Cron
             setTimeout(function() {
-                fetch('{{ route('pseudo.cron') }}').catch(function() {});
+                fetch('{{ url('/system/pseudo-cron') }}').catch(function() {});
             }, 3000);
         </script>
     </body>
