@@ -59,6 +59,89 @@ Route::get('/robots.txt', [\App\Http\Controllers\SeoController::class, 'robots']
 // Pseudo-Cron for background tasks without cPanel (publicly accessible)
 Route::get('/system/pseudo-cron', [\App\Http\Controllers\Admin\SettingController::class, 'pseudoCron'])->name('pseudo.cron');
 
+// Diagnostic tool for news fetcher (admin only, temporary)
+Route::get('/system/news-diagnostic', function () {
+    if (!auth()->check() || auth()->user()->role !== 'admin') abort(403);
+
+    $urls = [
+        'BBC World (HTTP)'  => 'http://feeds.bbci.co.uk/news/world/rss.xml',
+        'CNN Top Stories'   => 'http://rss.cnn.com/rss/edition.rss',
+        'NYT World (HTTPS)' => 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',
+        'Guardian (HTTPS)'  => 'https://www.theguardian.com/world/rss',
+        'AlJazeera (HTTPS)' => 'https://www.aljazeera.com/xml/rss/all.xml',
+    ];
+
+    $results = [];
+    foreach ($urls as $name => $url) {
+        try {
+            $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+                ->withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Accept'     => 'application/xml,text/xml,*/*',
+                ])->timeout(10)->get($url);
+
+            $status  = $response->status();
+            $length  = strlen($response->body());
+            $isRss   = str_contains($response->body(), '<rss') || str_contains($response->body(), '<feed');
+            $xml     = $isRss ? @simplexml_load_string($response->body(), 'SimpleXMLElement', LIBXML_NOCDATA) : false;
+            $items   = 0;
+            if ($xml && isset($xml->channel->item)) $items = count($xml->channel->item);
+            elseif ($xml && isset($xml->entry))      $items = count($xml->entry);
+
+            $results[$name] = [
+                'url'     => $url,
+                'status'  => $status,
+                'ok'      => $response->successful(),
+                'length'  => $length,
+                'is_rss'  => $isRss,
+                'items'   => $items,
+                'error'   => null,
+            ];
+        } catch (\Exception $e) {
+            $results[$name] = [
+                'url'    => $url,
+                'status' => 'Exception',
+                'ok'     => false,
+                'length' => 0,
+                'is_rss' => false,
+                'items'  => 0,
+                'error'  => $e->getMessage(),
+            ];
+        }
+    }
+
+    $html = '<html><head><title>News Diagnostic</title><style>
+        body{font-family:monospace;padding:20px;background:#111;color:#eee}
+        table{width:100%;border-collapse:collapse;margin-top:20px}
+        th,td{border:1px solid #444;padding:10px;text-align:left}
+        th{background:#222}.ok{color:#4ade80}.fail{color:#f87171}
+        .label{color:#94a3b8;font-size:12px}
+    </style></head><body>';
+    $html .= '<h2 style="color:#60a5fa">📡 Auto News Fetcher Diagnostic</h2>';
+    $html .= '<p style="color:#94a3b8">Server: ' . php_uname('n') . ' | PHP: ' . PHP_VERSION . ' | Time: ' . now() . '</p>';
+    $html .= '<table><tr><th>Source</th><th>Status</th><th>Items Found</th><th>Details</th></tr>';
+    foreach ($results as $name => $r) {
+        $statusClass = $r['ok'] ? 'ok' : 'fail';
+        $icon        = $r['ok'] ? '✅' : '❌';
+        $detail      = $r['error'] ?? ($r['is_rss'] ? "RSS OK, {$r['length']} bytes" : "Not RSS ({$r['length']} bytes)");
+        $html .= "<tr>
+            <td><strong>{$name}</strong><br><span class='label'>{$r['url']}</span></td>
+            <td class='{$statusClass}'>{$icon} {$r['status']}</td>
+            <td class='{$statusClass}'><strong>{$r['items']}</strong></td>
+            <td class='label'>{$detail}</td>
+        </tr>";
+    }
+    $html .= '</table>';
+
+    // Also check OpenAI key
+    $openaiKey = \App\Models\Setting::get('openai_api_key');
+    $html .= '<h3 style="color:#60a5fa;margin-top:30px">🔑 OpenAI API Key</h3>';
+    $html .= $openaiKey ? '<p class="ok">✅ Set (' . strlen($openaiKey) . ' chars)</p>' : '<p class="fail">❌ NOT SET — This is why posts are not generating!</p>';
+
+    $html .= '</body></html>';
+    return response($html);
+})->middleware('auth');
+
 require __DIR__.'/auth.php';
 
 // Admin Routes
