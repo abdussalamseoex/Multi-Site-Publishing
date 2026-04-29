@@ -106,16 +106,44 @@ class AutoNewsFetcher extends Command
             if (strpos($content, '<rss') !== false || strpos($content, '<feed') !== false) {
                 $xml = @simplexml_load_string($content, 'SimpleXMLElement', LIBXML_NOCDATA);
                 if ($xml) {
+                    // Register common namespaces
+                    $namespaces = $xml->getNamespaces(true);
+
                     // RSS 2.0
                     if (isset($xml->channel->item)) {
                         foreach ($xml->channel->item as $item) {
                             if (count($articles) >= $limit) break;
+
+                            // Get description / content:encoded
+                            $desc = '';
+                            if (isset($namespaces['content'])) {
+                                $contentNs = $item->children($namespaces['content']);
+                                $desc = isset($contentNs->encoded) ? (string)$contentNs->encoded : '';
+                            }
+                            if (empty($desc)) $desc = (string)$item->description;
+
+                            // Get image from media:content or enclosure
+                            $image = null;
+                            if (isset($namespaces['media'])) {
+                                $mediaNs = $item->children($namespaces['media']);
+                                if (isset($mediaNs->content['url'])) {
+                                    $image = (string)$mediaNs->content['url'];
+                                } elseif (isset($mediaNs->thumbnail['url'])) {
+                                    $image = (string)$mediaNs->thumbnail['url'];
+                                }
+                            }
+                            if (!$image && isset($item->enclosure['url'])) {
+                                $image = (string)$item->enclosure['url'];
+                            }
+
                             $articles[] = [
-                                'title' => (string)$item->title,
-                                'link' => (string)$item->link,
+                                'title'       => (string)$item->title,
+                                'link'        => (string)$item->link,
+                                'description' => strip_tags($desc),
+                                'image'       => $image,
                             ];
                         }
-                    } 
+                    }
                     // Atom
                     elseif (isset($xml->entry)) {
                         foreach ($xml->entry as $entry) {
@@ -129,9 +157,18 @@ class AutoNewsFetcher extends Command
                             }
                             if (!$link) $link = (string)$entry->link['href'];
 
+                            $desc = '';
+                            if (isset($namespaces['content'])) {
+                                $contentNs = $entry->children($namespaces['content']);
+                                $desc = isset($contentNs->encoded) ? (string)$contentNs->encoded : '';
+                            }
+                            if (empty($desc)) $desc = isset($entry->summary) ? (string)$entry->summary : '';
+
                             $articles[] = [
-                                'title' => (string)$entry->title,
-                                'link' => $link,
+                                'title'       => (string)$entry->title,
+                                'link'        => $link,
+                                'description' => strip_tags($desc),
+                                'image'       => null,
                             ];
                         }
                     }
@@ -146,8 +183,10 @@ class AutoNewsFetcher extends Command
                         // Basic filter for valid article links
                         if (strlen($title) > 20 && filter_var($link, FILTER_VALIDATE_URL)) {
                             $articles[] = [
-                                'title' => trim($title),
-                                'link' => $link
+                                'title'       => trim($title),
+                                'link'        => $link,
+                                'description' => '',
+                                'image'       => null,
                             ];
                         }
                     }
@@ -173,37 +212,60 @@ class AutoNewsFetcher extends Command
                 return false;
             }
 
-            // First, fetch the article content
-            $response = Http::withoutVerifying()->withHeaders([
-                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            ])->timeout(15)->get($article['link']);
-            
-            if (!$response->successful()) {
-                \Log::warning("AutoNewsFetcher: Failed to fetch article content for {$article['link']}. Status: " . $response->status());
-                return false;
+            // -----------------------------------------------------------------------
+            // STRATEGY: Use RSS description first (avoids paywall/bot-detection).
+            // Only fetch the article page if the RSS gave no useful description.
+            // -----------------------------------------------------------------------
+            $rssDescription = trim($article['description'] ?? '');
+            $originalImage   = $article['image'] ?? null;
+            $html            = '';
+
+            if (strlen($rssDescription) > 150) {
+                // RSS has enough content — use it directly, skip page fetch
+                $text = $rssDescription;
+                \Log::info("AutoNewsFetcher: Using RSS description for: " . $article['link']);
+            } else {
+                // Fallback: try fetching the article page
+                $response = Http::withoutVerifying()->withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept'     => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                ])->timeout(15)->get($article['link']);
+
+                if (!$response->successful()) {
+                    // Even if page fails, use RSS description if available
+                    if (!empty($rssDescription)) {
+                        $text = $rssDescription;
+                        \Log::info("AutoNewsFetcher: Page fetch failed ({$response->status()}), falling back to RSS description for: " . $article['link']);
+                    } else {
+                        \Log::warning("AutoNewsFetcher: Failed to fetch article content for {$article['link']}. Status: " . $response->status());
+                        return false;
+                    }
+                } else {
+                    $html = $response->body();
+
+                    // Extract og:image if we don't have one from RSS
+                    if (!$originalImage) {
+                        if (preg_match('/<meta\s+(?:property|name)=["\']og:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $m) ||
+                            preg_match('/<meta\s+content=["\']([^"\']+)["\']\s+(?:property|name)=["\']og:image["\']/i', $html, $m)) {
+                            $originalImage = $m[1];
+                        } elseif (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $html, $m)) {
+                            $originalImage = $m[1];
+                        }
+                    }
+
+                    // Extract text from page
+                    $text = strip_tags(preg_replace('#<script(.*?)>(.*?)</script>#is', '', $html));
+                    $text = preg_replace('/\s+/', ' ', $text);
+
+                    // Prefer RSS description if page text is very short (paywall/JS-only)
+                    if (strlen(trim($text)) < 300 && !empty($rssDescription)) {
+                        $text = $rssDescription;
+                        \Log::info("AutoNewsFetcher: Page content too short, using RSS description for: " . $article['link']);
+                    }
+                }
             }
 
-            $html = $response->body();
-            
-            // Extract original featured image (og:image)
-            $originalImage = null;
-            if (preg_match('/<meta\s+(?:property|name)=["\']og:image["\']\s+content=["\']([^"\']+)["\']/i', $html, $matches) || 
-                preg_match('/<meta\s+content=["\']([^"\']+)["\']\s+(?:property|name)=["\']og:image["\']/i', $html, $matches)) {
-                $originalImage = $matches[1];
-            } elseif (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $html, $matches)) {
-                $originalImage = $matches[1];
-            }
-
-            // Basic extraction
-            $text = strip_tags(preg_replace('#<script(.*?)>(.*?)</script>#is', '', $html));
-            $text = preg_replace('/\s+/', ' ', $text);
-            $text = substr($text, 0, 5000); // Limit context for OpenAI
-
-            if (empty(trim($text))) {
-                \Log::warning("AutoNewsFetcher: Article content empty after stripping tags for {$article['link']}");
-                return false;
-            }
+            $text = substr($text, 0, 5000);
 
             $openaiKey = Setting::get('openai_api_key');
             if (!$openaiKey) {
