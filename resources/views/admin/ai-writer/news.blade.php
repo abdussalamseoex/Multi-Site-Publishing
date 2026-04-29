@@ -58,10 +58,15 @@
                                         'bbc': {
                                             name: 'BBC News',
                                             categories: {
+                                                'Top Stories': 'http://feeds.bbci.co.uk/news/rss.xml',
                                                 'World': 'http://feeds.bbci.co.uk/news/world/rss.xml',
+                                                'UK': 'http://feeds.bbci.co.uk/news/uk/rss.xml',
+                                                'Politics': 'http://feeds.bbci.co.uk/news/politics/rss.xml',
                                                 'Technology': 'http://feeds.bbci.co.uk/news/technology/rss.xml',
                                                 'Business': 'http://feeds.bbci.co.uk/news/business/rss.xml',
                                                 'Health': 'http://feeds.bbci.co.uk/news/health/rss.xml',
+                                                'Science': 'http://feeds.bbci.co.uk/news/science_and_environment/rss.xml',
+                                                'Education': 'http://feeds.bbci.co.uk/news/education/rss.xml',
                                                 'Entertainment': 'http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml',
                                                 'Sports': 'http://feeds.bbci.co.uk/sport/rss.xml'
                                             }
