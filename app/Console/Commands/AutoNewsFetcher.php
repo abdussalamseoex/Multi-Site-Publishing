@@ -474,10 +474,10 @@ class AutoNewsFetcher extends Command
                 $featuredImageUrl = null;
                 $featuredImageCredit = null;
                 if ($source->featured_image_source !== 'none') {
-                    $imgData = $this->fetchImage($keyword, $source->featured_image_source);
-                    if ($imgData) {
-                        $featuredImageUrl = $imgData['url'];
-                        $featuredImageCredit = $imgData['credit'];
+                    $imgResults = $this->fetchImage($keyword, $source->featured_image_source, 1);
+                    if (!empty($imgResults) && isset($imgResults[0])) {
+                        $featuredImageUrl = $imgResults[0]['url'];
+                        $featuredImageCredit = $imgResults[0]['credit'];
                     }
                 }
 
@@ -496,10 +496,12 @@ class AutoNewsFetcher extends Command
                 if ($imageCount > 0 && $source->in_content_image_source !== 'none') {
                     $batchImages = $this->fetchImage($keyword, $source->in_content_image_source, $imageCount);
                     
-                    if (!empty($batchImages) && is_array($batchImages)) {
+                    if (!empty($batchImages) && is_iterable($batchImages)) {
                         foreach ($batchImages as $i => $imgData) {
+                            if (!is_array($imgData) || empty($imgData['url'])) continue;
+                            
                             $imgUrl = \App\Services\ImageService::downloadAndConvert($imgData['url'], 'posts');
-                            $credit = $imgData['credit'];
+                            $credit = $imgData['credit'] ?? '';
                             if (!empty($credit)) {
                                 $imageTag = '<figure class="my-8 overflow-hidden rounded-xl bg-gray-50 border border-gray-100 shadow-sm p-2"><img src="' . $imgUrl . '" alt="' . htmlspecialchars($keyword) . '" class="w-full h-auto rounded-lg"><figcaption class="flex items-center justify-center space-x-2 text-sm text-gray-500 mt-3 pb-1"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span>Image Credit: ' . $credit . '</span></figcaption></figure>';
                             } else {
@@ -663,7 +665,7 @@ class AutoNewsFetcher extends Command
             }
         }
 
-        return $count === 1 ? ($images[0] ?? null) : $images;
+        return $images;
     }
 
     /**
