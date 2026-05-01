@@ -71,31 +71,30 @@ class AutoNewsController extends Controller
     {
         $source = AutoNewsSource::findOrFail($id);
 
+        // Standard validation
         $request->validate([
-            'name'                    => 'required|string|max:255',
-            'source_url'              => 'required|string',
-            'category_id'             => 'nullable|exists:categories,id',
-            'posts_per_run'           => 'required|integer|min:1',
-            'fetch_interval_hours'    => 'required|integer|min:1',
-            'featured_image_source'   => 'required|string',
-            'in_content_image_source' => 'required|string',
-            'in_content_images_count' => 'required|integer|min:0',
+            'name'       => 'required|string',
+            'source_url' => 'required|string',
         ]);
 
-        // Use request input with existing source values as fallback to prevent DB null constraint errors
-        $source->name                    = $request->input('name', $source->name);
-        $source->source_url              = $request->input('source_url', $source->source_url);
-        $source->category_id             = $request->input('category_id', $source->category_id);
-        $source->user_id                 = $request->input('user_id', $source->user_id);
-        $source->posts_per_run           = $request->input('posts_per_run', $source->posts_per_run);
-        $source->fetch_interval_hours    = $request->input('fetch_interval_hours', $source->fetch_interval_hours);
-        $source->daily_post_limit        = $request->input('daily_post_limit', $source->daily_post_limit);
-        $source->use_smart_schedule      = $request->has('use_smart_schedule');
-        $source->featured_image_source   = $request->input('featured_image_source', $source->featured_image_source);
-        $source->in_content_image_source = $request->input('in_content_image_source', $source->in_content_image_source);
-        $source->in_content_images_count = $request->input('in_content_images_count', $source->in_content_images_count);
-        $source->is_active               = $request->has('is_active');
+        // Manually update fields only if they are present and not null/empty in the request
+        // This prevents the "Column cannot be null" error
+        if ($request->filled('name'))                    $source->name = $request->name;
+        if ($request->filled('source_url'))              $source->source_url = $request->source_url;
+        if ($request->filled('category_id'))             $source->category_id = $request->category_id;
+        if ($request->filled('user_id'))                 $source->user_id = $request->user_id;
+        if ($request->filled('posts_per_run'))           $source->posts_per_run = $request->posts_per_run;
+        if ($request->filled('fetch_interval_hours'))    $source->fetch_interval_hours = $request->fetch_interval_hours;
+        if ($request->filled('daily_post_limit'))        $source->daily_post_limit = $request->daily_post_limit;
+        if ($request->filled('featured_image_source'))   $source->featured_image_source = $request->featured_image_source;
+        if ($request->filled('in_content_image_source')) $source->in_content_image_source = $request->in_content_image_source;
+        if ($request->filled('in_content_images_count')) $source->in_content_images_count = $request->in_content_images_count;
+        
+        // Checkboxes always send null if unchecked, so we handle them specially
+        $source->is_active = $request->has('is_active');
+        $source->use_smart_schedule = $request->has('use_smart_schedule');
 
+        // Handle duration/expiry
         if ($request->filled('duration_days')) {
             $source->duration_days = (int) $request->duration_days;
             $source->expires_at    = now()->addDays($source->duration_days);

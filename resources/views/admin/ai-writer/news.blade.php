@@ -925,7 +925,12 @@
         document.getElementById('edit_posts_per_run').value = source.posts_per_run;
         document.getElementById('edit_fetch_interval_hours').value = source.fetch_interval_hours;
         document.getElementById('edit_featured_image_source').value = source.featured_image_source;
-        document.getElementById('edit_in_content_image_source').value = source.in_content_image_source;
+        
+        // Fix for legacy 'stock' value
+        let inContentVal = source.in_content_image_source;
+        if (inContentVal === 'stock') inContentVal = 'pexels';
+        document.getElementById('edit_in_content_image_source').value = inContentVal || 'none';
+        
         document.getElementById('edit_in_content_images_count').value = source.in_content_images_count || 0;
         document.getElementById('edit_use_smart_schedule').checked = source.use_smart_schedule;
         document.getElementById('edit_is_active').checked = source.is_active;
