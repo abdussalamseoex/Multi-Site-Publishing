@@ -365,6 +365,22 @@ class AutoNewsController extends Controller
                 }
                 break;
 
+            case 'update_smart_schedule':
+                $isSmart = $request->has('use_smart_schedule');
+                $limit = (int)$request->input('daily_post_limit');
+                
+                $updateData = ['use_smart_schedule' => $isSmart];
+                if ($isSmart && $limit >= 1) {
+                    $updateData['daily_post_limit'] = $limit;
+                    // Reset standard interval to sync with smart schedule logic
+                    $updateData['fetch_interval_hours'] = max(1, round(24 / $limit));
+                    $updateData['posts_per_run'] = 1;
+                }
+                
+                $query->update($updateData);
+                $message = 'Smart schedule settings updated for ' . count($ids) . ' sources.';
+                break;
+
             default:
                 return back()->withErrors(['error' => 'Invalid bulk action selected.']);
         }

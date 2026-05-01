@@ -458,6 +458,7 @@
                                     <optgroup label="Settings">
                                         <option value="change_interval">Change Interval (Hours)...</option>
                                         <option value="change_limit">Change Posts Per Run...</option>
+                                        <option value="update_smart_schedule">Update Smart Schedule...</option>
                                     </optgroup>
                                     <optgroup label="Danger Zone">
                                         <option value="delete">Delete Selected</option>
@@ -486,6 +487,21 @@
                                     <input type="number" id="bulk-value-input" placeholder="Value" class="text-xs border-gray-300 rounded-lg w-20">
                                 </div>
 
+                                {{-- Bulk Smart Schedule Advanced Section --}}
+                                <div id="bulk-smart-schedule-wrapper" class="hidden bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex flex-wrap gap-4 items-center mt-2 w-full">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="bulk-use-smart-input" checked class="rounded border-gray-300 text-indigo-600">
+                                        <label class="ml-2 text-xs font-bold text-gray-700">Enable Smart Schedule</label>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <label class="text-[10px] font-bold text-indigo-400 uppercase">Daily Post Limit</label>
+                                        <input type="number" id="bulk-daily-limit-input" value="10" min="1" max="100" class="text-sm border-gray-200 rounded-lg w-24">
+                                    </div>
+                                    <div class="text-xs text-indigo-400 italic">
+                                        (Sets 1 post per run and calculates hours automatically)
+                                    </div>
+                                </div>
+
                                 <button type="button" onclick="executeBulkAction()" id="bulk-apply-btn" disabled class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-lg font-bold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none disabled:opacity-50 transition">
                                     Apply
                                 </button>
@@ -499,6 +515,8 @@
                             <input type="hidden" name="category_id" id="bulk-category-id">
                             <input type="hidden" name="user_id" id="bulk-user-id">
                             <input type="hidden" name="value" id="bulk-action-value">
+                            <input type="hidden" name="use_smart_schedule" id="bulk-use-smart-schedule">
+                            <input type="hidden" name="daily_post_limit" id="bulk-daily-post-limit">
                             <div id="bulk-ids-container"></div>
                         </form>
 
@@ -1088,6 +1106,7 @@
             document.getElementById('bulk-category-wrapper').classList.toggle('hidden', val !== 'change_category');
             document.getElementById('bulk-author-wrapper').classList.toggle('hidden', val !== 'change_author');
             document.getElementById('bulk-value-wrapper').classList.toggle('hidden', val !== 'change_interval' && val !== 'change_limit');
+            document.getElementById('bulk-smart-schedule-wrapper').classList.toggle('hidden', val !== 'update_smart_schedule');
             updateBulkState();
         });
     });
@@ -1097,6 +1116,7 @@
         if (!action) return;
 
         if (action === 'delete' && !confirm('Delete all selected news sources? This cannot be undone.')) return;
+        if (action === 'update_smart_schedule' && !confirm('Apply smart schedule settings to all selected sources?')) return;
 
         const checkboxes = document.querySelectorAll('.source-checkbox:checked');
         const container = document.getElementById('bulk-ids-container');
@@ -1114,6 +1134,16 @@
         document.getElementById('bulk-category-id').value = document.getElementById('bulk-category-input').value;
         document.getElementById('bulk-user-id').value = document.getElementById('bulk-author-input').value;
         document.getElementById('bulk-action-value').value = document.getElementById('bulk-value-input').value;
+        
+        // Smart Schedule
+        if (action === 'update_smart_schedule') {
+            if (document.getElementById('bulk-use-smart-input').checked) {
+                document.getElementById('bulk-use-smart-schedule').value = '1';
+            } else {
+                document.getElementById('bulk-use-smart-schedule').value = '';
+            }
+            document.getElementById('bulk-daily-post-limit').value = document.getElementById('bulk-daily-limit-input').value;
+        }
 
         document.getElementById('hidden-bulk-action-form').submit();
     }
