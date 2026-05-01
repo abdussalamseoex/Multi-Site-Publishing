@@ -216,44 +216,67 @@ class AutoNewsController extends Controller
      */
     public function importPredefinedSources()
     {
-        // Predefined list with suggested category names
+        // Ensure 15 US Authors exist first
+        $this->importAuthors();
+        $authors = \App\Models\User::where('role', 'user')->where('email', 'LIKE', '%@' . request()->getHost())->take(15)->get();
+        $authorCount = $authors->count();
+
+        // Predefined list mapped to User's Categories
         $sources = [
-            ['name' => 'BBC World News', 'source_url' => 'http://feeds.bbci.co.uk/news/world/rss.xml', 'suggested_category' => 'World News'],
-            ['name' => 'BBC Technology', 'source_url' => 'http://feeds.bbci.co.uk/news/technology/rss.xml', 'suggested_category' => 'Technology'],
-            ['name' => 'BBC Business', 'source_url' => 'http://feeds.bbci.co.uk/news/business/rss.xml', 'suggested_category' => 'Business'],
-            ['name' => 'BBC Science', 'source_url' => 'http://feeds.bbci.co.uk/news/science_and_environment/rss.xml', 'suggested_category' => 'Science'],
-            ['name' => 'BBC Health', 'source_url' => 'http://feeds.bbci.co.uk/news/health/rss.xml', 'suggested_category' => 'Health'],
-            ['name' => 'CoinTelegraph Bitcoin', 'source_url' => 'https://cointelegraph.com/rss/tag/bitcoin', 'suggested_category' => 'Crypto'],
-            ['name' => 'CoinTelegraph Ethereum', 'source_url' => 'https://cointelegraph.com/rss/tag/ethereum', 'suggested_category' => 'Crypto'],
-            ['name' => 'CoinTelegraph Altcoins', 'source_url' => 'https://cointelegraph.com/rss/tag/altcoin', 'suggested_category' => 'Crypto'],
-            ['name' => 'CoinTelegraph Blockchain', 'source_url' => 'https://cointelegraph.com/rss/tag/blockchain', 'suggested_category' => 'Blockchain'],
-            ['name' => 'CoinTelegraph NFT', 'source_url' => 'https://cointelegraph.com/rss/tag/nft', 'suggested_category' => 'NFT'],
+            // Tech & IT
+            ['name' => 'TechCrunch', 'source_url' => 'https://techcrunch.com/feed/', 'target' => 'Technology & IT'],
+            ['name' => 'The Verge', 'source_url' => 'https://www.theverge.com/rss/index.xml', 'target' => 'Technology & IT'],
+            
+            // Business & Finance
+            ['name' => 'Forbes Business', 'source_url' => 'https://www.forbes.com/business/feed/', 'target' => 'Business & Finance'],
+            ['name' => 'Wall Street Journal', 'source_url' => 'https://feeds.a.dj.com/rss/WSJcomUSBusiness.xml', 'target' => 'Business & Finance'],
+            
+            // Health & Fitness
+            ['name' => 'Healthline News', 'source_url' => 'https://www.healthline.com/feed/news', 'target' => 'Health & Fitness'],
+            
+            // Lifestyle & Culture
+            ['name' => 'BBC Lifestyle', 'source_url' => 'http://feeds.bbci.co.uk/news/world/rss.xml', 'target' => 'Lifestyle & Culture'],
+            
+            // Automotive
+            ['name' => 'Car and Driver', 'source_url' => 'https://www.caranddriver.com/rss/all.xml/', 'target' => 'Automotive'],
+            
+            // Travel & Tourism
+            ['name' => 'Lonely Planet', 'source_url' => 'https://www.lonelyplanet.com/news/feed', 'target' => 'Travel & Tourism'],
+            
+            // Real Estate
+            ['name' => 'Realtor News', 'source_url' => 'https://www.realtor.com/news/feed/', 'target' => 'Real Estate'],
+            
+            // Crypto/Alt News (Fallback logic)
+            ['name' => 'CoinTelegraph', 'source_url' => 'https://cointelegraph.com/rss', 'target' => 'Alt News'],
         ];
 
-        // Find a fallback category if no match is found
-        $fallbackCategory = Category::where('name', 'LIKE', '%News%')->orWhere('name', 'LIKE', '%General%')->first();
-        if (!$fallbackCategory) {
-            $fallbackCategory = Category::first();
+        // Ensure 'Alt News' exists as fallback
+        $altNewsCategory = Category::where('name', 'Alt News')->first();
+        if (!$altNewsCategory) {
+            $altNewsCategory = Category::create([
+                'name' => 'Alt News',
+                'slug' => 'alt-news'
+            ]);
         }
 
-        // Find a default author (Admin or first user)
-        $defaultUser = \App\Models\User::where('role', 'admin')->first() ?? \App\Models\User::first();
-
         $count = 0;
-        foreach ($sources as $sourceData) {
+        foreach ($sources as $index => $sourceData) {
             if (!AutoNewsSource::where('source_url', $sourceData['source_url'])->exists()) {
                 
-                // Try to find a matching category by name
-                $category = Category::where('name', 'LIKE', '%' . $sourceData['suggested_category'] . '%')->first() ?? $fallbackCategory;
+                // Try to find matching category from user's list
+                $category = Category::where('name', $sourceData['target'])->first() ?? $altNewsCategory;
+
+                // Distribute authors (cycle through the 15 authors)
+                $assignedAuthor = ($authorCount > 0) ? $authors[$index % $authorCount] : (\App\Models\User::where('role', 'admin')->first() ?? \App\Models\User::first());
 
                 AutoNewsSource::create([
                     'name'                    => $sourceData['name'],
                     'source_url'              => $sourceData['source_url'],
                     'category_id'             => $category->id,
-                    'user_id'                 => $defaultUser->id,
+                    'user_id'                 => $assignedAuthor->id,
                     'posts_per_run'           => 2,
                     'fetch_interval_hours'    => 24,
-                    'featured_image_source'   => 'stock',
+                    'featured_image_source'   => 'original', // Use original as requested
                     'in_content_images_count' => 1,
                     'in_content_image_source' => 'stock',
                     'is_active'               => false,
@@ -262,7 +285,7 @@ class AutoNewsController extends Controller
             }
         }
 
-        return back()->with('status', "Successfully imported {$count} global news sources. They have been auto-mapped to your existing categories.");
+        return back()->with('status', "Successfully imported {$count} global news sources. Mapped to your categories and distributed across 15 authors.");
     }
 
     /**
