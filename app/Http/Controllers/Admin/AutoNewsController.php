@@ -221,33 +221,25 @@ class AutoNewsController extends Controller
         $authors = \App\Models\User::where('role', 'user')->where('email', 'LIKE', '%@' . request()->getHost())->take(15)->get();
         $authorCount = $authors->count();
 
-        // Predefined list mapped to User's Categories
+        // ONLY BBC & CoinTelegraph (Mapped to User Categories)
         $sources = [
-            // Tech & IT
-            ['name' => 'TechCrunch', 'source_url' => 'https://techcrunch.com/feed/', 'target' => 'Technology & IT'],
-            ['name' => 'The Verge', 'source_url' => 'https://www.theverge.com/rss/index.xml', 'target' => 'Technology & IT'],
+            // BBC News
+            ['name' => 'BBC World News', 'url' => 'http://feeds.bbci.co.uk/news/world/rss.xml', 'target' => 'Lifestyle & Culture'],
+            ['name' => 'BBC Technology', 'url' => 'http://feeds.bbci.co.uk/news/technology/rss.xml', 'target' => 'Technology & IT'],
+            ['name' => 'BBC Business', 'url' => 'http://feeds.bbci.co.uk/news/business/rss.xml', 'target' => 'Business & Finance'],
+            ['name' => 'BBC Science', 'url' => 'http://feeds.bbci.co.uk/news/science_and_environment/rss.xml', 'target' => 'Technology & IT'],
+            ['name' => 'BBC Health', 'url' => 'http://feeds.bbci.co.uk/news/health/rss.xml', 'target' => 'Health & Fitness'],
+            ['name' => 'BBC Entertainment', 'url' => 'http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml', 'target' => 'Entertainment & Pop Culture'],
             
-            // Business & Finance
-            ['name' => 'Forbes Business', 'source_url' => 'https://www.forbes.com/business/feed/', 'target' => 'Business & Finance'],
-            ['name' => 'Wall Street Journal', 'source_url' => 'https://feeds.a.dj.com/rss/WSJcomUSBusiness.xml', 'target' => 'Business & Finance'],
-            
-            // Health & Fitness
-            ['name' => 'Healthline News', 'source_url' => 'https://www.healthline.com/feed/news', 'target' => 'Health & Fitness'],
-            
-            // Lifestyle & Culture
-            ['name' => 'BBC Lifestyle', 'source_url' => 'http://feeds.bbci.co.uk/news/world/rss.xml', 'target' => 'Lifestyle & Culture'],
-            
-            // Automotive
-            ['name' => 'Car and Driver', 'source_url' => 'https://www.caranddriver.com/rss/all.xml/', 'target' => 'Automotive'],
-            
-            // Travel & Tourism
-            ['name' => 'Lonely Planet', 'source_url' => 'https://www.lonelyplanet.com/news/feed', 'target' => 'Travel & Tourism'],
-            
-            // Real Estate
-            ['name' => 'Realtor News', 'source_url' => 'https://www.realtor.com/news/feed/', 'target' => 'Real Estate'],
-            
-            // Crypto/Alt News (Fallback logic)
-            ['name' => 'CoinTelegraph', 'source_url' => 'https://cointelegraph.com/rss', 'target' => 'Alt News'],
+            // CoinTelegraph (Crypto)
+            ['name' => 'CoinTelegraph Bitcoin', 'url' => 'https://cointelegraph.com/rss/tag/bitcoin', 'target' => 'Alt News'],
+            ['name' => 'CoinTelegraph Ethereum', 'url' => 'https://cointelegraph.com/rss/tag/ethereum', 'target' => 'Alt News'],
+            ['name' => 'CoinTelegraph Altcoins', 'url' => 'https://cointelegraph.com/rss/tag/altcoin', 'target' => 'Alt News'],
+            ['name' => 'CoinTelegraph Blockchain', 'url' => 'https://cointelegraph.com/rss/tag/blockchain', 'target' => 'Alt News'],
+            ['name' => 'CoinTelegraph NFT', 'url' => 'https://cointelegraph.com/rss/tag/nft', 'target' => 'Alt News'],
+            ['name' => 'CoinTelegraph DeFi', 'url' => 'https://cointelegraph.com/rss/tag/defi', 'target' => 'Alt News'],
+            ['name' => 'CoinTelegraph Business', 'url' => 'https://cointelegraph.com/rss/tag/business', 'target' => 'Business & Finance'],
+            ['name' => 'CoinTelegraph Policy', 'url' => 'https://cointelegraph.com/rss/tag/policy-and-regulation', 'target' => 'Law & Legal'],
         ];
 
         // Ensure 'Alt News' exists as fallback
@@ -261,7 +253,7 @@ class AutoNewsController extends Controller
 
         $count = 0;
         foreach ($sources as $index => $sourceData) {
-            if (!AutoNewsSource::where('source_url', $sourceData['source_url'])->exists()) {
+            if (!AutoNewsSource::where('source_url', $sourceData['url'])->exists()) {
                 
                 // Try to find matching category from user's list
                 $category = Category::where('name', $sourceData['target'])->first() ?? $altNewsCategory;
@@ -271,12 +263,12 @@ class AutoNewsController extends Controller
 
                 AutoNewsSource::create([
                     'name'                    => $sourceData['name'],
-                    'source_url'              => $sourceData['source_url'],
+                    'source_url'              => $sourceData['url'],
                     'category_id'             => $category->id,
                     'user_id'                 => $assignedAuthor->id,
                     'posts_per_run'           => 2,
                     'fetch_interval_hours'    => 24,
-                    'featured_image_source'   => 'original', // Use original as requested
+                    'featured_image_source'   => 'original',
                     'in_content_images_count' => 1,
                     'in_content_image_source' => 'stock',
                     'is_active'               => false,
@@ -285,7 +277,7 @@ class AutoNewsController extends Controller
             }
         }
 
-        return back()->with('status', "Successfully imported {$count} global news sources. Mapped to your categories and distributed across 15 authors.");
+        return back()->with('status', "Successfully imported {$count} BBC & CoinTelegraph sources. Mapped to your categories and assigned to authors.");
     }
 
     /**
