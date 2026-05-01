@@ -153,4 +153,18 @@ class AutoNewsController extends Controller
             return back()->withErrors(['error' => 'Failed to run fetch. Check logs.']);
         }
     }
+
+    public function logs(Request $request)
+    {
+        $query = \App\Models\Post::with(['category', 'user'])->whereNotNull('auto_news_source_id');
+
+        if ($request->filled('source_id')) {
+            $query->where('auto_news_source_id', $request->source_id);
+        }
+
+        $posts = $query->latest()->paginate(30)->withQueryString();
+        $sources = AutoNewsSource::all();
+
+        return view('admin.ai-writer.news-logs', compact('posts', 'sources'));
+    }
 }

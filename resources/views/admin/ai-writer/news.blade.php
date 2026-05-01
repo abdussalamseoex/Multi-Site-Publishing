@@ -406,9 +406,9 @@
                                                     </span>
                                                     <span class="text-xs text-gray-400">/ {{ $source->use_smart_schedule ? $source->daily_post_limit : '∞' }} posts</span>
                                                 </div>
-                                                <a href="{{ route('admin.posts.index', ['source_id' => $source->id]) }}" target="_blank" class="text-[10px] text-indigo-500 hover:text-indigo-700 underline mt-1 font-bold flex items-center gap-1">
+                                                <a href="{{ route('admin.ai-writer.news.logs', ['source_id' => $source->id]) }}" class="text-[10px] text-indigo-500 hover:text-indigo-700 underline mt-1 font-bold flex items-center gap-1">
                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                                                    View History ({{ $source->posts_count }})
+                                                    View Logs ({{ $source->posts_count }})
                                                 </a>
                                             </div>
                                         </td>
