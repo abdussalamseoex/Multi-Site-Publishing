@@ -24,6 +24,10 @@ class PostController extends Controller
             $query->where('status', $request->status);
         }
 
+        if ($request->filled('source_id')) {
+            $query->where('auto_news_source_id', $request->source_id);
+        }
+
         $sort = $request->input('sort', 'latest');
         if ($sort == 'latest') {
             $query->latest();

@@ -11,7 +11,9 @@ class AutoNewsController extends Controller
 {
     public function index()
     {
-        $sources = AutoNewsSource::with(['category', 'user'])->get();
+        $sources = AutoNewsSource::with(['category', 'user'])->withCount(['posts', 'posts as today_posts_count' => function($query) {
+            $query->whereDate('created_at', today());
+        }])->get();
         $categories = Category::all();
         $users = \App\Models\User::all(); // Load all users to show in the dropdown
         

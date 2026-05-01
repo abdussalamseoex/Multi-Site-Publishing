@@ -483,6 +483,7 @@ class AutoNewsFetcher extends Command
                     $post->user_id = $admin ? $admin->id : 1;
                 }
                 $post->category_id = $source->category_id;
+                $post->auto_news_source_id = $source->id;
                 $post->title = $contentData['title'];
                 $post->slug = $slug;
                 $post->summary = $contentData['meta_description'] ?? '';

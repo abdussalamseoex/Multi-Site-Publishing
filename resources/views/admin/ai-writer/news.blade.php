@@ -347,6 +347,7 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category & Author</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Today's Stats</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Run / Next Fetch</th>
                                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                                     </tr>
@@ -396,6 +397,20 @@
                                                 <div class="font-medium">{{ $source->posts_per_run }} posts each time</div>
                                                 <div class="text-[10px] text-gray-400 uppercase">Every {{ $source->fetch_interval_hours }}h</div>
                                             @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex flex-col">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-lg font-bold {{ $source->use_smart_schedule && $source->today_posts_count >= $source->daily_post_limit ? 'text-green-600' : 'text-indigo-600' }}">
+                                                        {{ $source->today_posts_count }}
+                                                    </span>
+                                                    <span class="text-xs text-gray-400">/ {{ $source->use_smart_schedule ? $source->daily_post_limit : '∞' }} posts</span>
+                                                </div>
+                                                <a href="{{ route('admin.posts.index', ['source_id' => $source->id]) }}" target="_blank" class="text-[10px] text-indigo-500 hover:text-indigo-700 underline mt-1 font-bold flex items-center gap-1">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                                    View History ({{ $source->posts_count }})
+                                                </a>
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4 text-sm">
                                             @php

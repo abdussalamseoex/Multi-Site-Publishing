@@ -40,4 +40,9 @@ class AutoNewsSource extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function posts()
+    {
+        return $this->hasMany(Post::class, 'auto_news_source_id');
+    }
 }
