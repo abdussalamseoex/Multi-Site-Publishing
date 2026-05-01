@@ -61,6 +61,9 @@ class AutoNewsController extends Controller
             $msg .= " It will run for {$durationDays} day(s) and auto-stop on " . $expiresAt->format('M d, Y') . '.';
         }
 
+        return back()->with('status', $msg);
+    }
+
     public function update(Request $request, $id)
     {
         $source = AutoNewsSource::findOrFail($id);
