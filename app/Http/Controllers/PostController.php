@@ -72,9 +72,7 @@ class PostController extends Controller
 
         $featuredImagePath = null;
         if ($request->hasFile('featured_image')) {
-            $filename = time() . '_' . uniqid() . '.' . $request->file('featured_image')->getClientOriginalExtension();
-            $request->file('featured_image')->move(public_path('uploads/posts'), $filename);
-            $featuredImagePath = '/uploads/posts/' . $filename;
+            $featuredImagePath = \App\Services\ImageService::uploadAndConvert($request->file('featured_image'), 'posts');
         }
 
         $baseSlug = $request->input('slug') ? \Illuminate\Support\Str::slug($request->input('slug')) : \Illuminate\Support\Str::slug($request->input('title'));
@@ -140,7 +138,7 @@ class PostController extends Controller
             'title' => $request->input('title'),
             'slug' => $finalSlug,
             'original_slug' => $baseSlug,
-            'content' => $request->input('content'),
+            'content' => \App\Services\ImageService::parseAndConvertHtmlImages($request->input('content'), 'posts'),
             'category_id' => $request->input('category_id'),
             'featured_image' => $featuredImagePath,
             'status' => \App\Models\Setting::get('default_post_status', 'pending'), 
@@ -197,9 +195,7 @@ class PostController extends Controller
         ]);
 
         if ($request->hasFile('featured_image')) {
-            $filename = time() . '_' . uniqid() . '.' . $request->file('featured_image')->getClientOriginalExtension();
-            $request->file('featured_image')->move(public_path('uploads/posts'), $filename);
-            $post->featured_image = '/uploads/posts/' . $filename;
+            $post->featured_image = \App\Services\ImageService::uploadAndConvert($request->file('featured_image'), 'posts');
         }
 
         $requestedSlug = $request->input('slug') ? \Illuminate\Support\Str::slug($request->input('slug')) : \Illuminate\Support\Str::slug($request->input('title'));
@@ -224,7 +220,7 @@ class PostController extends Controller
         $post->update([
             'title' => $request->input('title'),
             'slug' => $finalSlug,
-            'content' => $request->input('content'),
+            'content' => \App\Services\ImageService::parseAndConvertHtmlImages($request->input('content'), 'posts'),
             'category_id' => $request->input('category_id'),
             'status' => 'pending', 
             'meta_title' => $request->input('meta_title') ?? $request->input('title'),

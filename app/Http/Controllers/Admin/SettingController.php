@@ -69,15 +69,13 @@ class SettingController extends Controller
         }
 
         if ($request->hasFile('site_logo')) {
-            $filename = 'logo_' . time() . '.' . $request->file('site_logo')->extension();
-            $request->file('site_logo')->move(public_path('uploads/logos'), $filename);
-            Setting::set('site_logo', '/uploads/logos/' . $filename);
+            $path = \App\Services\ImageService::uploadAndConvert($request->file('site_logo'), 'logos');
+            if ($path) Setting::set('site_logo', $path);
         }
 
         if ($request->hasFile('site_favicon')) {
-            $filename = 'favicon_' . time() . '.' . $request->file('site_favicon')->extension();
-            $request->file('site_favicon')->move(public_path('uploads/logos'), $filename);
-            Setting::set('site_favicon', '/uploads/logos/' . $filename);
+            $path = \App\Services\ImageService::uploadAndConvert($request->file('site_favicon'), 'logos');
+            if ($path) Setting::set('site_favicon', $path);
         }
 
         return back()->with('status', 'Settings updated successfully.');

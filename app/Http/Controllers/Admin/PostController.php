@@ -62,9 +62,7 @@ class PostController extends Controller
 
         $featuredImagePath = null;
         if ($request->hasFile('featured_image')) {
-            $filename = time() . '_' . uniqid() . '.' . $request->file('featured_image')->getClientOriginalExtension();
-            $request->file('featured_image')->move(public_path('uploads/posts'), $filename);
-            $featuredImagePath = '/uploads/posts/' . $filename;
+            $featuredImagePath = \App\Services\ImageService::uploadAndConvert($request->file('featured_image'), 'posts');
         }
 
         $baseSlug = $request->slug ? \Illuminate\Support\Str::slug($request->slug) : \Illuminate\Support\Str::slug($request->title);
@@ -85,7 +83,7 @@ class PostController extends Controller
             'title' => $request->title,
             'slug' => $finalSlug,
             'original_slug' => $baseSlug,
-            'content' => $request->content,
+            'content' => \App\Services\ImageService::parseAndConvertHtmlImages($request->content, 'posts'),
             'category_id' => $request->category_id,
             'featured_image' => $featuredImagePath,
             'status' => $request->status,
@@ -115,9 +113,7 @@ class PostController extends Controller
         ]);
 
         if ($request->hasFile('featured_image')) {
-            $filename = time() . '_' . uniqid() . '.' . $request->file('featured_image')->getClientOriginalExtension();
-            $request->file('featured_image')->move(public_path('uploads/posts'), $filename);
-            $post->featured_image = '/uploads/posts/' . $filename;
+            $post->featured_image = \App\Services\ImageService::uploadAndConvert($request->file('featured_image'), 'posts');
         }
 
         $requestedSlug = $request->slug ? \Illuminate\Support\Str::slug($request->slug) : \Illuminate\Support\Str::slug($request->title);
@@ -142,7 +138,7 @@ class PostController extends Controller
         $post->update([
             'title' => $request->title,
             'slug' => $finalSlug,
-            'content' => $request->content,
+            'content' => \App\Services\ImageService::parseAndConvertHtmlImages($request->content, 'posts'),
             'category_id' => $request->category_id,
             'status' => $request->status,
             'meta_title' => $request->meta_title ?? $request->title,
