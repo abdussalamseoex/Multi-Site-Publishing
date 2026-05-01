@@ -155,6 +155,40 @@ class UserController extends Controller
                 $message = $points . ' points added to ' . count($userIds) . ' users.';
                 break;
 
+            case 'update_limits':
+                $updateData = [];
+                
+                // Only update fields that are provided/filled to avoid overwriting with nulls unless intended
+                if ($request->filled('points')) {
+                    $updateData['points'] = (int)$request->input('points');
+                }
+                
+                if ($request->filled('daily_post_limit')) {
+                    $updateData['daily_post_limit'] = (int)$request->input('daily_post_limit');
+                }
+                
+                if ($request->filled('total_post_limit')) {
+                    $updateData['total_post_limit'] = (int)$request->input('total_post_limit');
+                }
+                
+                // For checkboxes in bulk, we might need a specific 'set_unlimited' flag
+                if ($request->has('apply_unlimited')) {
+                    $updateData['is_unlimited'] = $request->has('is_unlimited');
+                }
+                
+                if ($request->filled('dofollow_default')) {
+                    $val = $request->input('dofollow_default');
+                    $updateData['dofollow_default'] = ($val === 'null') ? null : (bool)$val;
+                }
+                
+                if (!empty($updateData)) {
+                    $query->update($updateData);
+                    $message = 'Limits and points updated for ' . count($userIds) . ' users.';
+                } else {
+                    return back()->withErrors(['error' => 'No limit values were provided to update.']);
+                }
+                break;
+
             default:
                 return back()->withErrors(['error' => 'Invalid bulk action selected.']);
         }

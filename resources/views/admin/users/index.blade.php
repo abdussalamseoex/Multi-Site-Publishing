@@ -65,6 +65,7 @@
                             <optgroup label="Points & Billing">
                                 <option value="set_points">Set Exact Points...</option>
                                 <option value="add_points">Add Points (+)...</option>
+                                <option value="update_limits">Update ALL Limits & Points...</option>
                             </optgroup>
                             <optgroup label="Danger Zone">
                                 <option value="delete">Delete Selected</option>
@@ -85,6 +86,34 @@
                             <input type="number" id="bulk-value-input" placeholder="Points" class="text-xs border-gray-300 rounded-lg w-20">
                         </div>
 
+                        {{-- Bulk Limits Advanced Section --}}
+                        <div id="bulk-limits-wrapper" class="hidden bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex flex-wrap gap-4 items-end mt-2 w-full">
+                            <div class="flex-1 min-w-[150px]">
+                                <label class="block text-[10px] font-bold text-indigo-400 uppercase">Points</label>
+                                <input type="number" id="bulk-points-input" placeholder="Points" class="w-full text-sm border-gray-200 rounded-lg">
+                            </div>
+                            <div class="flex-1 min-w-[150px]">
+                                <label class="block text-[10px] font-bold text-indigo-400 uppercase">Daily Limit</label>
+                                <input type="number" id="bulk-daily-input" placeholder="Default" class="w-full text-sm border-gray-200 rounded-lg">
+                            </div>
+                            <div class="flex-1 min-w-[150px]">
+                                <label class="block text-[10px] font-bold text-indigo-400 uppercase">Total Limit</label>
+                                <input type="number" id="bulk-total-input" placeholder="Default" class="w-full text-sm border-gray-200 rounded-lg">
+                            </div>
+                            <div class="flex-1 min-w-[150px]">
+                                <label class="block text-[10px] font-bold text-indigo-400 uppercase">DoFollow</label>
+                                <select id="bulk-dofollow-input" class="w-full text-sm border-gray-200 rounded-lg">
+                                    <option value="null">System Default</option>
+                                    <option value="1">Always DoFollow</option>
+                                    <option value="0">Always NoFollow</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center pb-2 px-2">
+                                <input type="checkbox" id="bulk-unlimited-input" class="rounded border-gray-300 text-indigo-600">
+                                <label class="ml-2 text-xs font-bold text-gray-700">Unlimited</label>
+                            </div>
+                        </div>
+
                         <button type="button" onclick="executeBulkAction()" id="bulk-apply-btn" disabled class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-lg font-bold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none disabled:opacity-50 transition">
                             Apply to Selected
                         </button>
@@ -98,6 +127,12 @@
                 <input type="hidden" name="action" id="bulk-action-type">
                 <input type="hidden" name="role" id="bulk-role-id">
                 <input type="hidden" name="value" id="bulk-action-value">
+                <input type="hidden" name="points" id="bulk-points">
+                <input type="hidden" name="daily_post_limit" id="bulk-daily-limit">
+                <input type="hidden" name="total_post_limit" id="bulk-total-limit">
+                <input type="hidden" name="apply_unlimited" id="bulk-apply-unlimited">
+                <input type="hidden" name="is_unlimited" id="bulk-is-unlimited">
+                <input type="hidden" name="dofollow_default" id="bulk-dofollow">
                 <div id="bulk-ids-container"></div>
             </form>
 
@@ -293,6 +328,7 @@
                 const val = this.value;
                 document.getElementById('bulk-role-wrapper').classList.toggle('hidden', val !== 'change_role');
                 document.getElementById('bulk-value-wrapper').classList.toggle('hidden', val !== 'set_points' && val !== 'add_points');
+                document.getElementById('bulk-limits-wrapper').classList.toggle('hidden', val !== 'update_limits');
                 updateBulkState();
             });
         });
@@ -303,6 +339,7 @@
 
             if (action === 'delete' && !confirm('Are you sure? This will permanently delete all selected users AND their posts.')) return;
             if (action === 'ban' && !confirm('Ban all selected users?')) return;
+            if (action === 'update_limits' && !confirm('Update limits for all selected users?')) return;
 
             const checkboxes = document.querySelectorAll('.user-checkbox:checked');
             const container = document.getElementById('bulk-ids-container');
@@ -319,6 +356,17 @@
             document.getElementById('bulk-action-type').value = action;
             document.getElementById('bulk-role-id').value = document.getElementById('bulk-role-input').value;
             document.getElementById('bulk-action-value').value = document.getElementById('bulk-value-input').value;
+            
+            // Advanced Limits
+            document.getElementById('bulk-points').value = document.getElementById('bulk-points-input').value;
+            document.getElementById('bulk-daily-limit').value = document.getElementById('bulk-daily-input').value;
+            document.getElementById('bulk-total-limit').value = document.getElementById('bulk-total-input').value;
+            document.getElementById('bulk-dofollow').value = document.getElementById('bulk-dofollow-input').value;
+            
+            if (action === 'update_limits') {
+                document.getElementById('bulk-apply-unlimited').value = '1';
+                document.getElementById('bulk-is-unlimited').value = document.getElementById('bulk-unlimited-input').checked ? '1' : '0';
+            }
 
             document.getElementById('hidden-bulk-action-form').submit();
         }
