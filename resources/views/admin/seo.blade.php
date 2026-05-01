@@ -76,6 +76,19 @@
                     </div>
                     
                     <div class="p-6 text-gray-900 space-y-6">
+                        <div class="flex items-center justify-between pb-6 border-b border-gray-100">
+                            <div>
+                                <label class="text-sm font-bold text-gray-700">Auto WebP Image Conversion</label>
+                                <p class="text-xs text-gray-500 mt-1">If enabled, all uploaded images (posts, logos, etc.) will be automatically converted to <strong>WebP</strong> format to improve page speed and SEO.</p>
+                            </div>
+                            <div>
+                                <select name="enable_auto_webp" class="mt-1 block w-40 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm font-bold">
+                                    <option value="off" {{ (isset($settings['enable_auto_webp']) && $settings['enable_auto_webp'] === 'off') || !isset($settings['enable_auto_webp']) ? 'selected' : '' }}>Disabled</option>
+                                    <option value="on" {{ (isset($settings['enable_auto_webp']) && $settings['enable_auto_webp'] === 'on') ? 'selected' : '' }}>Enabled</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="flex items-center justify-between">
                             <div>
                                 <label class="text-sm font-bold text-gray-700">Append Unique Code to Post Slugs</label>
