@@ -116,6 +116,7 @@ class AutoNewsFetcher extends Command
             $articles = [];
 
             $this->info("Fetched " . strlen($content) . " bytes from source.");
+            \Log::info("AutoNewsFetcher: Content Snippet: " . substr($content, 0, 500));
 
             // --- 1. Sitemap Support ---
             if (str_contains($url, 'sitemap') || stripos($content, '<urlset') !== false) {
@@ -289,7 +290,8 @@ class AutoNewsFetcher extends Command
             }
 
             return $articles;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            $this->error("Error: " . $e->getMessage());
             \Log::error("AutoNewsFetcher extractLinksFromSource Error: " . $e->getMessage());
             return [];
         }
