@@ -71,26 +71,29 @@ class AutoNewsController extends Controller
     {
         $source = AutoNewsSource::findOrFail($id);
 
-        // Extremely simple validation to prevent silent redirects
         $request->validate([
-            'name'          => 'required|string',
-            'source_url'    => 'required|string',
-            'category_id'   => 'nullable|integer',
-            'user_id'       => 'nullable|integer',
+            'name'                    => 'required|string|max:255',
+            'source_url'              => 'required|string',
+            'category_id'             => 'nullable|exists:categories,id',
+            'posts_per_run'           => 'required|integer|min:1',
+            'fetch_interval_hours'    => 'required|integer|min:1',
+            'featured_image_source'   => 'required|string',
+            'in_content_image_source' => 'required|string',
+            'in_content_images_count' => 'required|integer|min:0',
         ]);
 
-        // Map all fields manually to ensure nothing is missed
-        $source->name                    = $request->name;
-        $source->source_url              = $request->source_url;
-        $source->category_id             = $request->category_id;
-        $source->user_id                 = $request->user_id;
-        $source->posts_per_run           = $request->posts_per_run ?? 2;
-        $source->fetch_interval_hours    = $request->fetch_interval_hours ?? 24;
-        $source->daily_post_limit        = $request->daily_post_limit;
+        // Use request input with existing source values as fallback to prevent DB null constraint errors
+        $source->name                    = $request->input('name', $source->name);
+        $source->source_url              = $request->input('source_url', $source->source_url);
+        $source->category_id             = $request->input('category_id', $source->category_id);
+        $source->user_id                 = $request->input('user_id', $source->user_id);
+        $source->posts_per_run           = $request->input('posts_per_run', $source->posts_per_run);
+        $source->fetch_interval_hours    = $request->input('fetch_interval_hours', $source->fetch_interval_hours);
+        $source->daily_post_limit        = $request->input('daily_post_limit', $source->daily_post_limit);
         $source->use_smart_schedule      = $request->has('use_smart_schedule');
-        $source->featured_image_source   = $request->featured_image_source;
-        $source->in_content_image_source = $request->in_content_image_source;
-        $source->in_content_images_count = $request->in_content_images_count ?? 0;
+        $source->featured_image_source   = $request->input('featured_image_source', $source->featured_image_source);
+        $source->in_content_image_source = $request->input('in_content_image_source', $source->in_content_image_source);
+        $source->in_content_images_count = $request->input('in_content_images_count', $source->in_content_images_count);
         $source->is_active               = $request->has('is_active');
 
         if ($request->filled('duration_days')) {
@@ -100,7 +103,7 @@ class AutoNewsController extends Controller
 
         $source->save();
 
-        return back()->with('status', "Source '{$source->name}' has been updated to category ID: {$source->category_id}");
+        return back()->with('status', "Source '{$source->name}' updated successfully!");
     }
 
     public function destroy($id)
