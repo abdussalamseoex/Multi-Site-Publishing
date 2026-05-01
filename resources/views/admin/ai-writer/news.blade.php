@@ -375,78 +375,97 @@
                     </div>
 
                     @if($sources->count() > 0)
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 border">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category & Author</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Today's Stats</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Run / Next Fetch</th>
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    @foreach($sources as $source)
-                                    <tr id="source-row-{{ $source->id }}">
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900">{{ $source->name }}</div>
-                                            <div class="text-sm text-gray-500">{{ Str::limit($source->source_url, 40) }}</div>
-                                            @if($source->is_active)
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
-                                            @else
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Inactive</span>
-                                            @endif
+                        <form action="{{ route('admin.ai-writer.news.bulk-destroy') }}" method="POST" id="bulk-delete-form" onsubmit="return confirm('Delete all selected news sources? This cannot be undone.');">
+                            @csrf
+                            <div class="mb-4 flex items-center justify-between bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                <div class="flex items-center space-x-2 text-sm text-gray-600 font-medium">
+                                    <span id="selected-count" class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">0</span>
+                                    <span>sources selected</span>
+                                </div>
+                                <button type="submit" id="bulk-delete-btn" disabled class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-900 focus:outline-none focus:border-red-900 focus:ring ring-red-300 disabled:opacity-50 transition ease-in-out duration-150">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    Bulk Delete Selected
+                                </button>
+                            </div>
 
-                                            @if($source->expires_at)
-                                                <div class="mt-1 text-[10px] font-bold uppercase tracking-tighter {{ $source->expires_at->isPast() ? 'text-red-500' : 'text-amber-600' }}">
-                                                    @if($source->expires_at->isPast())
-                                                        Expired
-                                                    @else
-                                                        Ends in: {{ now()->diffInDays($source->expires_at) }} days
-                                                    @endif
+                            <div class="overflow-x-auto rounded-xl border border-gray-100">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left">
+                                                <input type="checkbox" id="select-all" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category & Author</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Today's Stats</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Run / Next Fetch</th>
+                                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        @foreach($sources as $source)
+                                        <tr id="source-row-{{ $source->id }}" class="hover:bg-gray-50 transition-colors">
+                                            <td class="px-4 py-4 whitespace-nowrap">
+                                                <input type="checkbox" name="ids[]" value="{{ $source->id }}" class="source-checkbox rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-medium text-gray-900">{{ $source->name }}</div>
+                                                <div class="text-sm text-gray-500">{{ Str::limit($source->source_url, 40) }}</div>
+                                                @if($source->is_active)
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                                                @else
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Inactive</span>
+                                                @endif
+
+                                                @if($source->expires_at)
+                                                    <div class="mt-1 text-[10px] font-bold uppercase tracking-tighter {{ $source->expires_at->isPast() ? 'text-red-500' : 'text-amber-600' }}">
+                                                        @if($source->expires_at->isPast())
+                                                            Expired
+                                                        @else
+                                                            Ends in: {{ now()->diffInDays($source->expires_at) }} days
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900 font-bold">{{ $source->category ? $source->category->name : 'N/A' }}</div>
+                                                <div class="text-xs text-gray-500 mt-1">
+                                                    <span class="font-medium text-gray-400">Author:</span> {{ $source->user ? $source->user->name : 'Admin (Default)' }}
                                                 </div>
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900 font-bold">{{ $source->category ? $source->category->name : 'N/A' }}</div>
-                                            <div class="text-xs text-gray-500 mt-1">
-                                                <span class="font-medium text-gray-400">Author:</span> {{ $source->user ? $source->user->name : 'Admin (Default)' }}
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            @if($source->use_smart_schedule)
-                                                <div class="font-bold text-indigo-600">{{ $source->daily_post_limit }} posts/day</div>
-                                                <div class="text-[10px] text-indigo-400 uppercase font-medium">
-                                                    @php
-                                                        $mins = ($source->daily_post_limit > 0) ? (24 / $source->daily_post_limit) * 60 : 0;
-                                                        if ($mins >= 60) {
-                                                            echo "Every " . round($mins/60, 1) . "h";
-                                                        } else {
-                                                            echo "Every " . round($mins, 1) . "m";
-                                                        }
-                                                    @endphp
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                @if($source->use_smart_schedule)
+                                                    <div class="font-bold text-indigo-600">{{ $source->daily_post_limit }} posts/day</div>
+                                                    <div class="text-[10px] text-indigo-400 uppercase font-medium">
+                                                        @php
+                                                            $mins = ($source->daily_post_limit > 0) ? (24 / $source->daily_post_limit) * 60 : 0;
+                                                            if ($mins >= 60) {
+                                                                echo "Every " . round($mins/60, 1) . "h";
+                                                            } else {
+                                                                echo "Every " . round($mins, 1) . "m";
+                                                            }
+                                                        @endphp
+                                                    </div>
+                                                @else
+                                                    <div class="font-medium">{{ $source->posts_per_run }} posts each time</div>
+                                                    <div class="text-[10px] text-gray-400 uppercase">Every {{ $source->fetch_interval_hours }}h</div>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex flex-col">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-lg font-bold {{ $source->use_smart_schedule && $source->today_posts_count >= $source->daily_post_limit ? 'text-green-600' : 'text-indigo-600' }}">
+                                                            {{ $source->today_posts_count }}
+                                                        </span>
+                                                        <span class="text-xs text-gray-400">/ {{ $source->use_smart_schedule ? $source->daily_post_limit : '∞' }} posts</span>
+                                                    </div>
+                                                    <a href="{{ route('admin.ai-writer.news.logs', ['source_id' => $source->id]) }}" class="text-[10px] text-indigo-500 hover:text-indigo-700 underline mt-1 font-bold flex items-center gap-1">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                                        View Logs ({{ $source->posts_count }})
+                                                    </a>
                                                 </div>
-                                            @else
-                                                <div class="font-medium">{{ $source->posts_per_run }} posts each time</div>
-                                                <div class="text-[10px] text-gray-400 uppercase">Every {{ $source->fetch_interval_hours }}h</div>
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="flex flex-col">
-                                                <div class="flex items-center gap-2">
-                                                    <span class="text-lg font-bold {{ $source->use_smart_schedule && $source->today_posts_count >= $source->daily_post_limit ? 'text-green-600' : 'text-indigo-600' }}">
-                                                        {{ $source->today_posts_count }}
-                                                    </span>
-                                                    <span class="text-xs text-gray-400">/ {{ $source->use_smart_schedule ? $source->daily_post_limit : '∞' }} posts</span>
-                                                </div>
-                                                <a href="{{ route('admin.ai-writer.news.logs', ['source_id' => $source->id]) }}" class="text-[10px] text-indigo-500 hover:text-indigo-700 underline mt-1 font-bold flex items-center gap-1">
-                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                                                    View Logs ({{ $source->posts_count }})
-                                                </a>
-                                            </div>
-                                        </td>
+                                            </td>
                                         <td class="px-6 py-4 text-sm">
                                             @php
                                                 $lastRun   = $source->last_run_at;
@@ -522,8 +541,8 @@
                                 </tbody>
                             </table>
                         </div>
-
-                        {{-- Live Fetch Log Panel --}}
+                    </form>
+                    {{-- Live Fetch Log Panel --}}
                         <div id="fetch-log-panel" class="hidden mt-6 border border-indigo-200 rounded-xl overflow-hidden shadow-sm">
                             <div class="bg-indigo-600 px-4 py-3 flex items-center justify-between">
                                 <div class="flex items-center space-x-3">
@@ -906,6 +925,35 @@
     // Initialize
     document.addEventListener('DOMContentLoaded', function() {
         calculateSmartSchedule();
+
+        // Bulk Delete Logic
+        const selectAll = document.getElementById('select-all');
+        const checkboxes = document.querySelectorAll('.source-checkbox');
+        const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+        const selectedCount = document.getElementById('selected-count');
+
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                checkboxes.forEach(cb => cb.checked = this.checked);
+                updateBulkDeleteState();
+            });
+        }
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', function() {
+                updateBulkDeleteState();
+            });
+        });
+
+        function updateBulkDeleteState() {
+            const checkedCount = document.querySelectorAll('.source-checkbox:checked').length;
+            selectedCount.textContent = checkedCount;
+            bulkDeleteBtn.disabled = checkedCount === 0;
+            
+            if (selectAll) {
+                selectAll.checked = checkedCount === checkboxes.length && checkboxes.length > 0;
+            }
+        }
     });
     </script>
     @endpush
