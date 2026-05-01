@@ -275,4 +275,20 @@ class AutoNewsController extends Controller
 
         return back()->with('status', "Successfully imported {$count} predefined news sources.");
     }
+
+    /**
+     * Bulk delete selected news sources
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        
+        if (empty($ids)) {
+            return back()->withErrors(['error' => 'No sources selected for deletion.']);
+        }
+
+        \App\Models\AutoNewsSource::whereIn('id', $ids)->delete();
+
+        return back()->with('status', count($ids) . ' news sources deleted successfully.');
+    }
 }
