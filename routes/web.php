@@ -195,6 +195,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/ai-writer/news/import-authors', [\App\Http\Controllers\Admin\AutoNewsController::class, 'importAuthors'])->name('ai-writer.news.import-authors');
     Route::post('/ai-writer/news/bulk-destroy', [\App\Http\Controllers\Admin\AutoNewsController::class, 'bulkDestroy'])->name('ai-writer.news.bulk-destroy');
     Route::post('/ai-writer/news/bulk_destroy', [\App\Http\Controllers\Admin\AutoNewsController::class, 'bulkDestroy']);
+    Route::get('/ai-writer/news/bulk-destroy', function() { return redirect()->route('admin.ai-writer.news'); });
+    Route::get('/ai-writer/news/bulk_destroy', function() { return redirect()->route('admin.ai-writer.news'); });
 
     Route::get('/ai-writer/settings', [\App\Http\Controllers\Admin\AIWriterController::class, 'settings'])->name('ai-writer.settings');
     Route::post('/ai-writer/settings', [\App\Http\Controllers\Admin\AIWriterController::class, 'storeSettings'])->name('ai-writer.settings.store');
