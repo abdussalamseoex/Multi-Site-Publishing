@@ -115,8 +115,10 @@ class AutoNewsFetcher extends Command
             $content = $response->body();
             $articles = [];
 
-            // Check if RSS
-            if (strpos($content, '<rss') !== false || strpos($content, '<feed') !== false) {
+            // Check if RSS - case insensitive
+            $isRss = (stripos($content, '<rss') !== false || stripos($content, '<feed') !== false);
+            
+            if ($isRss) {
                 $xml = @simplexml_load_string($content, 'SimpleXMLElement', LIBXML_NOCDATA);
                 if ($xml) {
                     // Register common namespaces
@@ -228,14 +230,22 @@ class AutoNewsFetcher extends Command
                     }
                 }
             } else {
-                // Not an RSS feed, attempt to find links using regex (very basic)
+                // Not an RSS feed, attempt to find links using regex
+                $baseUrl = parse_url($url, PHP_URL_SCHEME) . '://' . parse_url($url, PHP_URL_HOST);
                 preg_match_all('/<a\s+[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)<\/a>/si', $content, $matches);
+                
                 if (!empty($matches[1])) {
                     foreach ($matches[1] as $idx => $link) {
                         if (count($articles) >= $limit) break;
                         $title = strip_tags($matches[2][$idx]);
+
+                        // Handle relative links
+                        if (strpos($link, 'http') !== 0) {
+                            $link = rtrim($baseUrl, '/') . '/' . ltrim($link, '/');
+                        }
+
                         // Basic filter for valid article links
-                        if (strlen($title) > 20 && filter_var($link, FILTER_VALIDATE_URL)) {
+                        if (strlen($title) > 25 && filter_var($link, FILTER_VALIDATE_URL)) {
                             $articles[] = [
                                 'title'       => trim($title),
                                 'link'        => $link,
@@ -245,6 +255,10 @@ class AutoNewsFetcher extends Command
                         }
                     }
                 }
+            }
+
+            if (empty($articles)) {
+                \Log::info("AutoNewsFetcher: No valid articles parsed from " . $url . (strlen($content) < 100 ? " (Content too short: " . htmlspecialchars($content) . ")" : ""));
             }
 
             return $articles;
