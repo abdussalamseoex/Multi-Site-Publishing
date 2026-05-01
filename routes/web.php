@@ -192,7 +192,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/ai-writer/news/{id}', [\App\Http\Controllers\Admin\AutoNewsController::class, 'update'])->name('ai-writer.news.update');
     Route::post('/ai-writer/news/{id}/fetch', [\App\Http\Controllers\Admin\AutoNewsController::class, 'fetchNow'])->name('ai-writer.news.fetch');
     Route::post('/ai-writer/news/import-predefined', [\App\Http\Controllers\Admin\AutoNewsController::class, 'importPredefinedSources'])->name('ai-writer.news.import-predefined');
-    Route::post('/ai-writer/news/import-specialized', [\App\Http\Controllers\Admin\AutoNewsController::class, 'importSpecializedSources'])->name('ai-writer.news.import-specialized');
+    Route::post('/ai-writer/news/import-bbc', [\App\Http\Controllers\Admin\AutoNewsController::class, 'importBBCSources'])->name('ai-writer.news.import-bbc');
+    Route::post('/ai-writer/news/import-crypto', [\App\Http\Controllers\Admin\AutoNewsController::class, 'importCryptoSources'])->name('ai-writer.news.import-crypto');
     Route::post('/ai-writer/news/import-authors', [\App\Http\Controllers\Admin\AutoNewsController::class, 'importAuthors'])->name('ai-writer.news.import-authors');
     Route::post('/ai-writer/news/bulk-destroy', [\App\Http\Controllers\Admin\AutoNewsController::class, 'bulkDestroy'])->name('ai-writer.news.bulk-destroy');
     Route::post('/ai-writer/news/bulk_destroy', [\App\Http\Controllers\Admin\AutoNewsController::class, 'bulkDestroy']);

@@ -212,7 +212,7 @@ class AutoNewsController extends Controller
     }
 
     /**
-     * Import BBC and CoinTelegraph Predefined Sources
+     * Import 10+ Premium Tech Giants (TechCrunch, Verge, etc.)
      */
     public function importPredefinedSources()
     {
@@ -229,18 +229,70 @@ class AutoNewsController extends Controller
             ['name' => 'CNET', 'url' => 'https://www.cnet.com/rss/news/', 'target' => 'Technology & IT'],
         ];
 
-        $altNewsCategory = Category::where('name', 'Alt News')->first() ?? Category::create(['name' => 'Alt News', 'slug' => 'alt-news']);
-        $defaultUser = \App\Models\User::where('role', 'admin')->first() ?? \App\Models\User::first();
+        return $this->processBulkImport($sources, "Premium Tech Bundle");
+    }
+
+    /**
+     * Import BBC Global News Feeds
+     */
+    public function importBBCSources()
+    {
+        $sources = [
+            ['name' => 'BBC World News', 'url' => 'http://feeds.bbci.co.uk/news/world/rss.xml', 'target' => 'Lifestyle & Culture'],
+            ['name' => 'BBC Technology', 'url' => 'http://feeds.bbci.co.uk/news/technology/rss.xml', 'target' => 'Technology & IT'],
+            ['name' => 'BBC Business', 'url' => 'http://feeds.bbci.co.uk/news/business/rss.xml', 'target' => 'Business & Finance'],
+            ['name' => 'BBC Science', 'url' => 'http://feeds.bbci.co.uk/news/science_and_environment/rss.xml', 'target' => 'Health & Fitness'],
+            ['name' => 'BBC Health', 'url' => 'http://feeds.bbci.co.uk/news/health/rss.xml', 'target' => 'Health & Fitness'],
+            ['name' => 'BBC Entertainment', 'url' => 'http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml', 'target' => 'Entertainment & Pop Culture'],
+        ];
+
+        return $this->processBulkImport($sources, "BBC News Bundle");
+    }
+
+    /**
+     * Import Crypto/CoinTelegraph Feeds
+     */
+    public function importCryptoSources()
+    {
+        $sources = [
+            ['name' => 'CoinTelegraph Bitcoin', 'url' => 'https://cointelegraph.com/rss/tag/bitcoin', 'target' => 'Alt News'],
+            ['name' => 'CoinTelegraph Ethereum', 'url' => 'https://cointelegraph.com/rss/tag/ethereum', 'target' => 'Alt News'],
+            ['name' => 'CoinTelegraph NFT', 'url' => 'https://cointelegraph.com/rss/tag/nft', 'target' => 'Alt News'],
+            ['name' => 'CoinTelegraph DeFi', 'url' => 'https://cointelegraph.com/rss/tag/defi', 'target' => 'Alt News'],
+            ['name' => 'CoinTelegraph Blockchain', 'url' => 'https://cointelegraph.com/rss/tag/blockchain', 'target' => 'Alt News'],
+        ];
+
+        return $this->processBulkImport($sources, "Crypto Bundle");
+    }
+
+    /**
+     * Internal helper to process bulk imports with auto-mapping
+     */
+    private function processBulkImport($sources, $bundleName)
+    {
+        // Ensure Authors exist
+        $this->importAuthors();
+        $authors = \App\Models\User::where('role', 'user')->where('email', 'LIKE', '%@' . request()->getHost())->take(15)->get();
+        $authorCount = $authors->count();
+
+        // Ensure Fallback Category exists
+        $altNews = Category::where('name', 'Alt News')->first() ?? Category::create(['name' => 'Alt News', 'slug' => 'alt-news']);
 
         $count = 0;
-        foreach ($sources as $sourceData) {
+        foreach ($sources as $index => $sourceData) {
             if (!AutoNewsSource::where('source_url', $sourceData['url'])->exists()) {
-                $category = Category::where('name', $sourceData['target'])->first() ?? $altNewsCategory;
+                
+                // Smart Category Mapping
+                $category = Category::where('name', $sourceData['target'])->first() ?? $altNews;
+
+                // Author Distribution
+                $author = ($authorCount > 0) ? $authors[$index % $authorCount] : (\App\Models\User::where('role', 'admin')->first() ?? \App\Models\User::first());
+
                 AutoNewsSource::create([
                     'name'                    => $sourceData['name'],
                     'source_url'              => $sourceData['url'],
                     'category_id'             => $category->id,
-                    'user_id'                 => $defaultUser->id,
+                    'user_id'                 => $author->id,
                     'posts_per_run'           => 2,
                     'fetch_interval_hours'    => 24,
                     'featured_image_source'   => 'original',
@@ -252,40 +304,7 @@ class AutoNewsController extends Controller
             }
         }
 
-        return back()->with('status', "Successfully imported {$count} premium global sources.");
-    }
-
-    /**
-     * Specialized import for BBC and CoinTelegraph with selection
-     */
-    public function importSpecializedSources(Request $request)
-    {
-        $request->validate([
-            'sources'     => 'required|array',
-            'category_id' => 'required|exists:categories,id',
-            'user_id'     => 'required|exists:users,id',
-        ]);
-
-        $count = 0;
-        foreach ($request->sources as $sourceName => $url) {
-            if (!AutoNewsSource::where('source_url', $url)->exists()) {
-                AutoNewsSource::create([
-                    'name'                    => $sourceName,
-                    'source_url'              => $url,
-                    'category_id'             => $request->category_id,
-                    'user_id'                 => $request->user_id,
-                    'posts_per_run'           => 2,
-                    'fetch_interval_hours'    => 24,
-                    'featured_image_source'   => 'original',
-                    'in_content_images_count' => 1,
-                    'in_content_image_source' => 'stock',
-                    'is_active'               => false,
-                ]);
-                $count++;
-            }
-        }
-
-        return back()->with('status', "Successfully imported {$count} specialized sources.");
+        return back()->with('status', "Successfully imported {$count} sources from the {$bundleName}. All sources have been auto-mapped to your categories.");
     }
 
     /**
