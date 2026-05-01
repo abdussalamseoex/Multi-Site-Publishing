@@ -385,22 +385,27 @@
                     </div>
 
                     @if($sources->count() > 0)
-                        <form action="{{ route('admin.ai-writer.news.bulk-destroy') }}" method="POST" id="bulk-delete-form" onsubmit="return confirm('Delete all selected news sources? This cannot be undone.');">
-                            @csrf
-                            <div class="mb-4 flex items-center justify-between bg-gray-50 p-4 rounded-xl border border-gray-100">
-                                <div class="flex items-center space-x-2 text-sm text-gray-600 font-medium">
-                                    <span id="selected-count" class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">0</span>
-                                    <span>sources selected</span>
-                                </div>
-                                <button type="submit" id="bulk-delete-btn" disabled class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-900 focus:outline-none focus:border-red-900 focus:ring ring-red-300 disabled:opacity-50 transition ease-in-out duration-150">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                    Bulk Delete Selected
-                                </button>
+                        {{-- Bulk Operations Header --}}
+                        <div class="mb-4 flex items-center justify-between bg-gray-50 p-4 rounded-xl border border-gray-100">
+                            <div class="flex items-center space-x-2 text-sm text-gray-600 font-medium">
+                                <span id="selected-count" class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">0</span>
+                                <span>sources selected</span>
                             </div>
+                            <button type="button" onclick="submitBulkDelete()" id="bulk-delete-btn" disabled class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-900 focus:outline-none focus:border-red-900 focus:ring ring-red-300 disabled:opacity-50 transition ease-in-out duration-150">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                Bulk Delete Selected
+                            </button>
+                        </div>
 
-                            <div class="overflow-x-auto rounded-xl border border-gray-100">
-                                <table class="min-w-full divide-y divide-gray-200">
-                                    <thead class="bg-gray-50">
+                        {{-- Hidden Form for Bulk Delete to avoid nesting --}}
+                        <form action="{{ route('admin.ai-writer.news.bulk-destroy') }}" method="POST" id="hidden-bulk-delete-form" class="hidden">
+                            @csrf
+                            <div id="bulk-ids-container"></div>
+                        </form>
+
+                        <div class="overflow-x-auto rounded-xl border border-gray-100">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
                                         <tr>
                                             <th class="px-4 py-3 text-left">
                                                 <input type="checkbox" id="select-all" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
@@ -551,7 +556,7 @@
                                 </tbody>
                             </table>
                         </div>
-                    </form>
+                    
                     {{-- Live Fetch Log Panel --}}
                         <div id="fetch-log-panel" class="hidden mt-6 border border-indigo-200 rounded-xl overflow-hidden shadow-sm">
                             <div class="bg-indigo-600 px-4 py-3 flex items-center justify-between">
@@ -965,6 +970,24 @@
             }
         }
     });
+
+    function submitBulkDelete() {
+        if (!confirm('Delete all selected news sources? This cannot be undone.')) return;
+
+        const checkboxes = document.querySelectorAll('.source-checkbox:checked');
+        const container = document.getElementById('bulk-ids-container');
+        container.innerHTML = '';
+
+        checkboxes.forEach(cb => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'ids[]';
+            input.value = cb.value;
+            container.appendChild(input);
+        });
+
+        document.getElementById('hidden-bulk-delete-form').submit();
+    }
     </script>
     @endpush
 </x-app-layout>
