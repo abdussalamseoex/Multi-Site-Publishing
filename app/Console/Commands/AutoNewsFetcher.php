@@ -231,21 +231,43 @@ class AutoNewsFetcher extends Command
                 }
             } else {
                 // Not an RSS feed, attempt to find links using regex
-                $baseUrl = parse_url($url, PHP_URL_SCHEME) . '://' . parse_url($url, PHP_URL_HOST);
-                preg_match_all('/<a\s+[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)<\/a>/si', $content, $matches);
+                $baseUrl = parse_url($url, PHP_SCHEME) . '://' . parse_url($url, PHP_HOST);
                 
-                if (!empty($matches[1])) {
-                    foreach ($matches[1] as $idx => $link) {
+                // Matches <a> tags and captures href and inner content
+                preg_match_all('/<a\s+[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)<\/a>/si', $content, $matches, PREG_SET_ORDER);
+                
+                if (!empty($matches)) {
+                    foreach ($matches as $match) {
                         if (count($articles) >= $limit) break;
-                        $title = strip_tags($matches[2][$idx]);
+                        
+                        $link  = $match[1];
+                        $inner = $match[2];
+                        $title = trim(strip_tags($inner));
+
+                        // Fallback to title/aria-label attributes if inner text is empty
+                        if (empty($title) || strlen($title) < 10) {
+                            if (preg_match('/title=["\']([^"\']+)["\']/i', $match[0], $tm)) {
+                                $title = $tm[1];
+                            } elseif (preg_match('/aria-label=["\']([^"\']+)["\']/i', $match[0], $tm)) {
+                                $title = $tm[1];
+                            }
+                        }
 
                         // Handle relative links
                         if (strpos($link, 'http') !== 0) {
-                            $link = rtrim($baseUrl, '/') . '/' . ltrim($link, '/');
+                            if (strpos($link, '/') === 0) {
+                                $link = rtrim($baseUrl, '/') . '/' . ltrim($link, '/');
+                            } else {
+                                // Relative to current path (simple version)
+                                $link = rtrim($url, '/') . '/' . ltrim($link, '/');
+                            }
                         }
 
-                        // Basic filter for valid article links
-                        if (strlen($title) > 25 && filter_var($link, FILTER_VALIDATE_URL)) {
+                        // Filter for likely news articles
+                        // Usually news links have specific patterns (slugs, dates, etc.)
+                        $isLikelyArticle = (strlen($title) > 15 && (str_contains($link, '/202') || str_contains($link, '/entertainment/') || str_contains($link, '/article/')));
+
+                        if ($isLikelyArticle && filter_var($link, FILTER_VALIDATE_URL)) {
                             $articles[] = [
                                 'title'       => trim($title),
                                 'link'        => $link,
@@ -258,7 +280,7 @@ class AutoNewsFetcher extends Command
             }
 
             if (empty($articles)) {
-                \Log::info("AutoNewsFetcher: No valid articles parsed from " . $url . (strlen($content) < 100 ? " (Content too short: " . htmlspecialchars($content) . ")" : ""));
+                \Log::info("AutoNewsFetcher: No valid articles parsed from " . $url . (strlen($content) < 1000 ? " (Raw content length: " . strlen($content) . ")" : ""));
             }
 
             return $articles;
