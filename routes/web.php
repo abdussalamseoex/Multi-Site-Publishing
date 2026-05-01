@@ -195,8 +195,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/ai-writer/news/import-bbc', [\App\Http\Controllers\Admin\AutoNewsController::class, 'importBBCSources'])->name('ai-writer.news.import-bbc');
     Route::post('/ai-writer/news/import-crypto', [\App\Http\Controllers\Admin\AutoNewsController::class, 'importCryptoSources'])->name('ai-writer.news.import-crypto');
     Route::post('/ai-writer/news/import-authors', [\App\Http\Controllers\Admin\AutoNewsController::class, 'importAuthors'])->name('ai-writer.news.import-authors');
-    Route::post('/ai-writer/news/bulk-destroy', [\App\Http\Controllers\Admin\AutoNewsController::class, 'bulkDestroy'])->name('ai-writer.news.bulk-destroy');
-    Route::post('/ai-writer/news/bulk_destroy', [\App\Http\Controllers\Admin\AutoNewsController::class, 'bulkDestroy']);
+    Route::post('/ai-writer/news/bulk-action', [\App\Models\AutoNewsSource::class == \App\Http\Controllers\Admin\AutoNewsController::class ? '' : \App\Http\Controllers\Admin\AutoNewsController::class, 'bulkAction'])->name('ai-writer.news.bulk-action');
+    Route::post('/ai-writer/news/bulk_destroy', [\App\Http\Controllers\Admin\AutoNewsController::class, 'bulkAction']); // Keep for compatibility if needed
     Route::get('/ai-writer/news/bulk-destroy', function() { return redirect()->route('admin.ai-writer.news'); });
     Route::get('/ai-writer/news/bulk_destroy', function() { return redirect()->route('admin.ai-writer.news'); });
 
@@ -229,6 +229,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/categories/bulk-destroy', [\App\Http\Controllers\Admin\CategoryController::class, 'bulkDestroy'])->name('categories.bulk_destroy');
     Route::delete('/categories/{category}', [\App\Http\Controllers\Admin\CategoryController::class, 'destroy'])->name('categories.destroy');
 
+    Route::post('/users/bulk-action', [\App\Http\Controllers\Admin\UserController::class, 'bulkAction'])->name('users.bulk-action');
     Route::get('/users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
     Route::post('/users/{user}/role', [\App\Http\Controllers\Admin\UserController::class, 'updateRole'])->name('users.role');
     Route::patch('/users/{user}/toggle-ban', [\App\Http\Controllers\Admin\UserController::class, 'toggleBan'])->name('users.toggle-ban');

@@ -93,4 +93,72 @@ class UserController extends Controller
 
         return back()->with('status', "Limits and Points updated for {$user->name}.");
     }
+
+    /**
+     * Bulk operations for users
+     */
+    public function bulkAction(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        $action = $request->input('action');
+        
+        if (empty($ids)) {
+            return back()->withErrors(['error' => 'No users selected.']);
+        }
+
+        // Prevent self-action for sensitive operations
+        $userIds = array_diff($ids, [auth()->id()]);
+        if (empty($userIds) && count($ids) > 0) {
+            return back()->withErrors(['error' => 'You cannot perform bulk actions on yourself.']);
+        }
+
+        $query = User::whereIn('id', $userIds);
+        $message = 'Bulk action completed.';
+
+        switch ($action) {
+            case 'delete':
+                \App\Models\Post::whereIn('user_id', $userIds)->delete();
+                User::whereIn('id', $userIds)->delete();
+                $message = count($userIds) . ' users and their posts have been permanently deleted.';
+                break;
+
+            case 'ban':
+                $query->update(['status' => 'banned']);
+                $message = count($userIds) . ' users have been banned.';
+                break;
+
+            case 'unban':
+                $query->update(['status' => 'active']);
+                $message = count($userIds) . ' users have been unbanned.';
+                break;
+
+            case 'change_role':
+                $role = $request->input('role');
+                if (in_array($role, ['admin', 'author', 'editor', 'user'])) {
+                    $users = $query->get();
+                    foreach ($users as $u) {
+                        $u->syncRoles([$role]);
+                    }
+                    $message = count($userIds) . ' users role changed to ' . ucfirst($role) . '.';
+                }
+                break;
+
+            case 'set_points':
+                $points = (int)$request->input('value');
+                $query->update(['points' => $points]);
+                $message = 'Points set to ' . $points . ' for ' . count($userIds) . ' users.';
+                break;
+
+            case 'add_points':
+                $points = (int)$request->input('value');
+                $query->increment('points', $points);
+                $message = $points . ' points added to ' . count($userIds) . ' users.';
+                break;
+
+            default:
+                return back()->withErrors(['error' => 'Invalid bulk action selected.']);
+        }
+
+        return back()->with('status', $message);
+    }
 }

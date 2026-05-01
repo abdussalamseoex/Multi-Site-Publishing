@@ -300,18 +300,75 @@ class AutoNewsController extends Controller
     }
 
     /**
-     * Bulk delete selected news sources
+     * Bulk operations for news sources
      */
-    public function bulkDestroy(Request $request)
+    public function bulkAction(Request $request)
     {
         $ids = $request->input('ids', []);
+        $action = $request->input('action');
         
         if (empty($ids)) {
-            return back()->withErrors(['error' => 'No sources selected for deletion.']);
+            return back()->withErrors(['error' => 'No sources selected.']);
         }
 
-        \App\Models\AutoNewsSource::whereIn('id', $ids)->delete();
+        $query = \App\Models\AutoNewsSource::whereIn('id', $ids);
+        $message = 'Bulk action completed.';
 
-        return back()->with('status', count($ids) . ' news sources deleted successfully.');
+        switch ($action) {
+            case 'delete':
+                $query->delete();
+                $message = count($ids) . ' news sources deleted successfully.';
+                break;
+
+            case 'activate':
+                $query->update(['is_active' => true]);
+                $message = count($ids) . ' sources have been activated.';
+                break;
+
+            case 'deactivate':
+                $query->update(['is_active' => false]);
+                $message = count($ids) . ' sources have been deactivated.';
+                break;
+
+            case 'change_category':
+                $catId = $request->input('category_id');
+                if ($catId) {
+                    $query->update(['category_id' => $catId]);
+                    $message = count($ids) . ' sources moved to the selected category.';
+                }
+                break;
+
+            case 'change_author':
+                $userId = $request->input('user_id');
+                if ($userId) {
+                    $query->update(['user_id' => $userId]);
+                    $message = count($ids) . ' sources assigned to the selected author.';
+                }
+                break;
+
+            case 'change_interval':
+                $hours = (int)$request->input('value');
+                if ($hours >= 1) {
+                    $query->update([
+                        'fetch_interval_hours' => $hours,
+                        'use_smart_schedule' => false
+                    ]);
+                    $message = 'Fetch interval set to ' . $hours . ' hours for ' . count($ids) . ' sources.';
+                }
+                break;
+
+            case 'change_limit':
+                $limit = (int)$request->input('value');
+                if ($limit >= 1) {
+                    $query->update(['posts_per_run' => $limit]);
+                    $message = 'Posts per run updated to ' . $limit . ' for ' . count($ids) . ' sources.';
+                }
+                break;
+
+            default:
+                return back()->withErrors(['error' => 'Invalid bulk action selected.']);
+        }
+
+        return back()->with('status', $message);
     }
 }

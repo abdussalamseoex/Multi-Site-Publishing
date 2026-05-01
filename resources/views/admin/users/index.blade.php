@@ -44,11 +44,71 @@
                 </form>
             </div>
 
+            {{-- Bulk Operations Header --}}
+            <div class="mb-6 bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-100">
+                <div class="p-4 bg-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex items-center space-x-3 text-sm text-gray-600 font-medium">
+                        <span id="selected-count" class="bg-indigo-600 text-white px-3 py-1 rounded-full font-bold">0</span>
+                        <span>users selected</span>
+                    </div>
+                    
+                    <div class="flex flex-wrap items-center gap-2">
+                        <select id="bulk-action-select" disabled class="text-xs border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50">
+                            <option value="">-- Choose Action --</option>
+                            <optgroup label="Access Control">
+                                <option value="ban">Ban Selected</option>
+                                <option value="unban">Unban Selected</option>
+                            </optgroup>
+                            <optgroup label="Roles">
+                                <option value="change_role">Change Role...</option>
+                            </optgroup>
+                            <optgroup label="Points & Billing">
+                                <option value="set_points">Set Exact Points...</option>
+                                <option value="add_points">Add Points (+)...</option>
+                            </optgroup>
+                            <optgroup label="Danger Zone">
+                                <option value="delete">Delete Selected</option>
+                            </optgroup>
+                        </select>
+
+                        {{-- Extra inputs --}}
+                        <div id="bulk-role-wrapper" class="hidden">
+                            <select id="bulk-role-input" class="text-xs border-gray-300 rounded-lg">
+                                <option value="user">User</option>
+                                <option value="author">Author</option>
+                                <option value="editor">Editor</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+
+                        <div id="bulk-value-wrapper" class="hidden">
+                            <input type="number" id="bulk-value-input" placeholder="Points" class="text-xs border-gray-300 rounded-lg w-20">
+                        </div>
+
+                        <button type="button" onclick="executeBulkAction()" id="bulk-apply-btn" disabled class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-lg font-bold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none disabled:opacity-50 transition">
+                            Apply to Selected
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Hidden Form for Bulk Actions --}}
+            <form action="{{ route('admin.users.bulk-action') }}" method="POST" id="hidden-bulk-action-form" class="hidden">
+                @csrf
+                <input type="hidden" name="action" id="bulk-action-type">
+                <input type="hidden" name="role" id="bulk-role-id">
+                <input type="hidden" name="value" id="bulk-action-value">
+                <div id="bulk-ids-container"></div>
+            </form>
+
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
+                                <th class="px-4 py-3 text-left">
+                                    <input type="checkbox" id="select-all" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stats / Limits</th>
@@ -57,7 +117,10 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @foreach($users as $user)
-                            <tr>
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <input type="checkbox" name="ids[]" value="{{ $user->id }}" class="user-checkbox rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{{ $user->name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ $user->email }}<br>
@@ -192,6 +255,72 @@
 
         function closeLimitModal() {
             document.getElementById('limitModal').classList.add('hidden');
+        }
+
+        // Bulk Action Logic
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectAll = document.getElementById('select-all');
+            const checkboxes = document.querySelectorAll('.user-checkbox');
+            const bulkActionSelect = document.getElementById('bulk-action-select');
+            const bulkApplyBtn = document.getElementById('bulk-apply-btn');
+            const selectedCount = document.getElementById('selected-count');
+
+            if (selectAll) {
+                selectAll.addEventListener('change', function() {
+                    checkboxes.forEach(cb => cb.checked = this.checked);
+                    updateBulkState();
+                });
+            }
+
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', function() {
+                    updateBulkState();
+                });
+            });
+
+            function updateBulkState() {
+                const checkedCount = document.querySelectorAll('.user-checkbox:checked').length;
+                selectedCount.textContent = checkedCount;
+                bulkActionSelect.disabled = checkedCount === 0;
+                bulkApplyBtn.disabled = checkedCount === 0 || bulkActionSelect.value === '';
+                
+                if (selectAll) {
+                    selectAll.checked = checkedCount === checkboxes.length && checkboxes.length > 0;
+                }
+            }
+
+            bulkActionSelect.addEventListener('change', function() {
+                const val = this.value;
+                document.getElementById('bulk-role-wrapper').classList.toggle('hidden', val !== 'change_role');
+                document.getElementById('bulk-value-wrapper').classList.toggle('hidden', val !== 'set_points' && val !== 'add_points');
+                updateBulkState();
+            });
+        });
+
+        function executeBulkAction() {
+            const action = document.getElementById('bulk-action-select').value;
+            if (!action) return;
+
+            if (action === 'delete' && !confirm('Are you sure? This will permanently delete all selected users AND their posts.')) return;
+            if (action === 'ban' && !confirm('Ban all selected users?')) return;
+
+            const checkboxes = document.querySelectorAll('.user-checkbox:checked');
+            const container = document.getElementById('bulk-ids-container');
+            container.innerHTML = '';
+
+            checkboxes.forEach(cb => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids[]';
+                input.value = cb.value;
+                container.appendChild(input);
+            });
+
+            document.getElementById('bulk-action-type').value = action;
+            document.getElementById('bulk-role-id').value = document.getElementById('bulk-role-input').value;
+            document.getElementById('bulk-action-value').value = document.getElementById('bulk-value-input').value;
+
+            document.getElementById('hidden-bulk-action-form').submit();
         }
     </script>
 </x-app-layout>

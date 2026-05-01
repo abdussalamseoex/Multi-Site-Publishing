@@ -438,20 +438,67 @@
 
                     @if($sources->count() > 0)
                         {{-- Bulk Operations Header --}}
-                        <div class="mb-4 flex items-center justify-between bg-gray-50 p-4 rounded-xl border border-gray-100">
-                            <div class="flex items-center space-x-2 text-sm text-gray-600 font-medium">
-                                <span id="selected-count" class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">0</span>
+                        <div class="mb-4 bg-gray-50 p-4 rounded-xl border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div class="flex items-center space-x-3 text-sm text-gray-600 font-medium">
+                                <span id="selected-count" class="bg-indigo-600 text-white px-3 py-1 rounded-full font-bold">0</span>
                                 <span>sources selected</span>
                             </div>
-                            <button type="button" onclick="submitBulkDelete()" id="bulk-delete-btn" disabled class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-900 focus:outline-none focus:border-red-900 focus:ring ring-red-300 disabled:opacity-50 transition ease-in-out duration-150">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                Bulk Delete Selected
-                            </button>
+                            
+                            <div class="flex flex-wrap items-center gap-2">
+                                <select id="bulk-action-select" disabled class="text-xs border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50">
+                                    <option value="">-- Choose Action --</option>
+                                    <optgroup label="Status">
+                                        <option value="activate">Activate Selected</option>
+                                        <option value="deactivate">Deactivate Selected</option>
+                                    </optgroup>
+                                    <optgroup label="Management">
+                                        <option value="change_category">Change Category...</option>
+                                        <option value="change_author">Change Author...</option>
+                                    </optgroup>
+                                    <optgroup label="Settings">
+                                        <option value="change_interval">Change Interval (Hours)...</option>
+                                        <option value="change_limit">Change Posts Per Run...</option>
+                                    </optgroup>
+                                    <optgroup label="Danger Zone">
+                                        <option value="delete">Delete Selected</option>
+                                    </optgroup>
+                                </select>
+
+                                {{-- Extra inputs that show up based on selection --}}
+                                <div id="bulk-category-wrapper" class="hidden">
+                                    <select id="bulk-category-input" class="text-xs border-gray-300 rounded-lg">
+                                        @foreach(\App\Models\Category::all() as $cat)
+                                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div id="bulk-author-wrapper" class="hidden">
+                                    <select id="bulk-author-input" class="text-xs border-gray-300 rounded-lg">
+                                        <option value="">Admin (Default)</option>
+                                        @foreach(\App\Models\User::where('role', '!=', 'user')->get() as $u)
+                                            <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div id="bulk-value-wrapper" class="hidden">
+                                    <input type="number" id="bulk-value-input" placeholder="Value" class="text-xs border-gray-300 rounded-lg w-20">
+                                </div>
+
+                                <button type="button" onclick="executeBulkAction()" id="bulk-apply-btn" disabled class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-lg font-bold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none disabled:opacity-50 transition">
+                                    Apply
+                                </button>
+                            </div>
                         </div>
 
-                        {{-- Hidden Form for Bulk Delete to avoid nesting --}}
-                        <form action="{{ route('admin.ai-writer.news.bulk-destroy') }}" method="POST" id="hidden-bulk-delete-form" class="hidden">
+                        {{-- Hidden Form for Bulk Actions --}}
+                        <form action="{{ route('admin.ai-writer.news.bulk-action') }}" method="POST" id="hidden-bulk-action-form" class="hidden">
                             @csrf
+                            <input type="hidden" name="action" id="bulk-action-type">
+                            <input type="hidden" name="category_id" id="bulk-category-id">
+                            <input type="hidden" name="user_id" id="bulk-user-id">
+                            <input type="hidden" name="value" id="bulk-action-value">
                             <div id="bulk-ids-container"></div>
                         </form>
 
@@ -1005,38 +1052,51 @@
     document.addEventListener('DOMContentLoaded', function() {
         calculateSmartSchedule();
 
-        // Bulk Delete Logic
+        // Bulk Action Logic
         const selectAll = document.getElementById('select-all');
         const checkboxes = document.querySelectorAll('.source-checkbox');
-        const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+        const bulkActionSelect = document.getElementById('bulk-action-select');
+        const bulkApplyBtn = document.getElementById('bulk-apply-btn');
         const selectedCount = document.getElementById('selected-count');
 
         if (selectAll) {
             selectAll.addEventListener('change', function() {
                 checkboxes.forEach(cb => cb.checked = this.checked);
-                updateBulkDeleteState();
+                updateBulkState();
             });
         }
 
         checkboxes.forEach(cb => {
             cb.addEventListener('change', function() {
-                updateBulkDeleteState();
+                updateBulkState();
             });
         });
 
-        function updateBulkDeleteState() {
+        function updateBulkState() {
             const checkedCount = document.querySelectorAll('.source-checkbox:checked').length;
             selectedCount.textContent = checkedCount;
-            bulkDeleteBtn.disabled = checkedCount === 0;
+            bulkActionSelect.disabled = checkedCount === 0;
+            bulkApplyBtn.disabled = checkedCount === 0 || bulkActionSelect.value === '';
             
             if (selectAll) {
                 selectAll.checked = checkedCount === checkboxes.length && checkboxes.length > 0;
             }
         }
+
+        bulkActionSelect.addEventListener('change', function() {
+            const val = this.value;
+            document.getElementById('bulk-category-wrapper').classList.toggle('hidden', val !== 'change_category');
+            document.getElementById('bulk-author-wrapper').classList.toggle('hidden', val !== 'change_author');
+            document.getElementById('bulk-value-wrapper').classList.toggle('hidden', val !== 'change_interval' && val !== 'change_limit');
+            updateBulkState();
+        });
     });
 
-    function submitBulkDelete() {
-        if (!confirm('Delete all selected news sources? This cannot be undone.')) return;
+    function executeBulkAction() {
+        const action = document.getElementById('bulk-action-select').value;
+        if (!action) return;
+
+        if (action === 'delete' && !confirm('Delete all selected news sources? This cannot be undone.')) return;
 
         const checkboxes = document.querySelectorAll('.source-checkbox:checked');
         const container = document.getElementById('bulk-ids-container');
@@ -1050,7 +1110,12 @@
             container.appendChild(input);
         });
 
-        document.getElementById('hidden-bulk-delete-form').submit();
+        document.getElementById('bulk-action-type').value = action;
+        document.getElementById('bulk-category-id').value = document.getElementById('bulk-category-input').value;
+        document.getElementById('bulk-user-id').value = document.getElementById('bulk-author-input').value;
+        document.getElementById('bulk-action-value').value = document.getElementById('bulk-value-input').value;
+
+        document.getElementById('hidden-bulk-action-form').submit();
     }
     </script>
     @endpush
