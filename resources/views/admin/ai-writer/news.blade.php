@@ -610,6 +610,10 @@
                                         <option value="dalle">AI Generated (DALL-E)</option>
                                     </select>
                                 </div>
+                                <div>
+                                    <label class="block font-medium text-sm text-gray-700">Images Per Post</label>
+                                    <input type="number" name="in_content_images_count" id="edit_in_content_images_count" min="0" max="5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                </div>
                             </div>
 
                             <div class="flex items-center">
@@ -795,6 +799,7 @@
         document.getElementById('edit_fetch_interval_hours').value = source.fetch_interval_hours;
         document.getElementById('edit_featured_image_source').value = source.featured_image_source;
         document.getElementById('edit_in_content_image_source').value = source.in_content_image_source;
+        document.getElementById('edit_in_content_images_count').value = source.in_content_images_count || 0;
         document.getElementById('edit_use_smart_schedule').checked = source.use_smart_schedule;
         document.getElementById('edit_is_active').checked = source.is_active;
 

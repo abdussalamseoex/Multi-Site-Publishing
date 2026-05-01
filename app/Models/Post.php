@@ -37,11 +37,14 @@ class Post extends Model
     protected static function booted()
     {
         static::creating(function ($post) {
+            // Default is false (Nofollow)
+            $post->is_dofollow = false;
+
             if ($post->user_id) {
                 $user = \App\Models\User::find($post->user_id);
-                // If user has a specific dofollow default set, apply it to the post
-                if ($user && isset($user->dofollow_default)) {
-                    $post->is_dofollow = (bool)$user->dofollow_default;
+                // Only set to Dofollow if the Admin has explicitly granted permission (dofollow_default = 1)
+                if ($user && $user->dofollow_default == 1) {
+                    $post->is_dofollow = true;
                 }
             }
         });
