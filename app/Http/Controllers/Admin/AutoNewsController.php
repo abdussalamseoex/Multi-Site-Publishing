@@ -108,7 +108,8 @@ class AutoNewsController extends Controller
 
         $source->update($data);
 
-        return back()->with('status', 'Source "' . $source->name . '" updated successfully.');
+        $categoryName = $source->category ? $source->category->name : 'No Category';
+        return back()->with('status', "Source '{$source->name}' updated successfully! [Category: {$categoryName}]");
     }
 
     public function destroy($id)

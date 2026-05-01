@@ -658,7 +658,7 @@
                                 </div>
                                 <div>
                                     <label class="block font-medium text-sm text-gray-700">RSS/Target URL</label>
-                                    <input type="url" name="source_url" id="edit_source_url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                    <input type="text" name="source_url" id="edit_source_url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
                                 </div>
                             </div>
 
@@ -915,7 +915,7 @@
     // Modal Control Logic
     function openEditModal(source) {
         var form = document.getElementById('editForm');
-        form.action = '/admin/ai-writer/news/' + source.id;
+        form.action = window.location.origin + '/admin/ai-writer/news/' + source.id;
         
         document.getElementById('edit_name').value = source.name;
         document.getElementById('edit_source_url').value = source.source_url;
