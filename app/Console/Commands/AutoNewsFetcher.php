@@ -115,37 +115,50 @@ class AutoNewsFetcher extends Command
             $content = $response->body();
             $articles = [];
 
-            // Check if RSS - case insensitive
+            // --- 1. Sitemap Support ---
+            if (str_contains($url, 'sitemap') || stripos($content, '<urlset') !== false) {
+                $xml = @simplexml_load_string($content, 'SimpleXMLElement', LIBXML_NOCDATA);
+                if ($xml && (isset($xml->url) || isset($xml->sitemap))) {
+                    $nodes = isset($xml->url) ? $xml->url : $xml->sitemap;
+                    foreach ($nodes as $node) {
+                        if (count($articles) >= $limit) break;
+                        $loc = (string)$node->loc;
+                        if (filter_var($loc, FILTER_VALIDATE_URL) && !str_ends_with($loc, '.xml')) {
+                            $slug = basename($loc);
+                            if (strpos($slug, '.') !== false) $slug = substr($slug, 0, strrpos($slug, '.'));
+                            $title = ucwords(str_replace(['-', '_'], ' ', $slug));
+                            
+                            $articles[] = [
+                                'title'       => $title,
+                                'link'        => $loc,
+                                'description' => '',
+                                'image'       => null,
+                            ];
+                        }
+                    }
+                    return $articles;
+                }
+            }
+
+            // --- 2. RSS/Atom Support ---
             $isRss = (stripos($content, '<rss') !== false || stripos($content, '<feed') !== false);
-            
             if ($isRss) {
                 $xml = @simplexml_load_string($content, 'SimpleXMLElement', LIBXML_NOCDATA);
                 if ($xml) {
-                    // Register common namespaces
                     $namespaces = $xml->getNamespaces(true);
-
-                    // RSS 2.0
                     if (isset($xml->channel->item)) {
                         foreach ($xml->channel->item as $item) {
                             if (count($articles) >= $limit) break;
-
-                            // --- Skip articles older than 30 days ---
                             $pubDateStr = (string)$item->pubDate;
                             if (!empty($pubDateStr)) {
                                 try {
                                     $pubDate = \Carbon\Carbon::parse($pubDateStr);
-                                    if ($pubDate->diffInDays(now()) > 30) {
-                                        \Log::info("AutoNewsFetcher: Skipping old article from {$pubDateStr}: " . (string)$item->title);
-                                        continue;
-                                    }
-                                } catch (\Exception $e) { /* ignore parse errors */ }
+                                    if ($pubDate->diffInDays(now()) > 30) continue;
+                                } catch (\Exception $e) { }
                             }
-
-                            // --- Validate link ---
                             $link = trim((string)$item->link);
                             if (empty($link) || !filter_var($link, FILTER_VALIDATE_URL)) continue;
-
-                            // Get description / content:encoded
+                            
                             $desc = '';
                             if (isset($namespaces['content'])) {
                                 $contentNs = $item->children($namespaces['content']);
@@ -153,7 +166,6 @@ class AutoNewsFetcher extends Command
                             }
                             if (empty($desc)) $desc = (string)$item->description;
 
-                            // Get image from media:content, media:thumbnail or enclosure
                             $image = null;
                             if (isset($namespaces['media'])) {
                                 $mediaNs = $item->children($namespaces['media']);
@@ -161,10 +173,7 @@ class AutoNewsFetcher extends Command
                                     if (isset($mediaNs->$tag)) {
                                         foreach ($mediaNs->$tag as $node) {
                                             $imgUrl = (string)($node['url'] ?? '');
-                                            if (!empty($imgUrl)) {
-                                                $image = $imgUrl;
-                                                break 2;
-                                            }
+                                            if (!empty($imgUrl)) { $image = $imgUrl; break 2; }
                                         }
                                     }
                                 }
@@ -172,10 +181,7 @@ class AutoNewsFetcher extends Command
                             if (!$image && isset($item->enclosure)) {
                                 foreach ($item->enclosure as $enclosure) {
                                     $imgUrl = (string)($enclosure['url'] ?? '');
-                                    if (!empty($imgUrl)) {
-                                        $image = $imgUrl;
-                                        break;
-                                    }
+                                    if (!empty($imgUrl)) { $image = $imgUrl; break; }
                                 }
                             }
 
@@ -187,13 +193,9 @@ class AutoNewsFetcher extends Command
                                 'pub_date'    => $pubDateStr,
                             ];
                         }
-                    }
-                    // Atom
-                    elseif (isset($xml->entry)) {
+                    } elseif (isset($xml->entry)) {
                         foreach ($xml->entry as $entry) {
                             if (count($articles) >= $limit) break;
-
-                            // --- Skip old articles ---
                             $pubDateStr = isset($entry->published) ? (string)$entry->published : (isset($entry->updated) ? (string)$entry->updated : '');
                             if (!empty($pubDateStr)) {
                                 try {
@@ -201,12 +203,10 @@ class AutoNewsFetcher extends Command
                                     if ($pubDate->diffInDays(now()) > 30) continue;
                                 } catch (\Exception $e) { }
                             }
-
                             $link = '';
                             foreach ($entry->link as $l) {
                                 if ((string)$l['rel'] == 'alternate' || !(string)$l['rel']) {
-                                    $link = (string)$l['href'];
-                                    break;
+                                    $link = (string)$l['href']; break;
                                 }
                             }
                             if (!$link) $link = (string)$entry->link['href'];
@@ -229,58 +229,59 @@ class AutoNewsFetcher extends Command
                         }
                     }
                 }
-            } else {
-                // Not an RSS feed, attempt to find links using regex
-                $baseUrl = parse_url($url, PHP_SCHEME) . '://' . parse_url($url, PHP_HOST);
-                
-                // Matches <a> tags and captures href and inner content
-                preg_match_all('/<a\s+[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)<\/a>/si', $content, $matches, PREG_SET_ORDER);
-                
-                if (!empty($matches)) {
-                    foreach ($matches as $match) {
-                        if (count($articles) >= $limit) break;
-                        
-                        $link  = $match[1];
-                        $inner = $match[2];
-                        $title = trim(strip_tags($inner));
+                return $articles;
+            }
 
-                        // Fallback to title/aria-label attributes if inner text is empty
-                        if (empty($title) || strlen($title) < 10) {
-                            if (preg_match('/title=["\']([^"\']+)["\']/i', $match[0], $tm)) {
-                                $title = $tm[1];
-                            } elseif (preg_match('/aria-label=["\']([^"\']+)["\']/i', $match[0], $tm)) {
-                                $title = $tm[1];
-                            }
-                        }
+            // --- 3. HTML/DOM Support (Robust for complex sites) ---
+            $dom = new \DOMDocument();
+            @$dom->loadHTML(mb_convert_encoding($content, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+            $xpath = new \DOMXPath($dom);
+            $links = $xpath->query('//a[@href]');
+            
+            $parsedUrl = parse_url($url);
+            $baseUrl   = ($parsedUrl['scheme'] ?? 'http') . '://' . ($parsedUrl['host'] ?? '');
 
-                        // Handle relative links
-                        if (strpos($link, 'http') !== 0) {
-                            if (strpos($link, '/') === 0) {
-                                $link = rtrim($baseUrl, '/') . '/' . ltrim($link, '/');
-                            } else {
-                                // Relative to current path (simple version)
-                                $link = rtrim($url, '/') . '/' . ltrim($link, '/');
-                            }
-                        }
+            foreach ($links as $linkNode) {
+                if (count($articles) >= $limit) break;
 
-                        // Filter for likely news articles
-                        // Usually news links have specific patterns (slugs, dates, etc.)
-                        $isLikelyArticle = (strlen($title) > 15 && (str_contains($link, '/202') || str_contains($link, '/entertainment/') || str_contains($link, '/article/')));
+                $href  = trim($linkNode->getAttribute('href'));
+                $title = trim($linkNode->textContent);
 
-                        if ($isLikelyArticle && filter_var($link, FILTER_VALIDATE_URL)) {
-                            $articles[] = [
-                                'title'       => trim($title),
-                                'link'        => $link,
-                                'description' => '',
-                                'image'       => null,
-                            ];
-                        }
+                if (strlen($title) < 10) {
+                    $title = $linkNode->getAttribute('title') ?: $linkNode->getAttribute('aria-label');
+                }
+                if (strlen($title) < 10) {
+                    $imgs = $linkNode->getElementsByTagName('img');
+                    if ($imgs->length > 0) $title = $imgs->item(0)->getAttribute('alt');
+                }
+
+                if (empty($href) || strlen($title) < 15) continue;
+
+                // Resolve Relative URLs
+                if (strpos($href, 'http') !== 0) {
+                    if (strpos($href, '//') === 0) {
+                        $href = ($parsedUrl['scheme'] ?? 'http') . ':' . $href;
+                    } elseif (strpos($href, '/') === 0) {
+                        $href = rtrim($baseUrl, '/') . '/' . ltrim($href, '/');
+                    } else {
+                        $href = rtrim($url, '/') . '/' . ltrim($href, '/');
                     }
+                }
+
+                // Filtering for news articles
+                $isArticle = (str_contains($href, '/202') || str_contains($href, '/article/') || str_contains($href, '/news/') || str_contains($href, '/entertainment/'));
+                if ($isArticle && filter_var($href, FILTER_VALIDATE_URL) && !in_array($href, array_column($articles, 'link'))) {
+                    $articles[] = [
+                        'title'       => trim($title),
+                        'link'        => $href,
+                        'description' => '',
+                        'image'       => null,
+                    ];
                 }
             }
 
             if (empty($articles)) {
-                \Log::info("AutoNewsFetcher: No valid articles parsed from " . $url . (strlen($content) < 1000 ? " (Raw content length: " . strlen($content) . ")" : ""));
+                \Log::info("AutoNewsFetcher: No valid articles found for " . $url);
             }
 
             return $articles;
