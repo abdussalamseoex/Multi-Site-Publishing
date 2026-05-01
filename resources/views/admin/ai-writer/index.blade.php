@@ -136,11 +136,12 @@
                                         <th class="px-4 py-3 text-left font-bold text-gray-600 uppercase tracking-wider">Progress</th>
                                         <th class="px-4 py-3 text-left font-bold text-gray-600 uppercase tracking-wider">Status</th>
                                         <th class="px-4 py-3 text-left font-bold text-gray-600 uppercase tracking-wider">Next Run</th>
+                                        <th class="px-4 py-3 text-right font-bold text-gray-600 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="campaign-list" class="bg-white divide-y divide-gray-100">
                                     <tr>
-                                        <td colspan="4" class="px-4 py-8 text-center text-gray-500">Loading campaigns...</td>
+                                        <td colspan="5" class="px-4 py-8 text-center text-gray-500">Loading campaigns...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -194,6 +195,8 @@
 
     @push('scripts')
     <script>
+        let countdownIntervals = {};
+
         document.getElementById('ai-writer-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -264,9 +267,13 @@
                 const list = document.getElementById('campaign-list');
                 
                 if (data.data.length === 0) {
-                    list.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-500">No campaigns found.</td></tr>';
+                    list.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">No campaigns found.</td></tr>';
                     return;
                 }
+
+                // Clear previous countdowns
+                Object.values(countdownIntervals).forEach(clearInterval);
+                countdownIntervals = {};
 
                 list.innerHTML = '';
                 data.data.forEach(c => {
@@ -279,10 +286,13 @@
                         'paused': 'bg-yellow-100 text-yellow-800'
                     }[c.status];
 
-                    const nextRun = c.next_run_at ? new Date(c.next_run_at).toLocaleString() : 'N/A';
+                    const nextRunDate = c.next_run_at ? new Date(c.next_run_at) : null;
+                    const nextRunText = nextRunDate ? nextRunDate.toLocaleString() : 'N/A';
+                    const canPause = c.status === 'processing' || c.status === 'pending';
+                    const canResume = c.status === 'paused';
 
                     list.innerHTML += `
-                        <tr class="hover:bg-gray-50 transition">
+                        <tr class="hover:bg-gray-50 transition" id="campaign-row-${c.id}">
                             <td class="px-4 py-3">
                                 <div class="font-bold text-gray-900">${c.name}</div>
                                 <div class="flex items-center space-x-2 mt-1">
@@ -306,14 +316,71 @@
                                 ${c.error_log ? `<div class="text-[10px] text-red-500 mt-1 truncate max-w-[150px]" title="${c.error_log}">Error: ${c.error_log.split('\n').pop()}</div>` : ''}
                             </td>
                             <td class="px-4 py-3 text-xs text-gray-500 font-mono">
-                                ${nextRun}
+                                <div id="countdown-${c.id}">${nextRunText}</div>
+                                ${nextRunDate && c.status !== 'completed' && c.status !== 'failed' && c.status !== 'paused' ? 
+                                    `<div class="text-[10px] text-indigo-500 font-bold mt-1" id="timer-text-${c.id}">Calculating...</div>` : ''}
+                            </td>
+                            <td class="px-4 py-3 text-right space-x-2">
+                                ${canPause ? `<button onclick="toggleCampaign(${c.id})" class="text-yellow-600 hover:text-yellow-800 font-bold text-[10px] uppercase">Pause</button>` : ''}
+                                ${canResume ? `<button onclick="toggleCampaign(${c.id})" class="text-green-600 hover:text-green-800 font-bold text-[10px] uppercase">Resume</button>` : ''}
+                                <button onclick="deleteCampaign(${c.id})" class="text-red-600 hover:text-red-800 font-bold text-[10px] uppercase">Delete</button>
                             </td>
                         </tr>
                     `;
+
+                    if (nextRunDate && c.status !== 'completed' && c.status !== 'failed' && c.status !== 'paused') {
+                        startCountdown(c.id, nextRunDate);
+                    }
                 });
             } catch (error) {
                 console.error("Load Campaigns Error:", error);
             }
+        }
+
+        function startCountdown(id, date) {
+            const timerEl = document.getElementById(`timer-text-${id}`);
+            if (!timerEl) return;
+
+            function update() {
+                const now = new Date().getTime();
+                const distance = date.getTime() - now;
+
+                if (distance < 0) {
+                    timerEl.innerText = "Next post due now...";
+                    clearInterval(countdownIntervals[id]);
+                    return;
+                }
+
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                timerEl.innerText = `Next in: ${hours}h ${minutes}m ${seconds}s`;
+            }
+
+            update();
+            countdownIntervals[id] = setInterval(update, 1000);
+        }
+
+        async function toggleCampaign(id) {
+            try {
+                const response = await fetch(`/admin/ai-writer/campaigns/${id}/toggle`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value }
+                });
+                if (response.ok) loadCampaigns();
+            } catch (error) { console.error(error); }
+        }
+
+        async function deleteCampaign(id) {
+            if (!confirm('Are you sure you want to delete this campaign?')) return;
+            try {
+                const response = await fetch(`/admin/ai-writer/campaigns/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value }
+                });
+                if (response.ok) loadCampaigns();
+            } catch (error) { console.error(error); }
         }
 
         // Auto refresh every 30 seconds

@@ -121,4 +121,26 @@ class AIWriterController extends Controller
         $campaigns = AiBulkCampaign::with(['category', 'user'])->latest()->paginate(10);
         return response()->json($campaigns);
     }
+
+    public function toggleBulkCampaign($id)
+    {
+        $campaign = AiBulkCampaign::findOrFail($id);
+        
+        if ($campaign->status === 'processing' || $campaign->status === 'pending') {
+            $campaign->status = 'paused';
+        } elseif ($campaign->status === 'paused') {
+            $campaign->status = 'processing';
+            $campaign->next_run_at = now(); // Resume immediately
+        }
+        
+        $campaign->save();
+        return response()->json(['success' => true]);
+    }
+
+    public function deleteBulkCampaign($id)
+    {
+        $campaign = AiBulkCampaign::findOrFail($id);
+        $campaign->delete();
+        return response()->json(['success' => true]);
+    }
 }
