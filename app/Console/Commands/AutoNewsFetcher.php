@@ -116,7 +116,8 @@ class AutoNewsFetcher extends Command
             $articles = [];
 
             $this->info("Fetched " . strlen($content) . " bytes from source.");
-            \Log::info("AutoNewsFetcher: Content Snippet: " . substr($content, 0, 500));
+            file_put_contents(storage_path('logs/debug_fetch.html'), $content);
+            \Log::info("AutoNewsFetcher: Debug content saved to storage/logs/debug_fetch.html");
 
             // --- 1. Sitemap Support ---
             if (str_contains($url, 'sitemap') || stripos($content, '<urlset') !== false) {
