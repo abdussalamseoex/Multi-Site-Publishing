@@ -388,6 +388,7 @@
                                             @endif
                                         </td>
                                         <td class="px-6 py-4 text-sm">
+                                            @php
                                                 $lastRun   = $source->last_run_at;
                                                 $intervalH = ($source->use_smart_schedule && $source->daily_post_limit > 0) ? (24 / $source->daily_post_limit) : $source->fetch_interval_hours;
                                                 
@@ -404,6 +405,7 @@
                                                     $nextRun    = null;
                                                     $remainSecs = 0;
                                                 }
+                                            @endphp
 
                                             {{-- Last run label --}}
                                             <div class="text-xs text-gray-500 mb-1">
