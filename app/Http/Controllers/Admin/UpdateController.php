@@ -154,31 +154,44 @@ class UpdateController extends Controller
             return back()->with('update_log', $finalLog)->with('error', 'Update Failed! Check the log below.');
         }
 
-        // Run optimizations
+        // Run optimizations - FORCE REFRESH FOR ALL SITES
         try {
-            $log[] = "==== SYSTEM CLEANUP ====";
+            $log[] = "==== SYSTEM AUTO-REFRESH ====";
+            
+            // Clear everything to fix 404s and logic issues
             Artisan::call('optimize:clear');
             Artisan::call('route:clear');
             Artisan::call('config:clear');
             Artisan::call('view:clear');
             Artisan::call('cache:clear');
-            $log[] = "System cache, routes, and config cleared successfully.";
             
-            // Cleanup any static robots.txt so dynamic SeoController route can work
+            // Re-cache for performance (optional, but optimize:clear is safer for shared hosting)
+            // Artisan::call('optimize'); 
+
+            $log[] = "✅ All system caches, routes, and configs have been refreshed.";
+            
+            // Cleanup any static robots.txt
             if (File::exists(public_path('robots.txt'))) {
                 File::delete(public_path('robots.txt'));
-                $log[] = "Cleaned up static robots.txt wrapper constraint.";
+                $log[] = "✅ Static robots.txt removed for dynamic SEO.";
             }
+
+            // Also delete the emergency fix scripts if they exist
+            if (File::exists(public_path('fix_routes.php'))) File::delete(public_path('fix_routes.php'));
+            if (File::exists(public_path('patch_routes.php'))) File::delete(public_path('patch_routes.php'));
+
         } catch (\Exception $e) { 
-            $log[] = "Cleanup warning: " . $e->getMessage();
+            $log[] = "⚠️ Cleanup warning: " . $e->getMessage();
         }
 
         // Run migrations
         try {
-            $log[] = "==== DATABASE MIGRATE ====";
+            $log[] = "==== DATABASE SYNC ====";
             Artisan::call('migrate', ['--force' => true]);
-            $log[] = Artisan::output();
-        } catch (\Exception $e) { }
+            $log[] = "✅ Database schema updated successfully.";
+        } catch (\Exception $e) { 
+            $log[] = "⚠️ Migration notice: " . $e->getMessage();
+        }
 
         $finalLog = implode("\n\n", array_filter($log));
 
