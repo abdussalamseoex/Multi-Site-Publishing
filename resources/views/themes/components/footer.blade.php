@@ -1,7 +1,7 @@
 @php
     $footerMenu = \App\Models\Menu::where('location', 'footer')->with('items')->first();
     $footerCategoriesMenu = \App\Models\Menu::where('location', 'footer_categories')->with('items')->first();
-    $aboutText = \App\Models\Setting::get('site_description', 'We are a premier publishing platform dedicated to bringing you the best content from talented authors around the globe.');
+    $aboutText = \App\Models\Setting::get('footer_description', \App\Models\Setting::get('site_tagline', 'The Ultimate News Experience bringing you the latest updates around the clock.'));
     $siteTitle = \App\Models\Setting::get('site_title', 'Publish.');
     $logo = \App\Models\Setting::get('site_logo');
 @endphp
