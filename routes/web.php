@@ -184,6 +184,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // AI Automation
     Route::get('/ai-writer', [\App\Http\Controllers\Admin\AIWriterController::class, 'index'])->name('ai-writer.index');
     Route::post('/ai-writer/generate', [\App\Http\Controllers\Admin\AIWriterController::class, 'generate'])->name('ai-writer.generate');
+    Route::post('/ai-writer/bulk-start', [\App\Http\Controllers\Admin\AIWriterController::class, 'startBulkCampaign'])->name('ai-writer.bulk-start');
+    Route::get('/ai-writer/campaigns', [\App\Http\Controllers\Admin\AIWriterController::class, 'campaigns'])->name('ai-writer.campaigns');
     
     Route::get('/ai-writer/news', [\App\Http\Controllers\Admin\AutoNewsController::class, 'index'])->name('ai-writer.news');
     Route::get('/ai-writer/news/logs', [\App\Http\Controllers\Admin\AutoNewsController::class, 'logs'])->name('ai-writer.news.logs');

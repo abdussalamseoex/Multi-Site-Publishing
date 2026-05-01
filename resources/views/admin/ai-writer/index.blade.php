@@ -57,6 +57,17 @@
                                     <option value="1500">Very Long (~1500 Words)</option>
                                 </select>
                             </div>
+
+                            <div>
+                                <label class="block font-medium text-sm text-gray-700 text-indigo-600 font-bold">Assign Author</label>
+                                <select id="user_id" class="mt-1 block w-full rounded-md border-indigo-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                    @foreach($users as $user)
+                                        <option value="{{ $user->id }}" {{ auth()->id() == $user->id ? 'selected' : '' }}>
+                                            {{ $user->name }} ({{ $user->role }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-4 rounded border">
@@ -107,37 +118,40 @@
                         </div>
                     </form>
 
-                    <!-- Progress Area -->
-                    <div id="progress-area" class="mt-8 hidden border-t pt-6">
-                        <div class="flex justify-between items-center mb-2">
-                            <h3 class="font-bold text-lg text-gray-900">Generation Progress <span id="progress-text" class="text-indigo-600 font-bold ml-2">0/0</span></h3>
-                            <div class="text-right">
-                                <span class="text-xs font-medium text-gray-500 uppercase tracking-wider block">Est. Time Per Post</span>
-                                <span id="estimated-time" class="text-sm font-bold text-indigo-600 block">~45-60 seconds</span>
-                            </div>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-3 mb-4 overflow-hidden">
-                            <div id="progress-bar" class="bg-indigo-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    <!-- Campaign Area -->
+                    <div id="campaign-area" class="mt-8">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-lg text-gray-900">Active Campaigns & History</h3>
+                            <button onclick="loadCampaigns()" class="text-indigo-600 text-sm hover:underline flex items-center">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                Refresh
+                            </button>
                         </div>
                         
-                        <div class="flex justify-between items-center bg-indigo-50 border border-indigo-100 rounded-lg p-3 mb-4">
-                            <div class="flex items-center space-x-2">
-                                <svg class="animate-spin w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                                <span class="text-sm font-semibold text-indigo-900">Current Post Processing Time:</span>
-                            </div>
-                            <span id="live-timer" class="text-lg font-mono font-bold text-indigo-700">00:00</span>
+                        <div class="overflow-x-auto bg-gray-50 rounded-xl border border-gray-100">
+                            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left font-bold text-gray-600 uppercase tracking-wider">Campaign</th>
+                                        <th class="px-4 py-3 text-left font-bold text-gray-600 uppercase tracking-wider">Progress</th>
+                                        <th class="px-4 py-3 text-left font-bold text-gray-600 uppercase tracking-wider">Status</th>
+                                        <th class="px-4 py-3 text-left font-bold text-gray-600 uppercase tracking-wider">Next Run</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="campaign-list" class="bg-white divide-y divide-gray-100">
+                                    <tr>
+                                        <td colspan="4" class="px-4 py-8 text-center text-gray-500">Loading campaigns...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-
-                        <ul id="log" class="bg-gray-900 text-green-400 font-mono text-sm p-4 rounded-lg h-64 overflow-y-auto space-y-1 shadow-inner leading-relaxed">
-                            <li>Waiting for initialization...</li>
-                        </ul>
                     </div>
 
-                    <!-- History Area -->
+                    <!-- History Area (Recently Generated Posts) -->
                     <div class="mt-10 border-t pt-6">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="font-bold text-lg">Recently Generated Posts</h3>
-                            <a href="{{ route('posts.index') }}" class="text-indigo-600 text-sm hover:underline">Manage All Posts &rarr;</a>
+                            <a href="{{ route('admin.posts.index') }}" class="text-indigo-600 text-sm hover:underline">Manage All Posts &rarr;</a>
                         </div>
                         
                         @if($recentPosts && count($recentPosts) > 0)
@@ -155,7 +169,7 @@
                                         @foreach($recentPosts as $p)
                                         <tr>
                                             <td class="px-4 py-2">
-                                                <a href="{{ route('posts.edit', $p->id) }}" class="text-indigo-600 hover:underline">{{ $p->title }}</a>
+                                                <a href="{{ route('admin.posts.edit', $p->id) }}" class="text-indigo-600 hover:underline">{{ $p->title }}</a>
                                             </td>
                                             <td class="px-4 py-2 text-gray-500">{{ $p->category->name ?? 'N/A' }}</td>
                                             <td class="px-4 py-2">
@@ -184,108 +198,127 @@
             e.preventDefault();
             
             const btn = document.getElementById('start-btn');
-            const logArea = document.getElementById('log');
-            const progressArea = document.getElementById('progress-area');
-            const progressBar = document.getElementById('progress-bar');
-            const progressText = document.getElementById('progress-text');
-            
             const keywordsRaw = document.getElementById('keywords').value;
             const keywords = keywordsRaw.split('\n').map(k => k.trim()).filter(k => k !== '');
             
             if (keywords.length === 0) return alert('Please enter at least one keyword.');
 
-            btn.disabled = true;
-            btn.innerText = 'Generating...';
-            progressArea.classList.remove('hidden');
-            logArea.innerHTML = '';
-            
             const category_id = document.getElementById('category_id').value;
             const language = document.getElementById('language').value;
             const generate_title = document.getElementById('generate_title').value;
             const article_length = parseInt(document.getElementById('article_length').value);
+            const user_id = document.getElementById('user_id').value;
             const featured_image_source = document.getElementById('featured_image_source').value;
             const in_content_images_count = document.getElementById('in_content_images_count').value;
             const in_content_image_source = document.getElementById('in_content_image_source').value;
             const status = document.getElementById('status').value;
             const schedule_interval = parseInt(document.getElementById('schedule_interval').value);
-            
-            let currentTime = new Date();
-            let timerInterval;
 
-            for (let i = 0; i < keywords.length; i++) {
-                const keyword = keywords[i];
-                logArea.innerHTML += `<li>[${new Date().toLocaleTimeString()}] Starting: <strong>${keyword}</strong>...</li>`;
-                logArea.scrollTop = logArea.scrollHeight;
+            btn.disabled = true;
+            btn.innerText = 'Starting Campaign...';
 
-                // Start Live Timer
-                let secondsElapsed = 0;
-                document.getElementById('live-timer').innerText = '00:00';
-                timerInterval = setInterval(() => {
-                    secondsElapsed++;
-                    let m = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
-                    let s = (secondsElapsed % 60).toString().padStart(2, '0');
-                    document.getElementById('live-timer').innerText = `${m}:${s}`;
-                }, 1000);
+            try {
+                const response = await fetch("{{ route('admin.ai-writer.bulk-start') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                    },
+                    body: JSON.stringify({
+                        keywords: keywordsRaw,
+                        category_id,
+                        language,
+                        generate_title,
+                        article_length,
+                        user_id,
+                        featured_image_source,
+                        in_content_images_count,
+                        in_content_image_source,
+                        status,
+                        schedule_interval
+                    })
+                });
 
-                let scheduleTime = null;
-                if (status === 'scheduled') {
-                    // add interval
-                    currentTime.setMinutes(currentTime.getMinutes() + schedule_interval);
-                    scheduleTime = currentTime.toISOString();
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(result.message);
+                    document.getElementById('keywords').value = '';
+                    loadCampaigns();
+                } else {
+                    alert('Error: ' + result.message);
                 }
-
-                try {
-                    const response = await fetch("{{ route('admin.ai-writer.generate') }}", {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
-                        },
-                        body: JSON.stringify({
-                            keyword,
-                            category_id,
-                            language,
-                            generate_title,
-                            article_length,
-                            featured_image_source,
-                            in_content_images_count,
-                            in_content_image_source,
-                            status,
-                            schedule_time: scheduleTime
-                        })
-                    });
-
-                    clearInterval(timerInterval);
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        logArea.innerHTML += `<li class="text-green-300">[${new Date().toLocaleTimeString()}] Success: ${result.message} (Took ${secondsElapsed}s)</li>`;
-                    } else {
-                        logArea.innerHTML += `<li class="text-red-400">[${new Date().toLocaleTimeString()}] Failed: ${result.message}</li>`;
-                    }
-                } catch (error) {
-                    clearInterval(timerInterval);
-                    console.error("AI Writer Error:", error);
-                    logArea.innerHTML += `<li class="text-red-400">[${new Date().toLocaleTimeString()}] Error: ${error.message}. Please check Developer Console (F12) for details.</li>`;
-                }
-
-                // Update Progress
-                let percent = ((i + 1) / keywords.length) * 100;
-                progressBar.style.width = percent + '%';
-                progressText.innerText = `${i + 1}/${keywords.length}`;
-                logArea.scrollTop = logArea.scrollHeight;
+            } catch (error) {
+                console.error("AI Writer Error:", error);
+                alert('An error occurred. Please check console.');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Start Generating';
             }
-
-            btn.disabled = false;
-            btn.innerText = 'Start Generating';
-            logArea.innerHTML += `<li><strong>[${new Date().toLocaleTimeString()}] All tasks completed!</strong></li>`;
-            logArea.scrollTop = logArea.scrollHeight;
         });
+
+        async function loadCampaigns() {
+            try {
+                const response = await fetch("{{ route('admin.ai-writer.campaigns') }}");
+                const data = await response.json();
+                const list = document.getElementById('campaign-list');
+                
+                if (data.data.length === 0) {
+                    list.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-500">No campaigns found.</td></tr>';
+                    return;
+                }
+
+                list.innerHTML = '';
+                data.data.forEach(c => {
+                    const progress = Math.round((c.processed_count / c.total_count) * 100);
+                    const statusClass = {
+                        'pending': 'bg-gray-100 text-gray-800',
+                        'processing': 'bg-blue-100 text-blue-800 animate-pulse',
+                        'completed': 'bg-green-100 text-green-800',
+                        'failed': 'bg-red-100 text-red-800',
+                        'paused': 'bg-yellow-100 text-yellow-800'
+                    }[c.status];
+
+                    const nextRun = c.next_run_at ? new Date(c.next_run_at).toLocaleString() : 'N/A';
+
+                    list.innerHTML += `
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-3">
+                                <div class="font-bold text-gray-900">${c.name}</div>
+                                <div class="flex items-center space-x-2 mt-1">
+                                    <span class="text-[10px] text-gray-400 uppercase font-bold">${c.category ? c.category.name : 'N/A'}</span>
+                                    <span class="text-[10px] text-gray-300">|</span>
+                                    <span class="text-[10px] text-indigo-400 font-bold">Author: ${c.user ? c.user.name : 'N/A'}</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center space-x-3">
+                                    <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                        <div class="bg-indigo-600 h-full rounded-full transition-all" style="width: ${progress}%"></div>
+                                    </div>
+                                    <span class="text-xs font-bold text-indigo-600">${c.processed_count}/${c.total_count}</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="px-2 py-1 text-[10px] font-bold rounded-full uppercase ${statusClass}">
+                                    ${c.status}
+                                </span>
+                                ${c.error_log ? `<div class="text-[10px] text-red-500 mt-1 truncate max-w-[150px]" title="${c.error_log}">Error: ${c.error_log.split('\n').pop()}</div>` : ''}
+                            </td>
+                            <td class="px-4 py-3 text-xs text-gray-500 font-mono">
+                                ${nextRun}
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error("Load Campaigns Error:", error);
+            }
+        }
+
+        // Auto refresh every 30 seconds
+        setInterval(loadCampaigns, 30000);
+        loadCampaigns();
     </script>
     @endpush
 </x-app-layout>

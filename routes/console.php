@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('news:fetch-auto')->everyFiveMinutes();
+Schedule::command('ai:bulk-process')->everyMinute();
