@@ -71,45 +71,36 @@ class AutoNewsController extends Controller
     {
         $source = AutoNewsSource::findOrFail($id);
 
+        // Extremely simple validation to prevent silent redirects
         $request->validate([
-            'name'                    => 'required|string|max:255',
-            'source_url'              => 'required|string', // Relaxed validation
-            'category_id'             => 'nullable|exists:categories,id',
-            'posts_per_run'           => 'required|integer|min:1',
-            'fetch_interval_hours'    => 'required|integer|min:1',
-            'daily_post_limit'        => 'nullable|integer|min:1',
-            'duration_days'           => 'nullable|integer|min:1',
-            'featured_image_source'   => 'required|string',
-            'in_content_images_count' => 'required|integer|min:0',
-            'in_content_image_source' => 'required|string',
-            'user_id'                 => 'nullable|exists:users,id',
+            'name'          => 'required|string',
+            'source_url'    => 'required|string',
+            'category_id'   => 'nullable|integer',
+            'user_id'       => 'nullable|integer',
         ]);
 
-        $data = [
-            'name'                    => $request->name,
-            'source_url'              => $request->source_url,
-            'category_id'             => $request->category_id,
-            'posts_per_run'           => $request->posts_per_run,
-            'fetch_interval_hours'    => $request->fetch_interval_hours,
-            'daily_post_limit'        => $request->daily_post_limit,
-            'use_smart_schedule'      => $request->has('use_smart_schedule'),
-            'featured_image_source'   => $request->featured_image_source,
-            'in_content_images_count' => $request->in_content_images_count,
-            'in_content_image_source' => $request->in_content_image_source,
-            'is_active'               => $request->has('is_active'),
-            'user_id'                 => $request->user_id,
-        ];
+        // Map all fields manually to ensure nothing is missed
+        $source->name                    = $request->name;
+        $source->source_url              = $request->source_url;
+        $source->category_id             = $request->category_id;
+        $source->user_id                 = $request->user_id;
+        $source->posts_per_run           = $request->posts_per_run ?? 2;
+        $source->fetch_interval_hours    = $request->fetch_interval_hours ?? 24;
+        $source->daily_post_limit        = $request->daily_post_limit;
+        $source->use_smart_schedule      = $request->has('use_smart_schedule');
+        $source->featured_image_source   = $request->featured_image_source;
+        $source->in_content_image_source = $request->in_content_image_source;
+        $source->in_content_images_count = $request->in_content_images_count ?? 0;
+        $source->is_active               = $request->has('is_active');
 
-        // Only update duration/expiry if provided
         if ($request->filled('duration_days')) {
-            $data['duration_days'] = (int) $request->duration_days;
-            $data['expires_at']    = now()->addDays($data['duration_days']);
+            $source->duration_days = (int) $request->duration_days;
+            $source->expires_at    = now()->addDays($source->duration_days);
         }
 
-        $source->update($data);
+        $source->save();
 
-        $categoryName = $source->category ? $source->category->name : 'No Category';
-        return back()->with('status', "Source '{$source->name}' updated successfully! [Category: {$categoryName}]");
+        return back()->with('status', "Source '{$source->name}' has been updated to category ID: {$source->category_id}");
     }
 
     public function destroy($id)
@@ -296,7 +287,7 @@ class AutoNewsController extends Controller
                     'fetch_interval_hours'    => 24,
                     'featured_image_source'   => 'original',
                     'in_content_images_count' => 1,
-                    'in_content_image_source' => 'stock',
+                    'in_content_image_source' => 'pexels',
                     'is_active'               => false,
                 ]);
                 $count++;
