@@ -51,8 +51,16 @@ class AutoNewsFetcher extends Command
 
             // Check if it's time to run (skip if manual)
             if (!$isManual && $source->last_run_at) {
-                $hoursSinceLastRun = $source->last_run_at->diffInHours(now());
-                if ($hoursSinceLastRun < $source->fetch_interval_hours) {
+                $interval = $source->fetch_interval_hours;
+                $limit    = $source->posts_per_run;
+
+                if ($source->use_smart_schedule && $source->daily_post_limit > 0) {
+                    $interval = 24 / $source->daily_post_limit;
+                    $limit    = 1; // In smart mode, we usually fetch one at a time to spread them out
+                }
+
+                $hoursSinceLastRun = $source->last_run_at->diffInHours(now(), false);
+                if ($hoursSinceLastRun < $interval) {
                     continue; // Skip, not time yet
                 }
             }
@@ -60,7 +68,11 @@ class AutoNewsFetcher extends Command
             $this->info("Processing source: " . $source->name);
 
             // Fetch RSS or HTML
-            $articlesToProcess = $this->extractLinksFromSource($source->source_url, $source->posts_per_run);
+            $limit = $source->posts_per_run;
+            if ($source->use_smart_schedule && $source->daily_post_limit > 0) {
+                $limit = 1;
+            }
+            $articlesToProcess = $this->extractLinksFromSource($source->source_url, $limit);
             
             if (empty($articlesToProcess)) {
                 $this->error("No articles found for source: " . $source->name);
@@ -90,9 +102,10 @@ class AutoNewsFetcher extends Command
     {
         try {
             $response = Http::withoutVerifying()->withHeaders([
-                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            ])->timeout(15)->get($url);
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                'Accept-Language' => 'en-US,en;q=0.9',
+            ])->timeout(20)->get($url);
             
             if (!$response->successful()) {
                 \Log::warning("AutoNewsFetcher: Failed to fetch source URL {$url}. Status: " . $response->status());
@@ -138,18 +151,30 @@ class AutoNewsFetcher extends Command
                             }
                             if (empty($desc)) $desc = (string)$item->description;
 
-                            // Get image from media:content or enclosure
+                            // Get image from media:content, media:thumbnail or enclosure
                             $image = null;
                             if (isset($namespaces['media'])) {
                                 $mediaNs = $item->children($namespaces['media']);
-                                if (isset($mediaNs->content['url'])) {
-                                    $image = (string)$mediaNs->content['url'];
-                                } elseif (isset($mediaNs->thumbnail['url'])) {
-                                    $image = (string)$mediaNs->thumbnail['url'];
+                                foreach (['content', 'thumbnail'] as $tag) {
+                                    if (isset($mediaNs->$tag)) {
+                                        foreach ($mediaNs->$tag as $node) {
+                                            $imgUrl = (string)($node['url'] ?? '');
+                                            if (!empty($imgUrl)) {
+                                                $image = $imgUrl;
+                                                break 2;
+                                            }
+                                        }
+                                    }
                                 }
                             }
-                            if (!$image && isset($item->enclosure['url'])) {
-                                $image = (string)$item->enclosure['url'];
+                            if (!$image && isset($item->enclosure)) {
+                                foreach ($item->enclosure as $enclosure) {
+                                    $imgUrl = (string)($enclosure['url'] ?? '');
+                                    if (!empty($imgUrl)) {
+                                        $image = $imgUrl;
+                                        break;
+                                    }
+                                }
                             }
 
                             $articles[] = [
@@ -271,7 +296,11 @@ class AutoNewsFetcher extends Command
                     if (!$originalImage) {
                         if (preg_match('/<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']/i', $html, $m) ||
                             preg_match('/<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']/i', $html, $m) ||
-                            preg_match('/<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\']([^"\']+)["\']/i', $html, $m)) {
+                            preg_match('/<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\']([^"\']+)["\']/i', $html, $m) ||
+                            preg_match('/<meta[^>]+property=["\']og:image:url["\'][^>]+content=["\']([^"\']+)["\']/i', $html, $m) ||
+                            preg_match('/<meta[^>]+name=["\']image["\'][^>]+content=["\']([^"\']+)["\']/i', $html, $m) ||
+                            preg_match('/<meta[^>]+itemprop=["\']image["\'][^>]+content=["\']([^"\']+)["\']/i', $html, $m) ||
+                            preg_match('/<link[^>]+rel=["\']image_src["\'][^>]+href=["\']([^"\']+)["\']/i', $html, $m)) {
                             $originalImage = $m[1];
                         }
                     }
@@ -378,7 +407,10 @@ class AutoNewsFetcher extends Command
                         $featuredImageUrl = $imgData['url'];
                         $featuredImageCredit = $imgData['credit'];
                     }
-                } else {
+                }
+
+                // Fallback to original image if stock fetch failed or was 'none'
+                if (!$featuredImageUrl) {
                     $featuredImageUrl = $originalImage;
                 }
 

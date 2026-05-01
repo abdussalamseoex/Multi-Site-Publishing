@@ -171,7 +171,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block font-medium text-sm text-gray-700">Target Category</label>
                                 <select name="category_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
@@ -189,13 +189,66 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div>
-                                <label class="block font-medium text-sm text-gray-700">Posts Per Run</label>
-                                <input type="number" name="posts_per_run" value="5" min="1" max="20" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        </div>
+
+                        <!-- Smart Scheduling Section -->
+                        <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 shadow-sm mb-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="text-indigo-900 font-bold flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                    স্মার্ট শিডিউল (Smart Schedule)
+                                </h4>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="use_smart_schedule" id="use_smart_schedule" value="1" checked class="sr-only peer" onchange="toggleSmartSchedule()">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                    <span class="ml-3 text-sm font-medium text-indigo-900">Active</span>
+                                </label>
                             </div>
-                            <div>
-                                <label class="block font-medium text-sm text-gray-700">Fetch Interval (Hours)</label>
-                                <input type="number" name="fetch_interval_hours" value="24" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+
+                            <div id="smart_schedule_section">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                                    <div>
+                                        <label class="block font-medium text-sm text-indigo-800 mb-1">ডেইলি কয়টি পোস্ট চান? (Daily Goal)</label>
+                                        <div class="relative">
+                                            <input type="number" name="daily_post_limit" id="daily_post_limit" value="10" min="1" max="100" 
+                                                   class="block w-full rounded-lg border-indigo-300 pl-4 pr-12 py-3 text-lg font-bold text-indigo-900 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                                                   oninput="calculateSmartSchedule()">
+                                            <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                                                <span class="text-indigo-400 font-medium">Post/Day</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-white rounded-lg p-4 border border-indigo-100 flex items-center gap-4 shadow-inner">
+                                        <div class="bg-indigo-100 p-2 rounded-full">
+                                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-indigo-400 font-bold uppercase tracking-wider">শিডিউল প্রিভিউ (Preview)</p>
+                                            <p id="schedule_preview" class="text-sm font-semibold text-indigo-800">সিস্টেম প্রতি ২.৪ ঘণ্টা অন্তর ১টি করে পোস্ট করবে।</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-6">
+                                <button type="button" onclick="document.getElementById('advanced_scheduling').classList.toggle('hidden')" 
+                                        class="text-xs font-bold text-indigo-500 hover:text-indigo-700 uppercase tracking-widest flex items-center gap-1 focus:outline-none">
+                                    Advanced Scheduling
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                </button>
+
+                                <div id="advanced_scheduling" class="hidden mt-4 pt-4 border-t border-indigo-100">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label class="block font-medium text-sm text-gray-700">Articles to fetch each time</label>
+                                            <input type="number" name="posts_per_run" id="posts_per_run" value="5" min="1" max="20" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block font-medium text-sm text-gray-700">Fetch Frequency (Hours)</label>
+                                            <input type="number" name="fetch_interval_hours" id="fetch_interval_hours" value="24" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -327,14 +380,19 @@
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ $source->posts_per_run }} posts / {{ $source->fetch_interval_hours }}h
+                                            @if($source->use_smart_schedule)
+                                                <div class="font-bold text-indigo-600">{{ $source->daily_post_limit }} posts/day</div>
+                                                <div class="text-[10px] text-indigo-400 uppercase">Every {{ round(24/$source->daily_post_limit, 1) }}h</div>
+                                            @else
+                                                {{ $source->posts_per_run }} posts / {{ $source->fetch_interval_hours }}h
+                                            @endif
                                         </td>
                                         <td class="px-6 py-4 text-sm">
-                                            @php
                                                 $lastRun   = $source->last_run_at;
-                                                $intervalH = $source->fetch_interval_hours;
+                                                $intervalH = ($source->use_smart_schedule && $source->daily_post_limit > 0) ? (24 / $source->daily_post_limit) : $source->fetch_interval_hours;
+                                                
                                                 if ($lastRun) {
-                                                    $nextRun     = $lastRun->copy()->addHours($intervalH);
+                                                    $nextRun     = $lastRun->copy()->addMinutes($intervalH * 60);
                                                     $isDue       = $nextRun->isPast();
                                                     $totalSecs   = $intervalH * 3600;
                                                     $elapsedSecs = min($lastRun->diffInSeconds(now()), $totalSecs);
@@ -346,7 +404,6 @@
                                                     $nextRun    = null;
                                                     $remainSecs = 0;
                                                 }
-                                            @endphp
 
                                             {{-- Last run label --}}
                                             <div class="text-xs text-gray-500 mb-1">
@@ -582,6 +639,40 @@
         tick();
         setInterval(tick, 1000);
     })();
+
+    function toggleSmartSchedule() {
+        var isSmart = document.getElementById('use_smart_schedule').checked;
+        var section = document.getElementById('smart_schedule_section');
+        if (isSmart) {
+            section.classList.remove('opacity-50');
+            section.querySelectorAll('input').forEach(i => i.disabled = false);
+            calculateSmartSchedule();
+        } else {
+            section.classList.add('opacity-50');
+            section.querySelectorAll('input').forEach(i => i.disabled = true);
+        }
+    }
+
+    function calculateSmartSchedule() {
+        var goal = document.getElementById('daily_post_limit').value;
+        var preview = document.getElementById('schedule_preview');
+        var postsPerRun = document.getElementById('posts_per_run');
+        var interval = document.getElementById('fetch_interval_hours');
+
+        if (goal > 0) {
+            var hours = (24 / goal).toFixed(1);
+            preview.innerHTML = '✅ সিস্টেম প্রতি <strong>' + hours + ' ঘণ্টা</strong> অন্তর ১টি করে পোস্ট অটোমেটিক পাবলিশ করবে।';
+            
+            // Background sync for the existing interval logic
+            postsPerRun.value = 1;
+            interval.value = Math.max(1, Math.round(hours));
+        }
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        calculateSmartSchedule();
+    });
     </script>
     @endpush
 </x-app-layout>

@@ -12,6 +12,8 @@ class AutoNewsSource extends Model
         'category_id',
         'posts_per_run',
         'fetch_interval_hours',
+        'daily_post_limit',
+        'use_smart_schedule',
         'duration_days',
         'expires_at',
         'last_run_at',
@@ -26,6 +28,7 @@ class AutoNewsSource extends Model
         'last_run_at' => 'datetime',
         'expires_at'  => 'datetime',
         'is_active'   => 'boolean',
+        'use_smart_schedule' => 'boolean',
     ];
 
     public function category()
