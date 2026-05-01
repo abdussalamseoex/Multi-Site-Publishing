@@ -25,7 +25,7 @@
             <article class="block w-full h-full relative">
                 <a href="{{ route('frontend.post', $mainHero->slug) }}" class="absolute inset-0 z-10" aria-label="{{ $mainHero->title }}"></a>
                 @if($mainHero->featured_image)
-                    <img src="{{ Str::startsWith($mainHero->featured_image, 'http') ? $mainHero->featured_image : url($mainHero->featured_image) }}" class="w-full h-full object-cover hover-img">
+                    <img src="{{ Str::startsWith($mainHero->featured_image, 'http') ? $mainHero->featured_image : url($mainHero->featured_image) }}" class="absolute inset-0 w-full h-full object-cover hover-img">
                 @endif
                 <div class="absolute inset-0 overlay-gradient"></div>
                 <div class="absolute bottom-0 left-0 p-6 md:p-8 w-full z-20">
@@ -49,7 +49,7 @@
                 <article class="block w-full h-full relative">
                     <a href="{{ route('frontend.post', $subHero->slug) }}" class="absolute inset-0 z-10" aria-label="{{ $subHero->title }}"></a>
                     @if($subHero->featured_image)
-                        <img src="{{ Str::startsWith($subHero->featured_image, 'http') ? $subHero->featured_image : url($subHero->featured_image) }}" class="w-full h-full object-cover hover-img">
+                        <img src="{{ Str::startsWith($subHero->featured_image, 'http') ? $subHero->featured_image : url($subHero->featured_image) }}" class="absolute inset-0 w-full h-full object-cover hover-img">
                     @endif
                     <div class="absolute inset-0 overlay-gradient opacity-90"></div>
                     <div class="absolute bottom-0 left-0 p-4 z-20">

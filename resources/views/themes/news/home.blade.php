@@ -84,6 +84,7 @@
                 @php unset($blocks[$index]); @endphp
             @endif
         @endforeach
+    </div>
 
     <!-- MAIN CONTENT AREA -->
     <div class="max-w-[1200px] mx-auto px-4 mt-6">
