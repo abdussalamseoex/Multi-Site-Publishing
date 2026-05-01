@@ -36,6 +36,16 @@ class Post extends Model
      */
     protected static function booted()
     {
+        static::creating(function ($post) {
+            if ($post->user_id) {
+                $user = \App\Models\User::find($post->user_id);
+                // If user has a specific dofollow default set, apply it to the post
+                if ($user && isset($user->dofollow_default)) {
+                    $post->is_dofollow = (bool)$user->dofollow_default;
+                }
+            }
+        });
+
         static::saving(function ($post) {
             if ($post->content) {
                 $post->content = self::processLinks($post->content, $post->is_dofollow);

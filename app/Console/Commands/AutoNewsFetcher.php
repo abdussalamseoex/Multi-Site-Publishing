@@ -417,9 +417,10 @@ class AutoNewsFetcher extends Command
                 // In-Content Images
                 $content = $contentData['content'];
                 if ($imageCount > 0 && $source->in_content_image_source !== 'none') {
-                    for ($i = 0; $i < $imageCount; $i++) {
-                        $imgData = $this->fetchImage($keyword . ' part ' . ($i+1), $source->in_content_image_source);
-                        if ($imgData) {
+                    $batchImages = $this->fetchImage($keyword, $source->in_content_image_source, $imageCount);
+                    
+                    if (!empty($batchImages) && is_array($batchImages)) {
+                        foreach ($batchImages as $i => $imgData) {
                             $imgUrl = $imgData['url'];
                             $credit = $imgData['credit'];
                             if (!empty($credit)) {
@@ -507,8 +508,10 @@ class AutoNewsFetcher extends Command
         }
     }
 
-    private function fetchImage($query, $sourceName)
+    private function fetchImage($query, $sourceName, $count = 1)
     {
+        $images = [];
+
         if ($sourceName === 'pexels') {
             $pexelsKey = Setting::get('pexels_api_key');
             if (!$pexelsKey) return null;
@@ -517,16 +520,16 @@ class AutoNewsFetcher extends Command
                 'Authorization' => $pexelsKey
             ])->get("https://api.pexels.com/v1/search", [
                 'query' => $query,
-                'per_page' => 1,
+                'per_page' => $count,
                 'orientation' => 'landscape'
             ]);
 
             if ($response->successful()) {
                 $data = $response->json();
-                if (isset($data['photos'][0]['src']['large'])) {
-                    $photographer = $data['photos'][0]['photographer'] ?? 'Pexels';
-                    $url = $data['photos'][0]['url'] ?? 'https://www.pexels.com';
-                    return ['url' => $data['photos'][0]['src']['large'], 'credit' => "<a href='{$url}' target='_blank' rel='nofollow'>{$photographer} on Pexels</a>"];
+                foreach ($data['photos'] ?? [] as $photo) {
+                    $photographer = $photo['photographer'] ?? 'Pexels';
+                    $url = $photo['url'] ?? 'https://www.pexels.com';
+                    $images[] = ['url' => $photo['src']['large'], 'credit' => "<a href='{$url}' target='_blank' rel='nofollow'>{$photographer} on Pexels</a>"];
                 }
             }
         } elseif ($sourceName === 'unsplash') {
@@ -537,51 +540,53 @@ class AutoNewsFetcher extends Command
                 'Authorization' => 'Client-ID ' . $unsplashKey
             ])->get("https://api.unsplash.com/search/photos", [
                 'query' => $query,
-                'per_page' => 1,
+                'per_page' => $count,
                 'orientation' => 'landscape'
             ]);
 
             if ($response->successful()) {
                 $data = $response->json();
-                if (isset($data['results'][0]['urls']['regular'])) {
-                    $photographer = $data['results'][0]['user']['name'] ?? 'Unsplash';
-                    $url = $data['results'][0]['links']['html'] ?? 'https://unsplash.com';
-                    return ['url' => $data['results'][0]['urls']['regular'], 'credit' => "<a href='{$url}' target='_blank' rel='nofollow'>{$photographer} on Unsplash</a>"];
+                foreach ($data['results'] ?? [] as $result) {
+                    $photographer = $result['user']['name'] ?? 'Unsplash';
+                    $url = $result['links']['html'] ?? 'https://unsplash.com';
+                    $images[] = ['url' => $result['urls']['regular'], 'credit' => "<a href='{$url}' target='_blank' rel='nofollow'>{$photographer} on Unsplash</a>"];
                 }
             }
         } elseif ($sourceName === 'dalle') {
-            $openaiKey = Setting::get('openai_api_key');
-            if (!$openaiKey) return null;
+            for ($i = 0; $i < $count; $i++) {
+                $openaiKey = Setting::get('openai_api_key');
+                if (!$openaiKey) break;
 
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $openaiKey,
-                'Content-Type' => 'application/json',
-            ])->timeout(60)->post('https://api.openai.com/v1/images/generations', [
-                'model' => 'dall-e-3',
-                'prompt' => 'A highly realistic, photographic, editorial style news image for: ' . $query . '. Do NOT include any text, words, letters, signatures, or typography in the image. Keep it purely visual and high quality.',
-                'n' => 1,
-                'size' => '1024x1024'
-            ]);
+                $response = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $openaiKey,
+                    'Content-Type' => 'application/json',
+                ])->timeout(60)->post('https://api.openai.com/v1/images/generations', [
+                    'model' => 'dall-e-3',
+                    'prompt' => 'A highly realistic, photographic, editorial style news image for: ' . $query . '. Do NOT include any text, words, letters, signatures, or typography in the image. Keep it purely visual and high quality.',
+                    'n' => 1,
+                    'size' => '1024x1024'
+                ]);
 
-            if ($response->successful()) {
-                $data = $response->json();
-                if (isset($data['data'][0]['url'])) {
-                    $tempUrl = $data['data'][0]['url'];
-                    $imageContent = file_get_contents($tempUrl);
-                    if ($imageContent) {
-                        $filename = 'auto_img_' . time() . '_' . uniqid() . '.jpg';
-                        $path = public_path('uploads/posts/' . $filename);
-                        if (!file_exists(public_path('uploads/posts'))) {
-                            mkdir(public_path('uploads/posts'), 0777, true);
+                if ($response->successful()) {
+                    $data = $response->json();
+                    if (isset($data['data'][0]['url'])) {
+                        $tempUrl = $data['data'][0]['url'];
+                        $imageContent = @file_get_contents($tempUrl);
+                        if ($imageContent) {
+                            $filename = 'auto_img_' . time() . '_' . uniqid() . '.jpg';
+                            $path = public_path('uploads/posts/' . $filename);
+                            if (!file_exists(public_path('uploads/posts'))) {
+                                mkdir(public_path('uploads/posts'), 0777, true);
+                            }
+                            file_put_contents($path, $imageContent);
+                            $images[] = ['url' => '/uploads/posts/' . $filename, 'credit' => ""];
                         }
-                        file_put_contents($path, $imageContent);
-                        return ['url' => '/uploads/posts/' . $filename, 'credit' => ""];
                     }
                 }
             }
         }
 
-        return null;
+        return $count === 1 ? ($images[0] ?? null) : $images;
     }
 
     /**

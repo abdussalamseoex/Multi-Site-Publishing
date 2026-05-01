@@ -43,7 +43,8 @@
         .prose a { color: var(--primary); text-decoration: none; font-weight: 600; transition: color 0.2s; }
         .prose a:hover { color: #111; text-decoration: underline; }
         .prose blockquote { border-left: 3px solid var(--primary); padding-left: 1.5rem; font-style: italic; color: #555; font-size: 1.4rem; margin: 3rem 0; font-weight: 500;}
-        .prose ul { padding-left: 1.5rem; list-style-type: square; margin-bottom: 1.5rem; }
+        .prose ul { padding-left: 1.5rem; list-style-type: disc; margin-bottom: 1.5rem; }
+        .prose ol { padding-left: 1.5rem; list-style-type: decimal; margin-bottom: 1.5rem; }
         .prose li { margin-bottom: 0.5rem; }
     </style>
     {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
