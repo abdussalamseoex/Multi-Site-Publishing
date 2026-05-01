@@ -216,56 +216,31 @@ class AutoNewsController extends Controller
      */
     public function importPredefinedSources()
     {
-        // Ensure 15 US Authors exist first
-        $this->importAuthors();
-        $authors = \App\Models\User::where('role', 'user')->where('email', 'LIKE', '%@' . request()->getHost())->take(15)->get();
-        $authorCount = $authors->count();
-
-        // ONLY BBC & CoinTelegraph (Mapped to User Categories)
         $sources = [
-            // BBC News
-            ['name' => 'BBC World News', 'url' => 'http://feeds.bbci.co.uk/news/world/rss.xml', 'target' => 'Lifestyle & Culture'],
-            ['name' => 'BBC Technology', 'url' => 'http://feeds.bbci.co.uk/news/technology/rss.xml', 'target' => 'Technology & IT'],
-            ['name' => 'BBC Business', 'url' => 'http://feeds.bbci.co.uk/news/business/rss.xml', 'target' => 'Business & Finance'],
-            ['name' => 'BBC Science', 'url' => 'http://feeds.bbci.co.uk/news/science_and_environment/rss.xml', 'target' => 'Technology & IT'],
-            ['name' => 'BBC Health', 'url' => 'http://feeds.bbci.co.uk/news/health/rss.xml', 'target' => 'Health & Fitness'],
-            ['name' => 'BBC Entertainment', 'url' => 'http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml', 'target' => 'Entertainment & Pop Culture'],
-            
-            // CoinTelegraph (Crypto)
-            ['name' => 'CoinTelegraph Bitcoin', 'url' => 'https://cointelegraph.com/rss/tag/bitcoin', 'target' => 'Alt News'],
-            ['name' => 'CoinTelegraph Ethereum', 'url' => 'https://cointelegraph.com/rss/tag/ethereum', 'target' => 'Alt News'],
-            ['name' => 'CoinTelegraph Altcoins', 'url' => 'https://cointelegraph.com/rss/tag/altcoin', 'target' => 'Alt News'],
-            ['name' => 'CoinTelegraph Blockchain', 'url' => 'https://cointelegraph.com/rss/tag/blockchain', 'target' => 'Alt News'],
-            ['name' => 'CoinTelegraph NFT', 'url' => 'https://cointelegraph.com/rss/tag/nft', 'target' => 'Alt News'],
-            ['name' => 'CoinTelegraph DeFi', 'url' => 'https://cointelegraph.com/rss/tag/defi', 'target' => 'Alt News'],
-            ['name' => 'CoinTelegraph Business', 'url' => 'https://cointelegraph.com/rss/tag/business', 'target' => 'Business & Finance'],
-            ['name' => 'CoinTelegraph Policy', 'url' => 'https://cointelegraph.com/rss/tag/policy-and-regulation', 'target' => 'Law & Legal'],
+            ['name' => 'TechCrunch', 'url' => 'https://techcrunch.com/feed/', 'target' => 'Technology & IT'],
+            ['name' => 'The Verge', 'url' => 'https://www.theverge.com/rss/index.xml', 'target' => 'Technology & IT'],
+            ['name' => 'Gizmodo', 'url' => 'https://gizmodo.com/rss', 'target' => 'Technology & IT'],
+            ['name' => 'Wired', 'url' => 'https://www.wired.com/feed/rss', 'target' => 'Technology & IT'],
+            ['name' => 'Digital Trends', 'url' => 'https://www.digitaltrends.com/feed/', 'target' => 'Technology & IT'],
+            ['name' => 'Mashable', 'url' => 'https://mashable.com/feeds/rss/all', 'target' => 'Entertainment & Pop Culture'],
+            ['name' => 'Engadget', 'url' => 'https://www.engadget.com/rss.xml', 'target' => 'Technology & IT'],
+            ['name' => 'Ars Technica', 'url' => 'https://feeds.arstechnica.com/arstechnica/index', 'target' => 'Technology & IT'],
+            ['name' => 'The Next Web', 'url' => 'https://thenextweb.com/feed', 'target' => 'Technology & IT'],
+            ['name' => 'CNET', 'url' => 'https://www.cnet.com/rss/news/', 'target' => 'Technology & IT'],
         ];
 
-        // Ensure 'Alt News' exists as fallback
-        $altNewsCategory = Category::where('name', 'Alt News')->first();
-        if (!$altNewsCategory) {
-            $altNewsCategory = Category::create([
-                'name' => 'Alt News',
-                'slug' => 'alt-news'
-            ]);
-        }
+        $altNewsCategory = Category::where('name', 'Alt News')->first() ?? Category::create(['name' => 'Alt News', 'slug' => 'alt-news']);
+        $defaultUser = \App\Models\User::where('role', 'admin')->first() ?? \App\Models\User::first();
 
         $count = 0;
-        foreach ($sources as $index => $sourceData) {
+        foreach ($sources as $sourceData) {
             if (!AutoNewsSource::where('source_url', $sourceData['url'])->exists()) {
-                
-                // Try to find matching category from user's list
                 $category = Category::where('name', $sourceData['target'])->first() ?? $altNewsCategory;
-
-                // Distribute authors (cycle through the 15 authors)
-                $assignedAuthor = ($authorCount > 0) ? $authors[$index % $authorCount] : (\App\Models\User::where('role', 'admin')->first() ?? \App\Models\User::first());
-
                 AutoNewsSource::create([
                     'name'                    => $sourceData['name'],
                     'source_url'              => $sourceData['url'],
                     'category_id'             => $category->id,
-                    'user_id'                 => $assignedAuthor->id,
+                    'user_id'                 => $defaultUser->id,
                     'posts_per_run'           => 2,
                     'fetch_interval_hours'    => 24,
                     'featured_image_source'   => 'original',
@@ -277,7 +252,40 @@ class AutoNewsController extends Controller
             }
         }
 
-        return back()->with('status', "Successfully imported {$count} BBC & CoinTelegraph sources. Mapped to your categories and assigned to authors.");
+        return back()->with('status', "Successfully imported {$count} premium global sources.");
+    }
+
+    /**
+     * Specialized import for BBC and CoinTelegraph with selection
+     */
+    public function importSpecializedSources(Request $request)
+    {
+        $request->validate([
+            'sources'     => 'required|array',
+            'category_id' => 'required|exists:categories,id',
+            'user_id'     => 'required|exists:users,id',
+        ]);
+
+        $count = 0;
+        foreach ($request->sources as $sourceName => $url) {
+            if (!AutoNewsSource::where('source_url', $url)->exists()) {
+                AutoNewsSource::create([
+                    'name'                    => $sourceName,
+                    'source_url'              => $url,
+                    'category_id'             => $request->category_id,
+                    'user_id'                 => $request->user_id,
+                    'posts_per_run'           => 2,
+                    'fetch_interval_hours'    => 24,
+                    'featured_image_source'   => 'original',
+                    'in_content_images_count' => 1,
+                    'in_content_image_source' => 'stock',
+                    'is_active'               => false,
+                ]);
+                $count++;
+            }
+        }
+
+        return back()->with('status', "Successfully imported {$count} specialized sources.");
     }
 
     /**

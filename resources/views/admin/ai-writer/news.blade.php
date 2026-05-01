@@ -14,43 +14,119 @@
                 </div>
             @endif
 
-            <!-- Simplified Automation & Bulk Import -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-100">
-                    <div class="p-6 bg-white">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                            </div>
-                            <h3 class="font-bold text-lg text-gray-900">Import Global News Sources</h3>
+            <!-- Bulk Operations & Automation -->
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-100">
+                <div class="p-8 bg-gradient-to-br from-white to-indigo-50/30">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="p-3 bg-indigo-100 text-indigo-600 rounded-xl shadow-inner">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                         </div>
-                        <p class="text-sm text-gray-600 mb-6 leading-relaxed">Instantly import 15+ world-class news feeds. The system will <strong>automatically map</strong> them to your existing categories (World, Tech, Crypto, etc.).</p>
-                        
-                        <form action="{{ route('admin.ai-writer.news.import-predefined') }}" method="POST" onsubmit="return confirm('Import and auto-map all global news sources?');">
-                            @csrf
-                            <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2.5 bg-blue-600 border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:scale-95 transition-all shadow-md">
-                                Import & Auto-Map Sources
-                            </button>
-                        </form>
+                        <div>
+                            <h3 class="font-extrabold text-xl text-gray-900 tracking-tight">Bulk Operations & Automation</h3>
+                            <p class="text-sm text-gray-500 font-medium">Professional tools for multi-site content management</p>
+                        </div>
                     </div>
-                </div>
-
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-100">
-                    <div class="p-6 bg-white">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    
+                    <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                        {{-- Premium Tech Sources --}}
+                        <div class="xl:col-span-1 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between transition-all hover:shadow-md">
+                            <div>
+                                <h4 class="text-xs font-extrabold text-indigo-600 mb-4 uppercase tracking-widest flex items-center">
+                                    <span class="w-2 h-2 bg-indigo-600 rounded-full mr-2"></span>
+                                    Premium Tech Bundle
+                                </h4>
+                                <p class="text-xs text-gray-500 leading-relaxed mb-6">Instantly import the top 10 tech giants including <strong>TechCrunch, The Verge, Wired, and Gizmodo</strong>. Optimized for Technology & IT categories.</p>
                             </div>
-                            <h3 class="font-bold text-lg text-gray-900">US Author Generator</h3>
+                            <form action="{{ route('admin.ai-writer.news.import-predefined') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 active:scale-95">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                    Import 10 Tech Giants
+                                </button>
+                            </form>
                         </div>
-                        <p class="text-sm text-gray-600 mb-6 leading-relaxed">Automatically generate <strong>15 professional US-based author profiles</strong> to distribute your content professionally across multiple personas.</p>
-                        
-                        <form action="{{ route('admin.ai-writer.news.import-authors') }}" method="POST" onsubmit="return confirm('Generate 15 professional US authors?');">
-                            @csrf
-                            <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2.5 bg-emerald-600 border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 active:scale-95 transition-all shadow-md">
-                                Generate 15 Authors Now
-                            </button>
-                        </form>
+
+                        {{-- Specialized Selective Import (BBC & CoinTelegraph) --}}
+                        <div class="xl:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
+                            <h4 class="text-xs font-extrabold text-emerald-600 mb-4 uppercase tracking-widest flex items-center">
+                                <span class="w-2 h-2 bg-emerald-600 rounded-full mr-2"></span>
+                                Selective Global Import (BBC & Crypto)
+                            </h4>
+                            
+                            <form action="{{ route('admin.ai-writer.news.import-specialized') }}" method="POST" class="space-y-6">
+                                @csrf
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {{-- Sources Selection --}}
+                                    <div class="space-y-3">
+                                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Select News Feeds</label>
+                                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 max-h-40 overflow-y-auto custom-scrollbar">
+                                            <div class="grid grid-cols-1 gap-2">
+                                                @php
+                                                    $specialSources = [
+                                                        'BBC World' => 'http://feeds.bbci.co.uk/news/world/rss.xml',
+                                                        'BBC Tech' => 'http://feeds.bbci.co.uk/news/technology/rss.xml',
+                                                        'BBC Business' => 'http://feeds.bbci.co.uk/news/business/rss.xml',
+                                                        'BBC Science' => 'http://feeds.bbci.co.uk/news/science_and_environment/rss.xml',
+                                                        'CoinTelegraph Bitcoin' => 'https://cointelegraph.com/rss/tag/bitcoin',
+                                                        'CoinTelegraph Ethereum' => 'https://cointelegraph.com/rss/tag/ethereum',
+                                                        'CoinTelegraph NFT' => 'https://cointelegraph.com/rss/tag/nft',
+                                                        'CoinTelegraph DeFi' => 'https://cointelegraph.com/rss/tag/defi',
+                                                    ];
+                                                @endphp
+                                                @foreach($specialSources as $name => $url)
+                                                    <label class="flex items-center p-2 rounded-lg hover:bg-white transition-colors cursor-pointer group">
+                                                        <input type="checkbox" name="sources[{{ $name }}]" value="{{ $url }}" class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 shadow-sm">
+                                                        <span class="ml-2 text-xs font-semibold text-gray-600 group-hover:text-gray-900">{{ $name }}</span>
+                                                    </label>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- Target Mapping --}}
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Target Category</label>
+                                            <select name="category_id" required class="w-full rounded-xl border-gray-200 text-xs focus:ring-emerald-500 focus:border-emerald-500 shadow-sm transition-all">
+                                                @foreach($categories as $cat)
+                                                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Assign Author</label>
+                                            <select name="user_id" required class="w-full rounded-xl border-gray-200 text-xs focus:ring-emerald-500 focus:border-emerald-500 shadow-sm transition-all">
+                                                @foreach($users as $user)
+                                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-50 active:scale-95 mt-2">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                            Import Selected
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        {{-- Generate Authors Section --}}
+                        <div class="xl:col-span-3 bg-gray-50 p-6 rounded-2xl border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div class="flex items-center gap-4">
+                                <div class="p-3 bg-white text-purple-600 rounded-xl shadow-sm">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-gray-800">US Author Profile Generator</h4>
+                                    <p class="text-xs text-gray-500">Generate 15 realistic US author profiles to distribute your automated content.</p>
+                                </div>
+                            </div>
+                            <form action="{{ route('admin.ai-writer.news.import-authors') }}" method="POST" class="w-full md:w-auto">
+                                @csrf
+                                <button type="submit" class="w-full md:w-auto inline-flex items-center justify-center px-8 py-3 bg-purple-600 text-white rounded-xl font-bold text-sm hover:bg-purple-700 transition-all shadow-lg shadow-purple-50 active:scale-95">
+                                    Generate 15 Authors Now
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
