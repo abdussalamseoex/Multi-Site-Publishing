@@ -167,4 +167,111 @@ class AutoNewsController extends Controller
 
         return view('admin.ai-writer.news-logs', compact('posts', 'sources'));
     }
+
+    /**
+     * Bulk import 15 US-based authors (Male & Female)
+     */
+    public function importAuthors()
+    {
+        $authors = [
+            ['name' => 'James Smith', 'gender' => 'male'],
+            ['name' => 'Michael Johnson', 'gender' => 'male'],
+            ['name' => 'Robert Williams', 'gender' => 'male'],
+            ['name' => 'David Brown', 'gender' => 'male'],
+            ['name' => 'William Jones', 'gender' => 'male'],
+            ['name' => 'Christopher Garcia', 'gender' => 'male'],
+            ['name' => 'Matthew Miller', 'gender' => 'male'],
+            ['name' => 'Mary Davis', 'gender' => 'female'],
+            ['name' => 'Patricia Rodriguez', 'gender' => 'female'],
+            ['name' => 'Jennifer Martinez', 'gender' => 'female'],
+            ['name' => 'Linda Hernandez', 'gender' => 'female'],
+            ['name' => 'Elizabeth Lopez', 'gender' => 'female'],
+            ['name' => 'Barbara Gonzalez', 'gender' => 'female'],
+            ['name' => 'Susan Wilson', 'gender' => 'female'],
+            ['name' => 'Jessica Anderson', 'gender' => 'female'],
+        ];
+
+        $count = 0;
+        foreach ($authors as $authorData) {
+            $email = strtolower(str_replace(' ', '.', $authorData['name'])) . '@' . request()->getHost();
+            
+            // Check if user already exists
+            if (!\App\Models\User::where('email', $email)->exists()) {
+                \App\Models\User::create([
+                    'name'     => $authorData['name'],
+                    'email'    => $email,
+                    'password' => \Illuminate\Support\Facades\Hash::make(Str::random(12)),
+                    'role'     => 'user', // Default role for authors
+                ]);
+                $count++;
+            }
+        }
+
+        return back()->with('status', "Successfully imported {$count} US-based authors.");
+    }
+
+    /**
+     * Import BBC and CoinTelegraph Predefined Sources
+     */
+    public function importPredefinedSources()
+    {
+        $predefined = [
+            [
+                'name'       => 'BBC News - World',
+                'source_url' => 'http://feeds.bbci.co.uk/news/world/rss.xml',
+                'category'   => 'World News'
+            ],
+            [
+                'name'       => 'BBC News - Business',
+                'source_url' => 'http://feeds.bbci.co.uk/news/business/rss.xml',
+                'category'   => 'Business'
+            ],
+            [
+                'name'       => 'BBC News - Technology',
+                'source_url' => 'http://feeds.bbci.co.uk/news/technology/rss.xml',
+                'category'   => 'Technology'
+            ],
+            [
+                'name'       => 'CoinTelegraph - All',
+                'source_url' => 'https://cointelegraph.com/rss',
+                'category'   => 'Crypto'
+            ],
+            [
+                'name'       => 'CoinTelegraph - Bitcoin',
+                'source_url' => 'https://cointelegraph.com/rss/tag/bitcoin',
+                'category'   => 'Bitcoin'
+            ],
+        ];
+
+        $count = 0;
+        foreach ($predefined as $sourceData) {
+            // Check if source already exists
+            if (!AutoNewsSource::where('source_url', $sourceData['source_url'])->exists()) {
+                
+                // Try to find or create category
+                $category = Category::where('name', $sourceData['category'])->first();
+                if (!$category) {
+                    $category = Category::create([
+                        'name' => $sourceData['category'],
+                        'slug' => Str::slug($sourceData['category'])
+                    ]);
+                }
+
+                AutoNewsSource::create([
+                    'name'                    => $sourceData['name'],
+                    'source_url'              => $sourceData['source_url'],
+                    'category_id'             => $category->id,
+                    'posts_per_run'           => 2, // As requested
+                    'fetch_interval_hours'    => 24,
+                    'featured_image_source'   => 'stock',
+                    'in_content_images_count' => 1,
+                    'in_content_image_source' => 'stock',
+                    'is_active'               => false, // Disabled by default
+                ]);
+                $count++;
+            }
+        }
+
+        return back()->with('status', "Successfully imported {$count} predefined news sources.");
+    }
 }

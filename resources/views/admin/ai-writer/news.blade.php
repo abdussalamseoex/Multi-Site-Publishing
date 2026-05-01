@@ -14,6 +14,41 @@
                 </div>
             @endif
 
+            <!-- Automation & Bulk Import -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-blue-500">
+                    <div class="p-6 bg-white">
+                        <h3 class="font-bold text-lg mb-2 flex items-center text-blue-800">
+                            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                            Predefined Sources
+                        </h3>
+                        <p class="text-sm text-gray-600 mb-4">Instantly import the best news feeds from <strong>BBC News</strong> and <strong>CoinTelegraph</strong>. They will be added as inactive sources with a 2-post limit.</p>
+                        <form action="{{ route('admin.ai-writer.news.import-predefined') }}" method="POST" onsubmit="return confirm('Import all global news sources now?');">
+                            @csrf
+                            <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-900 focus:outline-none focus:border-blue-900 focus:ring ring-blue-300 disabled:opacity-25 transition ease-in-out duration-150">
+                                Import Global Sources
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-purple-500">
+                    <div class="p-6 bg-white">
+                        <h3 class="font-bold text-lg mb-2 flex items-center text-purple-800">
+                            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                            US Author Generator
+                        </h3>
+                        <p class="text-sm text-gray-600 mb-4">Automatically generate <strong>15 US-based author profiles</strong> (male/female) to distribute your automated news content professionally.</p>
+                        <form action="{{ route('admin.ai-writer.news.import-authors') }}" method="POST" onsubmit="return confirm('Generate 15 professional US authors?');">
+                            @csrf
+                            <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700 active:bg-purple-900 focus:outline-none focus:border-purple-900 focus:ring ring-purple-300 disabled:opacity-25 transition ease-in-out duration-150">
+                                Generate 15 Authors
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
             <!-- Add New Source -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
