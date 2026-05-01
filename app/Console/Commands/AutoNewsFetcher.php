@@ -115,7 +115,7 @@ class AutoNewsFetcher extends Command
             $content = $response->body();
             $articles = [];
 
-            \Log::info("AutoNewsFetcher: Fetched " . strlen($content) . " bytes from " . $url);
+            $this->info("Fetched " . strlen($content) . " bytes from source.");
 
             // --- 1. Sitemap Support ---
             if (str_contains($url, 'sitemap') || stripos($content, '<urlset') !== false) {
@@ -240,7 +240,7 @@ class AutoNewsFetcher extends Command
             $xpath = new \DOMXPath($dom);
             $links = $xpath->query('//a[@href]');
             
-            \Log::info("AutoNewsFetcher: Found " . $links->length . " links in HTML for " . $url);
+            $this->info("Found " . $links->length . " links in HTML.");
             
             $parsedUrl = parse_url($url);
             $baseUrl   = ($parsedUrl['scheme'] ?? 'http') . '://' . ($parsedUrl['host'] ?? '');
