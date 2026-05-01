@@ -214,66 +214,56 @@ class AutoNewsController extends Controller
     /**
      * Import BBC and CoinTelegraph Predefined Sources
      */
-    public function importPredefinedSources()
+    public function importPredefinedSources(Request $request)
     {
-        $predefined = [
-            [
-                'name'       => 'BBC News - World',
-                'source_url' => 'http://feeds.bbci.co.uk/news/world/rss.xml',
-                'category'   => 'World News'
-            ],
-            [
-                'name'       => 'BBC News - Business',
-                'source_url' => 'http://feeds.bbci.co.uk/news/business/rss.xml',
-                'category'   => 'Business'
-            ],
-            [
-                'name'       => 'BBC News - Technology',
-                'source_url' => 'http://feeds.bbci.co.uk/news/technology/rss.xml',
-                'category'   => 'Technology'
-            ],
-            [
-                'name'       => 'CoinTelegraph - All',
-                'source_url' => 'https://cointelegraph.com/rss',
-                'category'   => 'Crypto'
-            ],
-            [
-                'name'       => 'CoinTelegraph - Bitcoin',
-                'source_url' => 'https://cointelegraph.com/rss/tag/bitcoin',
-                'category'   => 'Bitcoin'
-            ],
+        $request->validate([
+            'category_id' => 'required|exists:categories,id',
+            'user_id'     => 'required|exists:users,id',
+        ]);
+
+        $categoryId = $request->category_id;
+        $userId     = $request->user_id;
+
+        $sources = [
+            // BBC News
+            ['name' => 'BBC World News', 'source_url' => 'http://feeds.bbci.co.uk/news/world/rss.xml'],
+            ['name' => 'BBC Technology', 'source_url' => 'http://feeds.bbci.co.uk/news/technology/rss.xml'],
+            ['name' => 'BBC Business', 'source_url' => 'http://feeds.bbci.co.uk/news/business/rss.xml'],
+            ['name' => 'BBC Science & Environment', 'source_url' => 'http://feeds.bbci.co.uk/news/science_and_environment/rss.xml'],
+            ['name' => 'BBC Health', 'source_url' => 'http://feeds.bbci.co.uk/news/health/rss.xml'],
+            ['name' => 'BBC Entertainment & Arts', 'source_url' => 'http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml'],
+            
+            // CoinTelegraph (Crypto)
+            ['name' => 'CoinTelegraph Bitcoin', 'source_url' => 'https://cointelegraph.com/rss/tag/bitcoin'],
+            ['name' => 'CoinTelegraph Ethereum', 'source_url' => 'https://cointelegraph.com/rss/tag/ethereum'],
+            ['name' => 'CoinTelegraph Altcoins', 'source_url' => 'https://cointelegraph.com/rss/tag/altcoin'],
+            ['name' => 'CoinTelegraph Blockchain', 'source_url' => 'https://cointelegraph.com/rss/tag/blockchain'],
+            ['name' => 'CoinTelegraph Business', 'source_url' => 'https://cointelegraph.com/rss/tag/business'],
+            ['name' => 'CoinTelegraph Policy', 'source_url' => 'https://cointelegraph.com/rss/tag/policy-and-regulation'],
+            ['name' => 'CoinTelegraph NFT', 'source_url' => 'https://cointelegraph.com/rss/tag/nft'],
+            ['name' => 'CoinTelegraph DeFi', 'source_url' => 'https://cointelegraph.com/rss/tag/defi'],
         ];
 
         $count = 0;
-        foreach ($predefined as $sourceData) {
-            // Check if source already exists
+        foreach ($sources as $sourceData) {
             if (!AutoNewsSource::where('source_url', $sourceData['source_url'])->exists()) {
-                
-                // Try to find or create category
-                $category = Category::where('name', $sourceData['category'])->first();
-                if (!$category) {
-                    $category = Category::create([
-                        'name' => $sourceData['category'],
-                        'slug' => Str::slug($sourceData['category'])
-                    ]);
-                }
-
                 AutoNewsSource::create([
                     'name'                    => $sourceData['name'],
                     'source_url'              => $sourceData['source_url'],
-                    'category_id'             => $category->id,
-                    'posts_per_run'           => 2, // As requested
+                    'category_id'             => $categoryId,
+                    'user_id'                 => $userId,
+                    'posts_per_run'           => 2,
                     'fetch_interval_hours'    => 24,
                     'featured_image_source'   => 'stock',
                     'in_content_images_count' => 1,
                     'in_content_image_source' => 'stock',
-                    'is_active'               => false, // Disabled by default
+                    'is_active'               => false,
                 ]);
                 $count++;
             }
         }
 
-        return back()->with('status', "Successfully imported {$count} predefined news sources.");
+        return back()->with('status', "Successfully imported {$count} global news sources into your selected category.");
     }
 
     /**
