@@ -716,7 +716,8 @@
                                 <div>
                                     <label class="block font-medium text-sm text-gray-700">Featured Image</label>
                                     <select name="featured_image_source" id="edit_featured_image_source" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                                        <option value="none">Original/None</option>
+                                        <option value="original">Original (RSS)</option>
+                                        <option value="none">None</option>
                                         <option value="pexels">Free (Pexels)</option>
                                         <option value="unsplash">Free (Unsplash)</option>
                                         <option value="dalle">AI Generated (DALL-E)</option>
@@ -734,6 +735,11 @@
                                 <div>
                                     <label class="block font-medium text-sm text-gray-700">Images Per Post</label>
                                     <input type="number" name="in_content_images_count" id="edit_in_content_images_count" min="0" max="5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                </div>
+                                <div>
+                                    <label class="block font-medium text-sm text-gray-700">Run Duration (Days)</label>
+                                    <input type="number" name="duration_days" id="edit_duration_days" min="1" max="30" placeholder="Unlimited" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                    <p class="text-[10px] text-gray-400 mt-1">Leave empty for unlimited duration.</p>
                                 </div>
                             </div>
 
@@ -923,6 +929,7 @@
         document.getElementById('edit_in_content_images_count').value = source.in_content_images_count || 0;
         document.getElementById('edit_use_smart_schedule').checked = source.use_smart_schedule;
         document.getElementById('edit_is_active').checked = source.is_active;
+        document.getElementById('edit_duration_days').value = source.duration_days || '';
 
         toggleEditSmartSchedule();
         document.getElementById('editModal').classList.remove('hidden');
