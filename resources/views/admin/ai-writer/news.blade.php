@@ -358,7 +358,17 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
-                        <h3 class="font-bold text-lg">Active Sources</h3>
+                        <div class="flex items-center space-x-4">
+                            <h3 class="font-bold text-lg">Active Sources</h3>
+                            <form action="{{ route('admin.update.process') }}" method="POST" class="inline">
+                                @csrf
+                                <input type="hidden" name="force_clear" value="1">
+                                <button type="submit" title="Fix 404 errors and refresh settings" class="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold hover:bg-indigo-200 transition-colors">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                    Refresh System
+                                </button>
+                            </form>
+                        </div>
 
                         {{-- Global Cron Countdown Banner --}}
                         <div class="flex items-center gap-3 bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3">

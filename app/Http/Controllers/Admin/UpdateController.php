@@ -57,6 +57,26 @@ class UpdateController extends Controller
 
     public function process(Request $request)
     {
+        if ($request->has('force_clear')) {
+            // Skip update and just run cleanup
+            $log = ["==== MANUAL SYSTEM REFRESH ===="];
+            try {
+                Artisan::call('optimize:clear');
+                Artisan::call('route:clear');
+                Artisan::call('config:clear');
+                Artisan::call('view:clear');
+                Artisan::call('cache:clear');
+                $log[] = "All caches and routes refreshed successfully.";
+            } catch (\Exception $e) {
+                $log[] = "Error: " . $e->getMessage();
+            }
+            return back()->with('status', 'System refreshed successfully! All 404 issues should be resolved now.')->with('update_log', implode("\n", $log));
+        }
+
+        $request->validate([
+            'update_file' => 'nullable|file|mimes:zip|max:51200', // 50MB max
+        ]);
+
         $log = [];
         $token = $this->getToken();
 
@@ -138,14 +158,20 @@ class UpdateController extends Controller
         try {
             $log[] = "==== SYSTEM CLEANUP ====";
             Artisan::call('optimize:clear');
-            $log[] = Artisan::output();
+            Artisan::call('route:clear');
+            Artisan::call('config:clear');
+            Artisan::call('view:clear');
+            Artisan::call('cache:clear');
+            $log[] = "System cache, routes, and config cleared successfully.";
             
             // Cleanup any static robots.txt so dynamic SeoController route can work
             if (File::exists(public_path('robots.txt'))) {
                 File::delete(public_path('robots.txt'));
                 $log[] = "Cleaned up static robots.txt wrapper constraint.";
             }
-        } catch (\Exception $e) { }
+        } catch (\Exception $e) { 
+            $log[] = "Cleanup warning: " . $e->getMessage();
+        }
 
         // Run migrations
         try {
