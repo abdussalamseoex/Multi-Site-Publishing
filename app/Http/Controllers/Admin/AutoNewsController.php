@@ -61,7 +61,50 @@ class AutoNewsController extends Controller
             $msg .= " It will run for {$durationDays} day(s) and auto-stop on " . $expiresAt->format('M d, Y') . '.';
         }
 
-        return back()->with('status', $msg);
+    public function update(Request $request, $id)
+    {
+        $source = AutoNewsSource::findOrFail($id);
+
+        $request->validate([
+            'name'                    => 'required|string|max:255',
+            'source_url'              => 'required|url',
+            'category_id'             => 'nullable|exists:categories,id',
+            'posts_per_run'           => 'required|integer|min:1|max:20',
+            'fetch_interval_hours'    => 'required|integer|min:1|max:168',
+            'daily_post_limit'        => 'nullable|integer|min:1|max:100',
+            'use_smart_schedule'      => 'boolean',
+            'duration_days'           => 'nullable|integer|min:1|max:30',
+            'featured_image_source'   => 'required|string',
+            'in_content_images_count' => 'required|integer|min:0|max:5',
+            'in_content_image_source' => 'required|string',
+            'is_active'               => 'boolean',
+            'user_id'                 => 'nullable|exists:users,id',
+        ]);
+
+        $durationDays = $request->duration_days ? (int) $request->duration_days : null;
+        
+        // If duration changed, we might want to update expires_at, but for now let's just update the value
+        // Usually, users expect duration to be from the moment they update it if they are extending it
+        $expiresAt = $durationDays ? now()->addDays($durationDays) : null;
+
+        $source->update([
+            'name'                    => $request->name,
+            'source_url'              => $request->source_url,
+            'category_id'             => $request->category_id,
+            'posts_per_run'           => $request->posts_per_run,
+            'fetch_interval_hours'    => $request->fetch_interval_hours,
+            'daily_post_limit'        => $request->daily_post_limit,
+            'use_smart_schedule'      => $request->has('use_smart_schedule'),
+            'duration_days'           => $durationDays,
+            'expires_at'              => $expiresAt,
+            'featured_image_source'   => $request->featured_image_source,
+            'in_content_images_count' => $request->in_content_images_count,
+            'in_content_image_source' => $request->in_content_image_source,
+            'is_active'               => $request->has('is_active') ? true : false,
+            'user_id'                 => $request->user_id,
+        ]);
+
+        return back()->with('status', 'Auto News Source updated successfully.');
     }
 
     public function destroy($id)

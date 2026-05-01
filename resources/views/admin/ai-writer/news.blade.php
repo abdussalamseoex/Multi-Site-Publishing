@@ -382,9 +382,19 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             @if($source->use_smart_schedule)
                                                 <div class="font-bold text-indigo-600">{{ $source->daily_post_limit }} posts/day</div>
-                                                <div class="text-[10px] text-indigo-400 uppercase">Every {{ round(24/$source->daily_post_limit, 1) }}h</div>
+                                                <div class="text-[10px] text-indigo-400 uppercase font-medium">
+                                                    @php
+                                                        $mins = ($source->daily_post_limit > 0) ? (24 / $source->daily_post_limit) * 60 : 0;
+                                                        if ($mins >= 60) {
+                                                            echo "Every " . round($mins/60, 1) . "h";
+                                                        } else {
+                                                            echo "Every " . round($mins, 1) . "m";
+                                                        }
+                                                    @endphp
+                                                </div>
                                             @else
-                                                {{ $source->posts_per_run }} posts / {{ $source->fetch_interval_hours }}h
+                                                <div class="font-medium">{{ $source->posts_per_run }} posts each time</div>
+                                                <div class="text-[10px] text-gray-400 uppercase">Every {{ $source->fetch_interval_hours }}h</div>
                                             @endif
                                         </td>
                                         <td class="px-6 py-4 text-sm">
@@ -439,6 +449,12 @@
                                             <div class="flex items-center justify-end space-x-2">
                                                 <button
                                                     type="button"
+                                                    onclick="openEditModal({{ json_encode($source) }})"
+                                                    class="text-amber-600 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded font-semibold text-xs transition-all">
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    type="button"
                                                     onclick="triggerFetch({{ $source->id }}, '{{ addslashes($source->name) }}', '{{ route('admin.ai-writer.news.fetch', $source->id) }}')"
                                                     id="fetch-btn-{{ $source->id }}"
                                                     class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded font-semibold text-xs transition-all">
@@ -476,11 +492,122 @@
                 </div>
             </div>
             
-            <div class="bg-gray-50 p-4 rounded text-sm text-gray-600">
-                <p><strong>Cron Job Setup:</strong> To make auto news fetching work, you need to set up a Cron Job on your server (cPanel/Plesk) to run the Laravel schedule every hour:</p>
-                <code class="block bg-gray-800 text-white p-2 mt-2 rounded">
-                    * * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
-                </code>
+            <div class="bg-gray-800 text-white p-4 mt-2 rounded-xl font-mono text-xs overflow-x-auto border-l-4 border-indigo-500">
+                * * * * * cd {{ base_path() }} && php artisan schedule:run >> /dev/null 2>&1
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Source Modal -->
+    <div id="editModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeEditModal()"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                <form id="editForm" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="bg-white px-6 py-6 border-b border-gray-100 flex items-center justify-between">
+                        <h3 class="text-xl font-bold text-gray-900" id="modal-title">Edit News Source</h3>
+                        <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                    <div class="bg-white px-6 py-6 max-h-[70vh] overflow-y-auto">
+                        <div class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block font-medium text-sm text-gray-700">Source Name</label>
+                                    <input type="text" name="name" id="edit_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                </div>
+                                <div>
+                                    <label class="block font-medium text-sm text-gray-700">RSS/Target URL</label>
+                                    <input type="url" name="source_url" id="edit_source_url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block font-medium text-sm text-gray-700">Target Category</label>
+                                    <select name="category_id" id="edit_category_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                        @foreach($categories as $category)
+                                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block font-medium text-sm text-gray-700">Author</label>
+                                    <select name="user_id" id="edit_user_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        <option value="">-- Default Admin --</option>
+                                        @foreach($users ?? [] as $user)
+                                            <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Smart Schedule Card (Edit) -->
+                            <div class="bg-indigo-50 p-5 rounded-xl border border-indigo-100">
+                                <div class="flex items-center justify-between mb-4">
+                                    <label class="font-bold text-indigo-900">Smart Schedule</label>
+                                    <label class="inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" name="use_smart_schedule" id="edit_use_smart_schedule" value="1" class="sr-only peer" onchange="toggleEditSmartSchedule()">
+                                        <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                    </label>
+                                </div>
+                                <div id="edit_smart_section" class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                                    <div>
+                                        <label class="block text-xs font-bold text-indigo-400 uppercase tracking-tighter mb-1">Daily Post Goal</label>
+                                        <input type="number" name="daily_post_limit" id="edit_daily_post_limit" min="1" max="100" class="block w-full rounded-lg border-indigo-200" oninput="calculateEditSmart()">
+                                    </div>
+                                    <div class="text-sm text-indigo-700 italic pt-4" id="edit_schedule_preview"></div>
+                                </div>
+                                <div id="edit_advanced_section" class="mt-4 pt-4 border-t border-indigo-100 hidden">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Per Run</label>
+                                            <input type="number" name="posts_per_run" id="edit_posts_per_run" min="1" max="20" class="block w-full rounded-lg border-gray-200">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Interval (Hours)</label>
+                                            <input type="number" name="fetch_interval_hours" id="edit_fetch_interval_hours" min="1" max="168" class="block w-full rounded-lg border-gray-200">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                <div>
+                                    <label class="block font-medium text-sm text-gray-700">Featured Image</label>
+                                    <select name="featured_image_source" id="edit_featured_image_source" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        <option value="none">Original/None</option>
+                                        <option value="pexels">Free (Pexels)</option>
+                                        <option value="unsplash">Free (Unsplash)</option>
+                                        <option value="dalle">AI Generated (DALL-E)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block font-medium text-sm text-gray-700">In-Content Image Source</label>
+                                    <select name="in_content_image_source" id="edit_in_content_image_source" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        <option value="none">None</option>
+                                        <option value="pexels">Free (Pexels)</option>
+                                        <option value="unsplash">Free (Unsplash)</option>
+                                        <option value="dalle">AI Generated (DALL-E)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center">
+                                <input type="checkbox" name="is_active" id="edit_is_active" value="1" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                <label for="edit_is_active" class="ml-2 block text-sm text-gray-900 font-bold">Active Status</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-6 py-4 flex flex-row-reverse space-x-2 space-x-reverse">
+                        <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold shadow-sm hover:bg-indigo-700 transition-all">Update Source</button>
+                        <button type="button" onclick="closeEditModal()" class="bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded-lg font-bold hover:bg-gray-50">Cancel</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -605,34 +732,31 @@
         });
     })();
 
-    // Global Cron countdown — Laravel runs schedule:run every minute, but news:fetch-auto is hourly.
-    // We show time until next top-of-hour.
+    // Global Cron countdown — Now tracks 5-minute intervals
     (function() {
         var globalEl  = document.getElementById('global-cron-countdown');
         var syncSpans = document.querySelectorAll('.cron-sync-countdown');
         if (!globalEl) return;
 
-        function secsUntilNextHour() {
+        function secsUntilNextCronRun() {
             var now = new Date();
-            var nextHour = new Date(now);
-            nextHour.setHours(now.getHours() + 1, 0, 0, 0);
-            return Math.max(0, Math.floor((nextHour - now) / 1000));
+            var mins = now.getMinutes();
+            // Next 5-minute mark (5, 10, 15, ..., 60)
+            var nextMins = Math.ceil((mins + 0.1) / 5) * 5;
+            var nextRun = new Date(now);
+            nextRun.setMinutes(nextMins, 0, 0);
+            return Math.max(0, Math.floor((nextRun - now) / 1000));
         }
 
         function fmtHMS(s) {
             if (s <= 0) return '⚡ Running now!';
-            var h = Math.floor(s / 3600);
-            var m = Math.floor((s % 3600) / 60);
+            var m = Math.floor(s / 60);
             var sec = s % 60;
-            var parts = [];
-            if (h > 0) parts.push(h + 'h');
-            parts.push(String(m).padStart(2,'0') + 'm');
-            parts.push(String(sec).padStart(2,'0') + 's');
-            return parts.join(' ');
+            return String(m).padStart(2,'0') + 'm ' + String(sec).padStart(2,'0') + 's';
         }
 
         function tick() {
-            var secs = secsUntilNextHour();
+            var secs = secsUntilNextCronRun();
             var formatted = fmtHMS(secs);
             globalEl.innerText = formatted;
             syncSpans.forEach(function(sp) { sp.innerText = formatted; });
@@ -641,6 +765,59 @@
         tick();
         setInterval(tick, 1000);
     })();
+
+    // Modal Control Logic
+    function openEditModal(source) {
+        var form = document.getElementById('editForm');
+        form.action = '/admin/ai-writer/news/' + source.id;
+        
+        document.getElementById('edit_name').value = source.name;
+        document.getElementById('edit_source_url').value = source.source_url;
+        document.getElementById('edit_category_id').value = source.category_id;
+        document.getElementById('edit_user_id').value = source.user_id || '';
+        document.getElementById('edit_daily_post_limit').value = source.daily_post_limit || 10;
+        document.getElementById('edit_posts_per_run').value = source.posts_per_run;
+        document.getElementById('edit_fetch_interval_hours').value = source.fetch_interval_hours;
+        document.getElementById('edit_featured_image_source').value = source.featured_image_source;
+        document.getElementById('edit_in_content_image_source').value = source.in_content_image_source;
+        document.getElementById('edit_use_smart_schedule').checked = source.use_smart_schedule;
+        document.getElementById('edit_is_active').checked = source.is_active;
+
+        toggleEditSmartSchedule();
+        document.getElementById('editModal').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').classList.add('hidden');
+    }
+
+    function toggleEditSmartSchedule() {
+        var isSmart = document.getElementById('edit_use_smart_schedule').checked;
+        var smartSec = document.getElementById('edit_smart_section');
+        var advSec = document.getElementById('edit_advanced_section');
+        
+        if (isSmart) {
+            smartSec.classList.remove('opacity-50');
+            smartSec.querySelectorAll('input').forEach(i => i.disabled = false);
+            advSec.classList.add('hidden');
+            calculateEditSmart();
+        } else {
+            smartSec.classList.add('opacity-50');
+            smartSec.querySelectorAll('input').forEach(i => i.disabled = true);
+            advSec.classList.remove('hidden');
+        }
+    }
+
+    function calculateEditSmart() {
+        var goal = document.getElementById('edit_daily_post_limit').value;
+        var preview = document.getElementById('edit_schedule_preview');
+        if (goal > 0) {
+            var mins = ((24 / goal) * 60).toFixed(1);
+            preview.innerHTML = 'Every ' + mins + ' minutes';
+            document.getElementById('edit_posts_per_run').value = 1;
+            document.getElementById('edit_fetch_interval_hours').value = Math.max(1, Math.round(24/goal));
+        }
+    }
 
     function toggleSmartSchedule() {
         var isSmart = document.getElementById('use_smart_schedule').checked;

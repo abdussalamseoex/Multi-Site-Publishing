@@ -59,8 +59,8 @@ class AutoNewsFetcher extends Command
                     $limit    = 1; // In smart mode, we usually fetch one at a time to spread them out
                 }
 
-                $hoursSinceLastRun = $source->last_run_at->diffInHours(now(), false);
-                if ($hoursSinceLastRun < $interval) {
+                $minutesSinceLastRun = $source->last_run_at->diffInMinutes(now());
+                if ($minutesSinceLastRun < ($interval * 60)) {
                     continue; // Skip, not time yet
                 }
             }
