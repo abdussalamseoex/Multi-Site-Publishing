@@ -115,6 +115,8 @@ class AutoNewsFetcher extends Command
             $content = $response->body();
             $articles = [];
 
+            \Log::info("AutoNewsFetcher: Fetched " . strlen($content) . " bytes from " . $url);
+
             // --- 1. Sitemap Support ---
             if (str_contains($url, 'sitemap') || stripos($content, '<urlset') !== false) {
                 $xml = @simplexml_load_string($content, 'SimpleXMLElement', LIBXML_NOCDATA);
@@ -237,6 +239,8 @@ class AutoNewsFetcher extends Command
             @$dom->loadHTML(mb_convert_encoding($content, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
             $xpath = new \DOMXPath($dom);
             $links = $xpath->query('//a[@href]');
+            
+            \Log::info("AutoNewsFetcher: Found " . $links->length . " links in HTML for " . $url);
             
             $parsedUrl = parse_url($url);
             $baseUrl   = ($parsedUrl['scheme'] ?? 'http') . '://' . ($parsedUrl['host'] ?? '');
