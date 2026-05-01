@@ -214,44 +214,43 @@ class AutoNewsController extends Controller
     /**
      * Import BBC and CoinTelegraph Predefined Sources
      */
-    public function importPredefinedSources(Request $request)
+    public function importPredefinedSources()
     {
-        $request->validate([
-            'category_id' => 'required|exists:categories,id',
-            'user_id'     => 'required|exists:users,id',
-        ]);
-
-        $categoryId = $request->category_id;
-        $userId     = $request->user_id;
-
+        // Predefined list with suggested category names
         $sources = [
-            // BBC News
-            ['name' => 'BBC World News', 'source_url' => 'http://feeds.bbci.co.uk/news/world/rss.xml'],
-            ['name' => 'BBC Technology', 'source_url' => 'http://feeds.bbci.co.uk/news/technology/rss.xml'],
-            ['name' => 'BBC Business', 'source_url' => 'http://feeds.bbci.co.uk/news/business/rss.xml'],
-            ['name' => 'BBC Science & Environment', 'source_url' => 'http://feeds.bbci.co.uk/news/science_and_environment/rss.xml'],
-            ['name' => 'BBC Health', 'source_url' => 'http://feeds.bbci.co.uk/news/health/rss.xml'],
-            ['name' => 'BBC Entertainment & Arts', 'source_url' => 'http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml'],
-            
-            // CoinTelegraph (Crypto)
-            ['name' => 'CoinTelegraph Bitcoin', 'source_url' => 'https://cointelegraph.com/rss/tag/bitcoin'],
-            ['name' => 'CoinTelegraph Ethereum', 'source_url' => 'https://cointelegraph.com/rss/tag/ethereum'],
-            ['name' => 'CoinTelegraph Altcoins', 'source_url' => 'https://cointelegraph.com/rss/tag/altcoin'],
-            ['name' => 'CoinTelegraph Blockchain', 'source_url' => 'https://cointelegraph.com/rss/tag/blockchain'],
-            ['name' => 'CoinTelegraph Business', 'source_url' => 'https://cointelegraph.com/rss/tag/business'],
-            ['name' => 'CoinTelegraph Policy', 'source_url' => 'https://cointelegraph.com/rss/tag/policy-and-regulation'],
-            ['name' => 'CoinTelegraph NFT', 'source_url' => 'https://cointelegraph.com/rss/tag/nft'],
-            ['name' => 'CoinTelegraph DeFi', 'source_url' => 'https://cointelegraph.com/rss/tag/defi'],
+            ['name' => 'BBC World News', 'source_url' => 'http://feeds.bbci.co.uk/news/world/rss.xml', 'suggested_category' => 'World News'],
+            ['name' => 'BBC Technology', 'source_url' => 'http://feeds.bbci.co.uk/news/technology/rss.xml', 'suggested_category' => 'Technology'],
+            ['name' => 'BBC Business', 'source_url' => 'http://feeds.bbci.co.uk/news/business/rss.xml', 'suggested_category' => 'Business'],
+            ['name' => 'BBC Science', 'source_url' => 'http://feeds.bbci.co.uk/news/science_and_environment/rss.xml', 'suggested_category' => 'Science'],
+            ['name' => 'BBC Health', 'source_url' => 'http://feeds.bbci.co.uk/news/health/rss.xml', 'suggested_category' => 'Health'],
+            ['name' => 'CoinTelegraph Bitcoin', 'source_url' => 'https://cointelegraph.com/rss/tag/bitcoin', 'suggested_category' => 'Crypto'],
+            ['name' => 'CoinTelegraph Ethereum', 'source_url' => 'https://cointelegraph.com/rss/tag/ethereum', 'suggested_category' => 'Crypto'],
+            ['name' => 'CoinTelegraph Altcoins', 'source_url' => 'https://cointelegraph.com/rss/tag/altcoin', 'suggested_category' => 'Crypto'],
+            ['name' => 'CoinTelegraph Blockchain', 'source_url' => 'https://cointelegraph.com/rss/tag/blockchain', 'suggested_category' => 'Blockchain'],
+            ['name' => 'CoinTelegraph NFT', 'source_url' => 'https://cointelegraph.com/rss/tag/nft', 'suggested_category' => 'NFT'],
         ];
+
+        // Find a fallback category if no match is found
+        $fallbackCategory = Category::where('name', 'LIKE', '%News%')->orWhere('name', 'LIKE', '%General%')->first();
+        if (!$fallbackCategory) {
+            $fallbackCategory = Category::first();
+        }
+
+        // Find a default author (Admin or first user)
+        $defaultUser = \App\Models\User::where('role', 'admin')->first() ?? \App\Models\User::first();
 
         $count = 0;
         foreach ($sources as $sourceData) {
             if (!AutoNewsSource::where('source_url', $sourceData['source_url'])->exists()) {
+                
+                // Try to find a matching category by name
+                $category = Category::where('name', 'LIKE', '%' . $sourceData['suggested_category'] . '%')->first() ?? $fallbackCategory;
+
                 AutoNewsSource::create([
                     'name'                    => $sourceData['name'],
                     'source_url'              => $sourceData['source_url'],
-                    'category_id'             => $categoryId,
-                    'user_id'                 => $userId,
+                    'category_id'             => $category->id,
+                    'user_id'                 => $defaultUser->id,
                     'posts_per_run'           => 2,
                     'fetch_interval_hours'    => 24,
                     'featured_image_source'   => 'stock',
@@ -263,7 +262,7 @@ class AutoNewsController extends Controller
             }
         }
 
-        return back()->with('status', "Successfully imported {$count} global news sources into your selected category.");
+        return back()->with('status', "Successfully imported {$count} global news sources. They have been auto-mapped to your existing categories.");
     }
 
     /**

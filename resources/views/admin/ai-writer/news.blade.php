@@ -14,66 +14,43 @@
                 </div>
             @endif
 
-            <!-- Premium Automation & Bulk Import -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-100">
-                <div class="p-8 bg-gradient-to-br from-white to-indigo-50/30">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="p-3 bg-indigo-100 text-indigo-600 rounded-xl">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                        </div>
-                        <div>
-                            <h3 class="font-extrabold text-xl text-gray-900">Bulk Operations & Automation</h3>
-                            <p class="text-sm text-gray-500 font-medium">Quickly setup authors and import global news feeds</p>
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {{-- Import Global Sources Section --}}
-                        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
-                            <h4 class="text-xs font-bold text-gray-400 mb-4 uppercase tracking-widest">Import Global News Sources</h4>
-                            <form action="{{ route('admin.ai-writer.news.import-predefined') }}" method="POST" class="space-y-4">
-                                @csrf
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Target Category</label>
-                                        <select name="category_id" required class="w-full rounded-xl border-gray-200 text-sm focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition-all">
-                                            @foreach($categories as $cat)
-                                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Assign Author</label>
-                                        <select name="user_id" required class="w-full rounded-xl border-gray-200 text-sm focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition-all">
-                                            @foreach($users as $user)
-                                                <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                                <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                                    Sync Global Feeds (BBC/CoinTelegraph)
-                                </button>
-                                <p class="text-center text-[10px] text-gray-400 font-medium italic">Instantly adds 15+ world-class sources</p>
-                            </form>
-                        </div>
-
-                        {{-- Generate Authors Section --}}
-                        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md flex flex-col">
-                            <h4 class="text-xs font-bold text-gray-400 mb-4 uppercase tracking-widest">Global Author Management</h4>
-                            <p class="text-xs text-gray-500 leading-relaxed mb-6">Instantly generate 15 professional US-based author profiles with realistic names to distribute your automated news content professionally.</p>
-                            
-                            <div class="mt-auto">
-                                <form action="{{ route('admin.ai-writer.news.import-authors') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 active:scale-95">
-                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                                        Generate 15 US Authors Now
-                                    </button>
-                                </form>
+            <!-- Simplified Automation & Bulk Import -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-100">
+                    <div class="p-6 bg-white">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                             </div>
+                            <h3 class="font-bold text-lg text-gray-900">Import Global News Sources</h3>
                         </div>
+                        <p class="text-sm text-gray-600 mb-6 leading-relaxed">Instantly import 15+ world-class news feeds. The system will <strong>automatically map</strong> them to your existing categories (World, Tech, Crypto, etc.).</p>
+                        
+                        <form action="{{ route('admin.ai-writer.news.import-predefined') }}" method="POST" onsubmit="return confirm('Import and auto-map all global news sources?');">
+                            @csrf
+                            <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2.5 bg-blue-600 border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:scale-95 transition-all shadow-md">
+                                Import & Auto-Map Sources
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-100">
+                    <div class="p-6 bg-white">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                            </div>
+                            <h3 class="font-bold text-lg text-gray-900">US Author Generator</h3>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-6 leading-relaxed">Automatically generate <strong>15 professional US-based author profiles</strong> to distribute your content professionally across multiple personas.</p>
+                        
+                        <form action="{{ route('admin.ai-writer.news.import-authors') }}" method="POST" onsubmit="return confirm('Generate 15 professional US authors?');">
+                            @csrf
+                            <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2.5 bg-emerald-600 border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 active:scale-95 transition-all shadow-md">
+                                Generate 15 Authors Now
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
