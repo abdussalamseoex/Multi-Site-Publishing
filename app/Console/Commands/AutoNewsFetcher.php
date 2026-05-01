@@ -176,16 +176,20 @@ class AutoNewsFetcher extends Command
                                 foreach (['content', 'thumbnail'] as $tag) {
                                     if (isset($mediaNs->$tag)) {
                                         foreach ($mediaNs->$tag as $node) {
-                                            $imgUrl = (string)($node['url'] ?? '');
-                                            if (!empty($imgUrl)) { $image = $imgUrl; break 2; }
+                                            if (is_object($node)) {
+                                                $imgUrl = (string)($node['url'] ?? '');
+                                                if (!empty($imgUrl)) { $image = $imgUrl; break 2; }
+                                            }
                                         }
                                     }
                                 }
                             }
                             if (!$image && isset($item->enclosure)) {
                                 foreach ($item->enclosure as $enclosure) {
-                                    $imgUrl = (string)($enclosure['url'] ?? '');
-                                    if (!empty($imgUrl)) { $image = $imgUrl; break; }
+                                    if (is_object($enclosure)) {
+                                        $imgUrl = (string)($enclosure['url'] ?? '');
+                                        if (!empty($imgUrl)) { $image = $imgUrl; break; }
+                                    }
                                 }
                             }
 
@@ -208,12 +212,21 @@ class AutoNewsFetcher extends Command
                                 } catch (\Exception $e) { }
                             }
                             $link = '';
-                            foreach ($entry->link as $l) {
-                                if ((string)$l['rel'] == 'alternate' || !(string)$l['rel']) {
-                                    $link = (string)$l['href']; break;
+                            if (isset($entry->link)) {
+                                foreach ($entry->link as $l) {
+                                    if (is_object($l)) {
+                                        $rel = (string)($l['rel'] ?? '');
+                                        if ($rel == 'alternate' || empty($rel)) {
+                                            $link = (string)($l['href'] ?? ''); 
+                                            if ($link) break;
+                                        }
+                                    }
+                                }
+                                if (!$link && is_object($entry->link)) {
+                                    $link = (string)($entry->link['href'] ?? '');
                                 }
                             }
-                            if (!$link) $link = (string)$entry->link['href'];
+                            
                             if (empty($link) || !filter_var($link, FILTER_VALIDATE_URL)) continue;
 
                             $desc = '';
@@ -223,11 +236,26 @@ class AutoNewsFetcher extends Command
                             }
                             if (empty($desc)) $desc = isset($entry->summary) ? (string)$entry->summary : '';
 
+                            $image = null;
+                            if (isset($namespaces['media'])) {
+                                $mediaNs = $entry->children($namespaces['media']);
+                                foreach (['content', 'thumbnail'] as $tag) {
+                                    if (isset($mediaNs->$tag)) {
+                                        foreach ($mediaNs->$tag as $node) {
+                                            if (is_object($node)) {
+                                                $imgUrl = (string)($node['url'] ?? '');
+                                                if (!empty($imgUrl)) { $image = $imgUrl; break 2; }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
                             $articles[] = [
                                 'title'       => (string)$entry->title,
                                 'link'        => $link,
                                 'description' => strip_tags($desc),
-                                'image'       => null,
+                                'image'       => $image,
                                 'pub_date'    => $pubDateStr,
                             ];
                         }
