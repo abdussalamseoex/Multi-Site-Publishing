@@ -15,10 +15,10 @@
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
         .font-mono-data { font-family: 'Roboto Mono', monospace; }
         
-        header { background-color: #0f172a !important; border-bottom: 2px solid var(--primary) !important; padding-top: 0.5rem; padding-bottom: 0.5rem; }
-        header a { color: #f8fafc !important; }
-        header .text-primary { color: #38bdf8 !important; } /* sky-400 */
-        header .bg-primary { background-color: var(--primary) !important; color: white !important; }
+        .site-header { background-color: #0f172a !important; border-bottom: 2px solid var(--primary) !important; padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .site-header a { color: #f8fafc !important; }
+        .site-header .text-primary { color: #38bdf8 !important; } /* sky-400 */
+        .site-header .bg-primary { background-color: var(--primary) !important; color: white !important; }
 
         .border-ledger { border-color: #cbd5e1; }
         .bg-ledger-dark { background-color: #0f172a; color: white; }

@@ -27,18 +27,19 @@
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
         .font-mono-data { font-family: 'Roboto Mono', monospace; }
         
-        header { background-color: #0f172a !important; border-bottom: 2px solid var(--primary) !important; padding-top: 0.5rem; padding-bottom: 0.5rem; }
-        header a { color: #f8fafc !important; }
-        header .text-primary { color: #38bdf8 !important; }
-        header .bg-primary { background-color: var(--primary) !important; color: white !important; }
+        .site-header { background-color: #0f172a !important; border-bottom: 2px solid var(--primary) !important; padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .site-header a { color: #f8fafc !important; }
+        .site-header .text-primary { color: #38bdf8 !important; }
+        .site-header .bg-primary { background-color: var(--primary) !important; color: white !important; }
 
-        .prose { font-family: 'Inter', serif; }
-        .prose p { margin-bottom: 1.5rem; font-size: 1.125rem; line-height: 1.7; color: #334155; }
-        .prose img { width: 100%; margin: 2rem 0; border: 1px solid #cbd5e1; }
-        .prose h2 { font-family: 'Inter', sans-serif; font-size: 2rem; font-weight: 800; color: #0f172a; margin-top: 3rem; margin-bottom: 1.25rem; border-bottom: 1px solid #cbd5e1; padding-bottom: 0.5rem;}
-        .prose h3 { font-family: 'Inter', sans-serif; font-size: 1.5rem; font-weight: 700; color: #0f172a; margin-top: 2rem; margin-bottom: 1rem; }
-        .prose a { color: var(--primary); text-decoration: underline; font-weight: 600; }
-        .prose blockquote { border-left: 4px solid var(--primary); padding-left: 1.5rem; font-style: italic; color: #475569; font-size: 1.25rem; margin: 2rem 0; font-family: Georgia, serif; }
+        .prose { font-family: 'Inter', sans-serif; }
+        .prose p { margin-bottom: 1.5rem; font-size: 1.125rem; line-height: 1.8; color: #334155; }
+        .prose img { width: 100%; margin: 2rem 0; border: 1px solid #cbd5e1; border-radius: 4px; }
+        .prose h2 { font-family: 'Inter', sans-serif; font-size: 2.25rem; font-weight: 800; color: #0f172a; margin-top: 3.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid #0f172a; padding-bottom: 0.5rem; letter-spacing: -0.025em;}
+        .prose h3 { font-family: 'Inter', sans-serif; font-size: 1.75rem; font-weight: 700; color: #0f172a; margin-top: 2.5rem; margin-bottom: 1.25rem; }
+        .prose a { color: var(--primary); text-decoration: none; font-weight: 700; border-bottom: 2px solid rgba(3, 105, 161, 0.2); transition: border-color 0.2s; }
+        .prose a:hover { border-bottom-color: var(--primary); }
+        .prose blockquote { border-left: 5px solid #0f172a; padding-left: 2rem; font-style: italic; color: #1e293b; font-size: 1.35rem; margin: 3rem 0; font-family: 'Inter', sans-serif; font-weight: 500; }
         .prose ul { list-style-type: square; margin-bottom: 1.5rem; padding-left: 1.5rem; color: #334155;}
     </style>
     {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
@@ -46,29 +47,43 @@
 <body class="antialiased">
 
     <!-- Ticker -->
-    <div class="bg-slate-900 text-[10px] font-mono-data tracking-widest text-slate-400 py-1.5 border-b border-slate-700 text-center">
-        MARKET DATA IS DELAYED BY 15 MINUTES.
+    <div class="bg-[#0f172a] text-[10px] font-mono-data tracking-[0.2em] text-slate-400 py-2 border-b border-slate-800 text-center uppercase">
+        <span class="animate-pulse">●</span> Market data is delayed by 15 minutes
     </div>
 
     @include('themes.components.header')
 
-    <div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="max-w-5xl mx-auto px-4 py-16">
         
-        <header class="mb-10 text-center md:text-left border-b-2 border-slate-900 pb-8">
-            <a href="{{ isset($post->category) ? route('frontend.category', $post->category->slug) : '#' }}" class="hover:opacity-80 transition"><span class="text-sky-700 font-bold uppercase tracking-wider text-[11px] mb-4 block">{{ $post->category->name ?? 'Finance Report' }}</span></a>
-            <h1 class="text-4xl md:text-6xl font-black leading-[1.1] mb-6 text-slate-900 tracking-tight line-clamp-2">{{ $post->title }}</h1>
+        <div class="mb-12">
+            <nav class="flex items-center space-x-2 text-[11px] font-bold uppercase tracking-widest mb-6">
+                <a href="{{ route('home') }}" class="text-slate-400 hover:text-sky-700 transition">Home</a>
+                <span class="text-slate-300">/</span>
+                <a href="{{ isset($post->category) ? route('frontend.category', $post->category->slug) : '#' }}" class="text-sky-700 hover:opacity-80 transition">{{ $post->category->name ?? 'Finance' }}</a>
+            </nav>
+
+            <h1 class="text-4xl md:text-7xl font-black leading-[1.05] mb-10 text-slate-900 tracking-tightest">{{ $post->title }}</h1>
             
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 font-mono-data text-xs text-slate-500 uppercase">
-                <div class="flex gap-4">
-                    <span>AUTH: {{ $post->user->name ?? 'DESK' }}</span>
-                    <span>|</span>
-                    <span>PUB: {{ $post->created_at->format('Y-m-d H:i') }}</span>
+            <div class="flex flex-col md:flex-row md:items-center justify-between py-6 border-y-2 border-slate-900 gap-6">
+                <div class="flex items-center gap-6 font-mono-data text-[11px] text-slate-500 uppercase tracking-wider">
+                    <div class="flex items-center gap-2">
+                        <span class="text-slate-300">BY</span>
+                        <span class="text-slate-900 font-bold">{{ $post->user->name ?? 'THE DESK' }}</span>
+                    </div>
+                    <div class="w-1 h-1 bg-slate-300 rounded-full"></div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-slate-300">PUBLISHED</span>
+                        <span class="text-slate-900 font-bold">{{ $post->created_at->format('M d, Y') }}</span>
+                    </div>
                 </div>
-                <div class="bg-slate-200 px-3 py-1 rounded text-slate-700">
-                    VOL: {{ number_format($post->views) }}
+                <div class="flex items-center gap-4">
+                    <div class="flex flex-col items-end">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Article Volume</span>
+                        <span class="text-lg font-black text-slate-900 font-mono-data">{{ number_format($post->views) }}</span>
+                    </div>
                 </div>
             </div>
-        </header>
+        </div>
 
         @if($post->featured_image)
             <figure class="mb-10">

@@ -5,7 +5,7 @@
     $headerText = \App\Models\Setting::get('header_text_color', '#1f2937');
 @endphp
 
-<header class="sticky top-0 z-50 backdrop-blur-md shadow-sm" style="background-color: {{ $headerBg }}e6; border-bottom: 1px solid {{ $headerBg === '#ffffff' ? '#f3f4f6' : 'rgba(255,255,255,0.1)' }};">
+<header class="site-header sticky top-0 z-50 backdrop-blur-md shadow-sm" style="background-color: {{ $headerBg }}e6; border-bottom: 1px solid {{ $headerBg === '#ffffff' ? '#f3f4f6' : 'rgba(255,255,255,0.1)' }};">
     <nav class="max-w-7xl mx-auto py-4 px-6 flex justify-between items-center">
         <!-- Logo -->
         <div class="flex-shrink-0">
