@@ -27,20 +27,29 @@
                         </div>
                         <p class="text-sm text-gray-500 mb-6">Configure the API keys required for AI Content Generation and Auto Image Fetching.</p>
                         
-                        <div class="space-y-4 md:w-1/2">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">OpenAI API Key (ChatGPT/DALL-E)</label>
-                                <input type="password" name="openai_api_key" value="{{ $settings['openai_api_key'] ?? '' }}" placeholder="sk-..." class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                                <label class="block font-medium text-sm text-gray-700">OpenAI API Key</label>
+                                <input type="password" name="openai_api_key" value="{{ $settings['openai_api_key'] ?? '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="sk-...">
                             </div>
-                            
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Pexels API Key (Free Stock Images)</label>
-                                <input type="password" name="pexels_api_key" value="{{ $settings['pexels_api_key'] ?? '' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                                <label class="block font-medium text-sm text-gray-700">Pexels API Key</label>
+                                <input type="password" name="pexels_api_key" value="{{ $settings['pexels_api_key'] ?? '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                             </div>
-
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Unsplash API Key (Optional Alternative)</label>
-                                <input type="password" name="unsplash_api_key" value="{{ $settings['unsplash_api_key'] ?? '' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                                <label class="block font-medium text-sm text-gray-700">Unsplash Access Key</label>
+                                <input type="password" name="unsplash_api_key" value="{{ $settings['unsplash_api_key'] ?? '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div class="p-4 bg-blue-50 border border-blue-100 rounded-lg space-y-4">
+                                <h4 class="text-blue-900 font-bold text-xs uppercase">Google Search API (For Images & Real-time Links)</h4>
+                                <div>
+                                    <label class="block font-medium text-xs text-gray-500 uppercase">Google API Key</label>
+                                    <input type="password" name="google_search_api_key" value="{{ $settings['google_search_api_key'] ?? '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm">
+                                </div>
+                                <div>
+                                    <label class="block font-medium text-xs text-gray-500 uppercase">Search Engine ID (CX)</label>
+                                    <input type="text" name="google_search_engine_id" value="{{ $settings['google_search_engine_id'] ?? '' }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm">
+                                </div>
                             </div>
                         </div>
                     </div>

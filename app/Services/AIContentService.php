@@ -21,9 +21,12 @@ class AIContentService
         $articleLength = $settings['article_length'] ?? 800;
         $generateTitle = $settings['generate_title'] ?? 'yes';
         $imageCount = $settings['in_content_images_count'] ?? 1;
+        
+        $enableOutbound = $settings['enable_outbound_links'] ?? false;
+        $outboundCount = $settings['outbound_links_count'] ?? 1;
 
         // 1. Generate Content
-        $contentData = $this->generateContentFromOpenAI($keyword, $language, $imageCount, $articleLength, $openaiKey, $generateTitle);
+        $contentData = $this->generateContentFromOpenAI($keyword, $language, $imageCount, $articleLength, $openaiKey, $generateTitle, $enableOutbound, $outboundCount);
         if (!$contentData) {
             throw new \Exception('Failed to generate content from OpenAI.');
         }
@@ -109,15 +112,20 @@ class AIContentService
         return $post;
     }
 
-    private function generateContentFromOpenAI($keyword, $language, $imageCount, $articleLength, $apiKey, $generateTitle = 'yes')
+    private function generateContentFromOpenAI($keyword, $language, $imageCount, $articleLength, $apiKey, $generateTitle = 'yes', $enableOutbound = false, $outboundCount = 1)
     {
         $imageInstruction = $imageCount > 0 ? "Also, insert the exact text '[IMAGE_PLACEHOLDER]' at appropriate places in the content $imageCount times." : "";
+
+        $outboundInstruction = "";
+        if ($enableOutbound) {
+            $outboundInstruction = "Also, identify and naturally insert exactly $outboundCount relevant outbound links to high-authority websites (like Wikipedia, Investopedia, BBC, .gov sites, etc.) within the content. Use descriptive anchor text. Ensure the links are functional and highly relevant to the topic.";
+        }
 
         $titleInstruction = $generateTitle === 'no' 
             ? "- 'title': MUST BE EXACTLY THE STRING '{keyword}' without any modifications."
             : "- 'title': A catchy, SEO-friendly title without the year unless necessary. DO NOT use colons (:) in the title. DO NOT start the title with clichés like 'Unlocking', 'Discovering', 'The Secret', or 'Guide'.";
 
-        $defaultPrompt = "Write a comprehensive, SEO-optimized, and highly engaging article about '{keyword}' in {language}. The article length should be approximately {article_length} words. The current year is {current_year}, ensure content is up-to-date.\nFollow Google's EEAT (Experience, Expertise, Authoritativeness, Trustworthiness) guidelines.\nFormat the output as a valid JSON object with four keys:\n$titleInstruction\n- 'meta_description': A 150-160 character meta description.\n- 'meta_keywords': A comma-separated string of 5-8 SEO keywords.\n- 'content': The main article content formatted in HTML (use <p> for paragraphs with logical spacing, <h2> for main sections, <h3> for sub-sections. Do NOT use <h1>). Do NOT start the content with an 'Introduction' heading. Start directly with the first paragraph and NO heading above it.\n{image_instruction}\nMake the content sound natural, human-written, and provide deep value to the reader. Do not sound like an AI robot.";
+        $defaultPrompt = "Write a comprehensive, SEO-optimized, and highly engaging article about '{keyword}' in {language}. The article length should be approximately {article_length} words. The current year is {current_year}, ensure content is up-to-date.\nFollow Google's EEAT (Experience, Expertise, Authoritativeness, Trustworthiness) guidelines.\nFormat the output as a valid JSON object with four keys:\n$titleInstruction\n- 'meta_description': A 150-160 character meta description.\n- 'meta_keywords': A comma-separated string of 5-8 SEO keywords.\n- 'content': The main article content formatted in HTML (use <p> for paragraphs with logical spacing, <h2> for main sections, <h3> for sub-sections. Do NOT use <h1>). Do NOT start the content with an 'Introduction' heading. Start directly with the first paragraph and NO heading above it.\n{image_instruction}\n{outbound_instruction}\nMake the content sound natural, human-written, and provide deep value to the reader. Do not sound like an AI robot.";
         $promptTemplate = Setting::get('ai_writer_prompt', $defaultPrompt);
 
         if ($generateTitle === 'no') {
@@ -125,8 +133,8 @@ class AIContentService
         }
 
         $prompt = str_replace(
-            ['{keyword}', '{language}', '{article_length}', '{image_instruction}', '{current_year}'],
-            [$keyword, $language, $articleLength, $imageInstruction, date('Y')],
+            ['{keyword}', '{language}', '{article_length}', '{image_instruction}', '{outbound_instruction}', '{current_year}'],
+            [$keyword, $language, $articleLength, $imageInstruction, $outboundInstruction, date('Y')],
             $promptTemplate
         );
 
@@ -152,132 +160,175 @@ class AIContentService
         return false;
     }
 
-    private function fetchImage($query, $source, $count = 1)
+    private function fetchImage($query, $sources, $count = 1)
     {
         $images = [];
-
-        if ($source === 'pexels') {
-            $pexelsKey = Setting::get('pexels_api_key');
-            if (!$pexelsKey) return null;
-
-            $response = Http::withHeaders([
-                'Authorization' => $pexelsKey
-            ])->get("https://api.pexels.com/v1/search", [
-                'query' => $query,
-                'per_page' => $count,
-                'orientation' => 'landscape'
-            ]);
-
-            if ($response->successful()) {
-                $data = $response->json();
-                foreach ($data['photos'] ?? [] as $photo) {
-                    $photographer = $photo['photographer'] ?? 'Pexels';
-                    $url = $photo['url'] ?? 'https://www.pexels.com';
-                    $images[] = ['url' => $photo['src']['large'], 'credit' => "<a href='{$url}' target='_blank' rel='nofollow'>{$photographer} on Pexels</a>"];
-                }
+        if (empty($sources)) return $count === 1 ? null : [];
+        
+        // Ensure sources is an array
+        $sources = is_array($sources) ? $sources : [$sources];
+        
+        for ($i = 0; $i < $count; $i++) {
+            // Round-robin through sources
+            $source = $sources[$i % count($sources)];
+            
+            $img = null;
+            if ($source === 'pexels') {
+                $img = $this->fetchFromPexels($query);
+            } elseif ($source === 'unsplash') {
+                $img = $this->fetchFromUnsplash($query);
+            } elseif ($source === 'google') {
+                $img = $this->fetchFromGoogle($query, 'image');
+            } elseif ($source === 'dalle') {
+                $img = $this->fetchFromDalle($query);
             }
-        } elseif ($source === 'unsplash') {
-            $unsplashKey = Setting::get('unsplash_api_key');
-            if (!$unsplashKey) return null;
-
-            $response = Http::withHeaders([
-                'Authorization' => 'Client-ID ' . $unsplashKey
-            ])->get("https://api.unsplash.com/search/photos", [
-                'query' => $query,
-                'per_page' => $count,
-                'orientation' => 'landscape'
-            ]);
-
-            if ($response->successful()) {
-                $data = $response->json();
-                foreach ($data['results'] ?? [] as $result) {
-                    $photographer = $result['user']['name'] ?? 'Unsplash';
-                    $url = $result['links']['html'] ?? 'https://unsplash.com';
-                    $images[] = ['url' => $result['urls']['regular'], 'credit' => "<a href='{$url}' target='_blank' rel='nofollow'>{$photographer} on Unsplash</a>"];
-                }
-            }
-        } elseif ($source === 'dalle') {
-            for ($i = 0; $i < $count; $i++) {
-                $openaiKey = Setting::get('openai_api_key');
-                if (!$openaiKey) break;
-
-                $response = Http::withHeaders([
-                    'Authorization' => 'Bearer ' . $openaiKey,
-                    'Content-Type' => 'application/json',
-                ])->timeout(60)->post('https://api.openai.com/v1/images/generations', [
-                    'model' => 'dall-e-3',
-                    'prompt' => 'A highly realistic, photographic, editorial style blog image for the topic: ' . $query . '. Do NOT include any text, words, letters, signatures, or typography in the image. Keep it purely visual and high quality.',
-                    'n' => 1,
-                    'size' => '1024x1024'
-                ]);
-
-                if ($response->successful()) {
-                    $data = $response->json();
-                    if (isset($data['data'][0]['url'])) {
-                        $tempUrl = $data['data'][0]['url'];
-                        $imageContent = @file_get_contents($tempUrl);
-                        if ($imageContent) {
-                            $filename = 'ai_img_' . time() . '_' . uniqid() . '.jpg';
-                            $path = public_path('uploads/posts/' . $filename);
-                            if (!file_exists(public_path('uploads/posts'))) {
-                                mkdir(public_path('uploads/posts'), 0777, true);
-                            }
-                            file_put_contents($path, $imageContent);
-                            $images[] = ['url' => '/uploads/posts/' . $filename, 'credit' => ""];
-                        }
-                    }
-                }
+            
+            if ($img) {
+                $images[] = $img;
             }
         }
 
         return $count === 1 ? ($images[0] ?? null) : $images;
     }
 
+    private function fetchFromPexels($query)
+    {
+        $pexelsKey = Setting::get('pexels_api_key');
+        if (!$pexelsKey) return null;
+
+        $response = Http::withHeaders(['Authorization' => $pexelsKey])->get("https://api.pexels.com/v1/search", [
+            'query' => $query,
+            'per_page' => 1,
+            'orientation' => 'landscape'
+        ]);
+
+        if ($response->successful()) {
+            $data = $response->json();
+            $photo = $data['photos'][0] ?? null;
+            if ($photo) {
+                return [
+                    'url' => $photo['src']['large'], 
+                    'credit' => "<a href='{$photo['url']}' target='_blank' rel='nofollow'>{$photo['photographer']} on Pexels</a>"
+                ];
+            }
+        }
+        return null;
+    }
+
+    private function fetchFromUnsplash($query)
+    {
+        $unsplashKey = Setting::get('unsplash_api_key');
+        if (!$unsplashKey) return null;
+
+        $response = Http::withHeaders(['Authorization' => 'Client-ID ' . $unsplashKey])->get("https://api.unsplash.com/search/photos", [
+            'query' => $query,
+            'per_page' => 1,
+            'orientation' => 'landscape'
+        ]);
+
+        if ($response->successful()) {
+            $data = $response->json();
+            $result = $data['results'][0] ?? null;
+            if ($result) {
+                return [
+                    'url' => $result['urls']['regular'], 
+                    'credit' => "<a href='{$result['links']['html']}' target='_blank' rel='nofollow'>{$result['user']['name']} on Unsplash</a>"
+                ];
+            }
+        }
+        return null;
+    }
+
+    private function fetchFromGoogle($query, $type = 'image')
+    {
+        $apiKey = Setting::get('google_search_api_key');
+        $cx = Setting::get('google_search_engine_id');
+        if (!$apiKey || !$cx) return null;
+
+        $params = [
+            'key' => $apiKey,
+            'cx' => $cx,
+            'q' => $query,
+            'num' => 1
+        ];
+
+        if ($type === 'image') {
+            $params['searchType'] = 'image';
+            $params['imgSize'] = 'large';
+            $params['imgType'] = 'photo';
+            $params['rights'] = 'cc_publicdomain,cc_attribute,cc_sharealike'; // Creative Commons
+        }
+
+        $response = Http::get("https://www.googleapis.com/customsearch/v1", $params);
+
+        if ($response->successful()) {
+            $data = $response->json();
+            $item = $data['items'][0] ?? null;
+            if ($item) {
+                if ($type === 'image') {
+                    return [
+                        'url' => $item['link'],
+                        'credit' => "<a href='{$item['image']['contextLink']}' target='_blank' rel='nofollow'>Source via Google Images</a>"
+                    ];
+                } else {
+                    return ['url' => $item['link'], 'title' => $item['title']];
+                }
+            }
+        }
+        return null;
+    }
+
+    private function fetchFromDalle($query)
+    {
+        $openaiKey = Setting::get('openai_api_key');
+        if (!$openaiKey) return null;
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $openaiKey,
+            'Content-Type' => 'application/json',
+        ])->timeout(60)->post('https://api.openai.com/v1/images/generations', [
+            'model' => 'dall-e-3',
+            'prompt' => 'A high-quality photographic editorial image for: ' . $query . '. No text or signatures.',
+            'n' => 1,
+            'size' => '1024x1024'
+        ]);
+
+        if ($response->successful()) {
+            $data = $response->json();
+            $tempUrl = $data['data'][0]['url'] ?? null;
+            if ($tempUrl) {
+                $imageContent = @file_get_contents($tempUrl);
+                if ($imageContent) {
+                    $filename = 'ai_img_' . time() . '_' . uniqid() . '.jpg';
+                    $path = public_path('uploads/posts/' . $filename);
+                    if (!file_exists(public_path('uploads/posts'))) mkdir(public_path('uploads/posts'), 0777, true);
+                    file_put_contents($path, $imageContent);
+                    return ['url' => '/uploads/posts/' . $filename, 'credit' => "AI Generated"];
+                }
+            }
+        }
+        return null;
+    }
+
     private function stripHeadingsBeforeFirstParagraph(string $content): string
     {
         $firstPPos = stripos($content, '<p');
-        if ($firstPPos === false) {
-            return preg_replace('/^\s*(<h[1-6][^>]*>.*?<\/h[1-6]>\s*)+/is', '', $content);
-        }
-
+        if ($firstPPos === false) return preg_replace('/^\s*(<h[1-6][^>]*>.*?<\/h[1-6]>\s*)+/is', '', $content);
         $before = substr($content, 0, $firstPPos);
         $after  = substr($content, $firstPPos);
-
         $before = preg_replace('/<h[1-6][^>]*>.*?<\/h[1-6]>/is', '', $before);
-        $before = trim($before);
-
-        return $before . $after;
+        return trim($before) . $after;
     }
 
     private function sanitizeTitle(string $title): string
     {
-        $title = trim($title);
-        $title = trim($title, '"\'');
-
+        $title = trim($title, ' "\'');
         if (strpos($title, ':') !== false) {
             $parts = explode(':', $title, 2);
-            $before = trim($parts[0]);
-            $after  = trim($parts[1] ?? '');
-            $title = strlen($after) >= strlen($before) ? $after : $before;
+            $title = strlen(trim($parts[1] ?? '')) >= strlen(trim($parts[0])) ? trim($parts[1]) : trim($parts[0]);
         }
-
-        $cliches = [
-            'Unlocking', 'Discovering', 'Unveiling', 'Exploring', 'Mastering',
-            'Navigating', 'Revolutionizing', 'Transforming', 'Harnessing',
-            'The Secret to', 'The Secrets of', 'The Secret Behind',
-            'The Ultimate Guide to', 'The Ultimate Guide',
-            'A Comprehensive Guide to', 'A Guide to',
-            'Everything You Need to Know About',
-            'Why You Should', 'How to Achieve',
-        ];
-
-        foreach ($cliches as $cliche) {
-            if (stripos($title, $cliche) === 0) {
-                $title = trim(substr($title, strlen($cliche)));
-                break;
-            }
-        }
-
+        $cliches = ['Unlocking', 'Discovering', 'The Secret to', 'The Ultimate Guide to'];
+        foreach ($cliches as $cliche) if (stripos($title, $cliche) === 0) $title = trim(substr($title, strlen($cliche)));
         return ucfirst(trim($title, ' ,;'));
     }
 }

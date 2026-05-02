@@ -80,14 +80,16 @@ class AIWriterController extends Controller
             'keywords' => 'required|string',
             'category_id' => 'required|exists:categories,id',
             'language' => 'required|string',
-            'featured_image_source' => 'required|string',
+            'featured_image_sources' => 'nullable|array',
+            'in_content_image_sources' => 'nullable|array',
             'in_content_images_count' => 'required|integer|min:0|max:5',
-            'in_content_image_source' => 'required|string',
             'status' => 'required|string',
             'schedule_interval' => 'required|integer|min:1',
             'article_length' => 'nullable|integer',
             'generate_title' => 'required|string',
             'user_id' => 'required|exists:users,id',
+            'enable_outbound_links' => 'nullable|boolean',
+            'outbound_links_count' => 'nullable|integer|min:1|max:5',
         ]);
 
         $keywords = array_filter(array_map('trim', explode("\n", $request->keywords)));
@@ -106,6 +108,8 @@ class AIWriterController extends Controller
             'interval_minutes' => $request->schedule_interval,
             'status' => 'pending',
             'next_run_at' => now(), // Start immediately
+            'enable_outbound_links' => $request->boolean('enable_outbound_links'),
+            'outbound_links_count' => $request->outbound_links_count ?? 1,
             'settings' => $request->all(),
         ]);
 

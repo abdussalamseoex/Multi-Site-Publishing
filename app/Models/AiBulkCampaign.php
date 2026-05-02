@@ -18,7 +18,9 @@ class AiBulkCampaign extends Model
         'last_run_at',
         'next_run_at',
         'error_log',
-        'settings'
+        'settings',
+        'enable_outbound_links',
+        'outbound_links_count'
     ];
 
     protected $casts = [
@@ -26,6 +28,7 @@ class AiBulkCampaign extends Model
         'settings' => 'array',
         'last_run_at' => 'datetime',
         'next_run_at' => 'datetime',
+        'enable_outbound_links' => 'boolean',
     ];
 
     public function user()

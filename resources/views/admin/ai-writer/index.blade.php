@@ -70,28 +70,82 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-4 rounded border">
-                            <div>
-                                <label class="block font-medium text-sm text-gray-700">Featured Image</label>
-                                <select id="featured_image_source" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                                    <option value="pexels">Free (Pexels)</option>
-                                    <option value="unsplash">Free (Unsplash)</option>
-                                    <option value="dalle">AI Generated (DALL-E 3)</option>
-                                    <option value="none">None</option>
-                                </select>
+                        <!-- SEO & Links -->
+                        <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100 mb-6">
+                            <h3 class="text-indigo-900 font-bold text-sm mb-4 flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                                SEO & Outbound Links
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" id="enable_outbound_links" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                    <label for="enable_outbound_links" class="text-sm font-medium text-gray-700">Add Outbound Links (Wikipedia, News, etc.)</label>
+                                </div>
+                                <div id="outbound_count_wrapper" class="opacity-50 pointer-events-none transition-opacity">
+                                    <label class="block font-medium text-xs text-gray-500 uppercase mb-1">Links per Article</label>
+                                    <select id="outbound_links_count" class="block w-full rounded-md border-gray-300 shadow-sm text-sm">
+                                        <option value="1">1 Link</option>
+                                        <option value="2">2 Links</option>
+                                        <option value="3">3 Links</option>
+                                    </select>
+                                </div>
                             </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50 p-6 rounded-lg border border-gray-200">
                             <div>
-                                <label class="block font-medium text-sm text-gray-700">In-Content Images Count</label>
-                                <input type="number" id="in_content_images_count" value="1" min="0" max="5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <label class="block font-bold text-sm text-slate-800 mb-3 uppercase tracking-wider">Featured Image Sources</label>
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" name="featured_image_sources[]" value="pexels" checked class="w-4 h-4 text-indigo-600 rounded">
+                                        <label class="text-sm text-gray-700">Pexels (Free Stock)</label>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" name="featured_image_sources[]" value="unsplash" class="w-4 h-4 text-indigo-600 rounded">
+                                        <label class="text-sm text-gray-700">Unsplash (Free Stock)</label>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" name="featured_image_sources[]" value="google" class="w-4 h-4 text-indigo-600 rounded">
+                                        <label class="text-sm text-gray-700">Google Images (Creative Commons)</label>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" name="featured_image_sources[]" value="dalle" class="w-4 h-4 text-indigo-600 rounded">
+                                        <label class="text-sm text-gray-700">DALL-E 3 (AI Generated)</label>
+                                    </div>
+                                </div>
                             </div>
+
                             <div>
-                                <label class="block font-medium text-sm text-gray-700">In-Content Image Source</label>
-                                <select id="in_content_image_source" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                                    <option value="pexels">Free (Pexels)</option>
-                                    <option value="unsplash">Free (Unsplash)</option>
-                                    <option value="dalle">AI Generated (DALL-E 3)</option>
-                                    <option value="none">None</option>
-                                </select>
+                                <label class="block font-bold text-sm text-slate-800 mb-3 uppercase tracking-wider">In-Content Image Sources</label>
+                                <div class="grid grid-cols-1 gap-4">
+                                    <div>
+                                        <label class="block font-medium text-xs text-gray-500 uppercase mb-2">Select Platforms</label>
+                                        <div class="space-y-2">
+                                            <div class="flex items-center gap-2">
+                                                <input type="checkbox" name="in_content_image_sources[]" value="pexels" checked class="w-4 h-4 text-indigo-600 rounded">
+                                                <label class="text-sm text-gray-700">Pexels</label>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <input type="checkbox" name="in_content_image_sources[]" value="unsplash" class="w-4 h-4 text-indigo-600 rounded">
+                                                <label class="text-sm text-gray-700">Unsplash</label>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <input type="checkbox" name="in_content_image_sources[]" value="google" class="w-4 h-4 text-indigo-600 rounded">
+                                                <label class="text-sm text-gray-700">Google Images</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block font-medium text-xs text-gray-500 uppercase mb-1">Max Images</label>
+                                        <select id="in_content_images_count" class="block w-full rounded-md border-gray-300 shadow-sm text-sm">
+                                            <option value="0">No Images</option>
+                                            <option value="1">1 Image</option>
+                                            <option value="2">2 Images</option>
+                                            <option value="3" selected>3 Images</option>
+                                            <option value="5">5 Images</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -197,6 +251,15 @@
     <script>
         let countdownIntervals = {};
 
+        document.getElementById('enable_outbound_links').addEventListener('change', function() {
+            const wrapper = document.getElementById('outbound_count_wrapper');
+            if (this.checked) {
+                wrapper.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                wrapper.classList.add('opacity-50', 'pointer-events-none');
+            }
+        });
+
         document.getElementById('ai-writer-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -211,9 +274,14 @@
             const generate_title = document.getElementById('generate_title').value;
             const article_length = parseInt(document.getElementById('article_length').value);
             const user_id = document.getElementById('user_id').value;
-            const featured_image_source = document.getElementById('featured_image_source').value;
+            const enable_outbound_links = document.getElementById('enable_outbound_links').checked;
+            const outbound_links_count = document.getElementById('outbound_links_count').value;
+            
+            // Collect multi-source images
+            const featured_image_sources = Array.from(document.querySelectorAll('input[name="featured_image_sources[]"]:checked')).map(cb => cb.value);
+            const in_content_image_sources = Array.from(document.querySelectorAll('input[name="in_content_image_sources[]"]:checked')).map(cb => cb.value);
+
             const in_content_images_count = document.getElementById('in_content_images_count').value;
-            const in_content_image_source = document.getElementById('in_content_image_source').value;
             const status = document.getElementById('status').value;
             const schedule_interval = parseInt(document.getElementById('schedule_interval').value);
 
@@ -234,9 +302,11 @@
                         generate_title,
                         article_length,
                         user_id,
-                        featured_image_source,
+                        enable_outbound_links,
+                        outbound_links_count,
+                        featured_image_sources,
+                        in_content_image_sources,
                         in_content_images_count,
-                        in_content_image_source,
                         status,
                         schedule_interval
                     })
