@@ -22,6 +22,10 @@ class AIContentService
         $generateTitle = $settings['generate_title'] ?? 'yes';
         $imageCount = $settings['in_content_images_count'] ?? 1;
         
+        // Fix: Use plural keys from settings as set in controller/UI
+        $featuredSources = $settings['featured_image_sources'] ?? ($settings['featured_image_source'] ?? []);
+        $inContentSources = $settings['in_content_image_sources'] ?? ($settings['in_content_image_source'] ?? []);
+        
         $enableOutbound = $settings['enable_outbound_links'] ?? false;
         $outboundCount = $settings['outbound_links_count'] ?? 1;
 
@@ -38,8 +42,8 @@ class AIContentService
 
         // 2. Handle Featured Image
         $featuredImageUrl = null;
-        if (($settings['featured_image_source'] ?? 'none') !== 'none') {
-            $imgData = $this->fetchImage($keyword, $settings['featured_image_source']);
+        if (!empty($featuredSources) && $featuredSources !== 'none') {
+            $imgData = $this->fetchImage($keyword, $featuredSources);
             if ($imgData) {
                 $featuredImageUrl = $imgData['url'];
             }
@@ -47,8 +51,8 @@ class AIContentService
 
         // 3. Handle In-Content Images
         $content = $contentData['content'];
-        if ($imageCount > 0 && ($settings['in_content_image_source'] ?? 'none') !== 'none') {
-            $batchImages = $this->fetchImage($keyword, $settings['in_content_image_source'], $imageCount);
+        if ($imageCount > 0 && !empty($inContentSources) && $inContentSources !== 'none') {
+            $batchImages = $this->fetchImage($keyword, $inContentSources, $imageCount);
             
             if (!empty($batchImages) && is_array($batchImages)) {
                 foreach ($batchImages as $i => $imgData) {
@@ -243,38 +247,53 @@ class AIContentService
     {
         $apiKey = Setting::get('google_search_api_key');
         $cx = Setting::get('google_search_engine_id');
-        if (!$apiKey || !$cx) return null;
+        
+        if (!$apiKey || !$cx) {
+            \Log::warning("Google Search API Key or CX ID is missing.");
+            return null;
+        }
 
         $params = [
             'key' => $apiKey,
             'cx' => $cx,
             'q' => $query,
-            'num' => 1
+            'num' => 3 // Fetch a few to increase chances
         ];
 
         if ($type === 'image') {
             $params['searchType'] = 'image';
             $params['imgSize'] = 'large';
             $params['imgType'] = 'photo';
-            $params['rights'] = 'cc_publicdomain,cc_attribute,cc_sharealike'; // Creative Commons
+            $params['rights'] = '(cc_publicdomain|cc_attribute|cc_sharealike|cc_noncommercial|cc_noncom_sharealike)'; 
         }
 
+        \Log::info("Fetching from Google ($type): " . $query);
         $response = Http::get("https://www.googleapis.com/customsearch/v1", $params);
 
         if ($response->successful()) {
             $data = $response->json();
-            $item = $data['items'][0] ?? null;
-            if ($item) {
-                if ($type === 'image') {
-                    return [
-                        'url' => $item['link'],
-                        'credit' => "<a href='{$item['image']['contextLink']}' target='_blank' rel='nofollow'>Source via Google Images</a>"
-                    ];
-                } else {
-                    return ['url' => $item['link'], 'title' => $item['title']];
-                }
+            $items = $data['items'] ?? [];
+            
+            if (empty($items)) {
+                \Log::warning("Google returned no results for: " . $query);
+                return null;
             }
+
+            $item = $items[0]; // Pick the first one
+            
+            if ($type === 'image') {
+                \Log::info("Found Google Image: " . $item['link']);
+                return [
+                    'url' => $item['link'],
+                    'credit' => "<a href='{$item['image']['contextLink']}' target='_blank' rel='nofollow'>Source via Google Images</a>"
+                ];
+            } else {
+                return ['url' => $item['link'], 'title' => $item['title']];
+            }
+        } else {
+            \Log::error("Google API Error: " . $response->body());
         }
+        
         return null;
     }
 
