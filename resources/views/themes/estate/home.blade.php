@@ -92,7 +92,7 @@
                     if (empty($sidebarBlocks)) {
                         $sidebarBlocks = [
                             ['id' => uniqid(), 'type' => 'popular_posts', 'title' => 'Popular Local', 'limit' => 4],
-                            ['id' => uniqid(), 'type' => 'about_agency', 'title' => 'List With Us']
+                            ['id' => uniqid(), 'type' => 'agency_widget', 'title' => 'List With Us']
                         ];
                     }
                 @endphp

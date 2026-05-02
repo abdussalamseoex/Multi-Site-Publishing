@@ -57,7 +57,6 @@
                     
                     if (empty($sidebarBlocks)) {
                         $sidebarBlocks = [
-                            ['id' => uniqid(), 'type' => 'about_agency', 'title' => 'About Us'],
                             ['id' => uniqid(), 'type' => 'popular_posts', 'title' => 'Featured', 'limit' => 5],
                             ['id' => uniqid(), 'type' => 'ad_block', 'title' => 'Sidebar Ad']
                         ];
