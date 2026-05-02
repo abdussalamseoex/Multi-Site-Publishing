@@ -124,34 +124,6 @@ class AIContentService
         return $post;
     }
 
-        $content = str_replace('[IMAGE_PLACEHOLDER]', '', $content);
-        $content = preg_replace('/<h[1-6][^>]*>.*?(Introduction|ভূমিকা|পরিचय|Introducción|Overview|Background|সারসংক্ষেপ).*?<\/h[1-6]>/is', '', $content);
-        $content = $this->stripHeadingsBeforeFirstParagraph($content);
-        $content = trim($content);
-
-        // 4. Save Post
-        $cleanTitle = str_replace(['"', '\''], '', $contentData['title']);
-        $slug = Str::slug($cleanTitle);
-        $existing = Post::where('slug', $slug)->exists();
-        if ($existing) {
-            $slug = $slug . '-' . time();
-        }
-
-        $status = $settings['status'] ?? 'published';
-        $createdAt = now();
-        if ($status === 'scheduled' && isset($settings['schedule_time'])) {
-            $status = 'published';
-            $createdAt = Carbon::parse($settings['schedule_time']);
-        }
-
-        $post = new Post();
-        $post->user_id = $userId ?? auth()->id() ?? 1;
-        $post->category_id = $settings['category_id'];
-        $post->title = $contentData['title'];
-        $post->slug = $slug;
-        $post->summary = $contentData['meta_description'] ?? '';
-        $post->content = $content;
-        $post->featured_image = $featuredImageUrl;
     private function generateContentFromOpenAI($keyword, $language, $imageCount, $articleLength, $apiKey, $generateTitle = 'yes', $aiModel = 'gpt-4o-mini')
     {
         $titleInstruction = $generateTitle === 'no' 
