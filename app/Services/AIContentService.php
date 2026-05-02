@@ -175,7 +175,7 @@ PROMPT;
             ],
             'response_format' => ['type' => 'json_object'],
             'temperature'     => 0.7,
-            'max_tokens'      => 4096,
+            'max_tokens'      => 16000,
         ]);
 
         if (!$response->successful()) {
@@ -201,49 +201,56 @@ PROMPT;
     {
         \Log::info("Injecting $count outbound links for: $keyword");
 
-        // High-authority sites relevant to common topics
-        $authorityLinks = [
-            ['url' => 'https://en.wikipedia.org/wiki/' . urlencode(str_replace(' ', '_', $keyword)), 'title' => $keyword . ' - Wikipedia'],
-            ['url' => 'https://www.investopedia.com/search?q=' . urlencode($keyword), 'title' => $keyword . ' - Investopedia'],
-            ['url' => 'https://www.bbc.com/search?q=' . urlencode($keyword), 'title' => $keyword . ' - BBC News'],
-            ['url' => 'https://www.statista.com/search/?q=' . urlencode($keyword), 'title' => $keyword . ' - Statista'],
-            ['url' => 'https://scholar.google.com/scholar?q=' . urlencode($keyword), 'title' => 'Research on ' . $keyword . ' - Google Scholar'],
+        $allLinks = [];
+
+        // First: try Google Custom Search for REAL article URLs
+        $search1 = $this->fetchFromGoogle($keyword, 'web');
+        if ($search1 && !empty($search1['url'])) $allLinks[] = $search1;
+
+        if (count($allLinks) < $count) {
+            $search2 = $this->fetchFromGoogle($keyword . ' guide explained', 'web');
+            if ($search2 && !empty($search2['url'])) $allLinks[] = $search2;
+        }
+
+        // Fallback: real Wikipedia article URL (not search)
+        if (count($allLinks) < $count) {
+            $wikiSlug = urlencode(str_replace(' ', '_', ucwords($keyword)));
+            $allLinks[] = [
+                'url'   => "https://en.wikipedia.org/wiki/{$wikiSlug}",
+                'title' => $keyword . ' - Wikipedia',
+            ];
+        }
+
+        // Additional fallbacks with REAL article-level URLs
+        $fallbacks = [
+            ['url' => 'https://www.investopedia.com/terms/' . strtolower(substr($keyword, 0, 1)) . '/' . Str::slug($keyword) . '.asp', 'title' => $keyword . ' Definition - Investopedia'],
+            ['url' => 'https://www.statista.com/topics/' . Str::slug($keyword) . '/', 'title' => $keyword . ' Statistics - Statista'],
         ];
+        foreach ($fallbacks as $fb) {
+            if (count($allLinks) >= $count) break;
+            $allLinks[] = $fb;
+        }
 
-        // Try Google Custom Search for real links
-        $realLinks = [];
-        $googleLink = $this->fetchFromGoogle($keyword . ' statistics research', 'web');
-        if ($googleLink) $realLinks[] = $googleLink;
-
-        $googleLink2 = $this->fetchFromGoogle($keyword . ' official guide', 'web');
-        if ($googleLink2) $realLinks[] = $googleLink2;
-
-        // Merge real links with authority fallbacks
-        $allLinks = array_merge($realLinks, $authorityLinks);
         $allLinks = array_slice($allLinks, 0, $count);
 
-        // Split content into paragraphs and inject links
+        // Inject into content
         $paragraphs = explode('</p>', $content);
         $total      = count($paragraphs);
 
-        if ($total < 3) return $content; // too short to inject
+        if ($total < 3) return $content;
 
         foreach ($allLinks as $index => $link) {
-            $pos = (int) floor($total / (count($allLinks) + 1)) * ($index + 1);
-            $pos = max(1, min($pos, $total - 2));
-
+            $pos    = (int) floor($total / (count($allLinks) + 1)) * ($index + 1);
+            $pos    = max(1, min($pos, $total - 2));
             $anchor = htmlspecialchars($link['title'] ?? $keyword);
-            $url    = $link['url'];
-            $linkTag = " <a href=\"{$url}\" target=\"_blank\" rel=\"noopener nofollow\" style=\"color:#4f46e5;font-weight:bold;text-decoration:underline;\">{$anchor}</a>";
-
-            $paragraphs[$pos] .= $linkTag . '</p>';
-            // Remove the </p> we'll add via implode to avoid duplication
-            $paragraphs[$pos] = rtrim($paragraphs[$pos], '</p>') ;
+            $url    = htmlspecialchars($link['url']);
+            // Append link before closing </p>
+            $paragraphs[$pos] = rtrim($paragraphs[$pos])
+                . " <a href=\"{$url}\" target=\"_blank\" rel=\"noopener nofollow\" style=\"color:#4f46e5;font-weight:700;\">{$anchor}</a>";
         }
 
-        $result = implode('</p>', $paragraphs);
         \Log::info("Outbound links injected: " . count($allLinks));
-        return $result;
+        return implode('</p>', $paragraphs);
     }
 
     // ============================================================
