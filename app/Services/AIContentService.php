@@ -40,8 +40,9 @@ class AIContentService
 
         // ============================================================
         // STEP 1: GENERATE ARTICLE CONTENT FROM OPENAI
+        // (Outbound links are included IN the prompt if enabled)
         // ============================================================
-        $contentData = $this->callOpenAI($keyword, $language, $articleLength, $generateTitle, $aiModel, $openaiKey);
+        $contentData = $this->callOpenAI($keyword, $language, $articleLength, $generateTitle, $aiModel, $openaiKey, $enableOutbound, $outboundCount);
         if (!$contentData || empty($contentData['content'])) {
             throw new \Exception('OpenAI did not return valid content. Check API key or try again.');
         }
@@ -51,12 +52,7 @@ class AIContentService
 
         \Log::info("Content generated. Word count: " . str_word_count(strip_tags($content)));
 
-        // ============================================================
-        // STEP 2: INJECT OUTBOUND LINKS (Post-process)
-        // ============================================================
-        if ($enableOutbound && $outboundCount > 0) {
-            $content = $this->injectOutboundLinks($content, $keyword, $outboundCount);
-        }
+        // STEP 2: OUTBOUND LINKS (Handled naturally by OpenAI in Step 1)
 
         // ============================================================
         // STEP 3: FEATURED IMAGE
@@ -134,32 +130,35 @@ class AIContentService
             $titleRule = "- \"title\": A compelling, SEO-friendly headline about \"{$keyword}\". No colons. No clichés like 'Unlocking' or 'Discovering'.";
         }
 
+        $outboundInstruction = "";
+        if ($enableOutbound && $outboundCount > 0) {
+            $outboundInstruction = "- IMPORTANT: Naturally integrate exactly {$outboundCount} authoritative, real-world outbound links (e.g., to Wikipedia, highly trusted news sites, or official sources) into the article text. Use highly relevant, descriptive anchor text. Do NOT use broken or fake URLs.";
+        }
+
         $prompt = <<<PROMPT
-You are a professional journalist and SEO content writer. Write a detailed, engaging article about the following topic:
+You are an expert, professional journalist and senior SEO content writer. Write an extremely detailed, comprehensive, and engaging article about the following topic.
 
 TOPIC: "{$keyword}"
 LANGUAGE: {$language}
-REQUIRED WORD COUNT: approximately {$articleLength} words (this is mandatory — do not write less)
+TARGET WORD COUNT: At least {$articleLength} words. (You MUST write a long-form, in-depth article. Do not summarize. Cover multiple sub-topics, provide real-world examples, and deep analysis).
 
 WRITING RULES:
-- The entire article must be written in {$language}
-- Write in a professional, authoritative, and human tone
-- Use <h2> and <h3> tags for subheadings (never <h1>)
-- Use <p> tags for every paragraph
-- Do NOT use <hr> tags or horizontal lines anywhere
-- Do NOT start the article with a heading — start directly with a paragraph
-- Do NOT add an "Introduction" or "Conclusion" heading
-- Provide deep analysis, real-world examples, and expert insights
-- The content must be 100% unique and valuable
+- The entire article must be written fluently in {$language}.
+- Tone: Professional, authoritative, human-like (EEAT guidelines).
+- Use <h2> and <h3> tags for structuring the article (never use <h1>).
+- Use <p> tags for every paragraph.
+- Do NOT use <hr> tags or horizontal lines.
+- Do NOT start with a heading like "Introduction" — start directly with a strong opening paragraph.
+{$outboundInstruction}
 
 RESPONSE FORMAT:
 Return a valid JSON object with EXACTLY these four keys:
 {$titleRule}
-- "meta_description": A 150-160 character SEO meta description about "{$keyword}"
-- "meta_keywords": 6-8 relevant SEO keywords as a comma-separated string
-- "content": The full article HTML content (must be approximately {$articleLength} words)
+- "meta_description": A 150-160 character SEO meta description about "{$keyword}".
+- "meta_keywords": 6-8 relevant SEO keywords as a comma-separated string.
+- "content": The full HTML article content.
 
-CRITICAL: Return ONLY the JSON object. No markdown. No explanation. No extra text.
+CRITICAL: Return ONLY the JSON object. Do not include markdown blocks or any extra text outside the JSON.
 PROMPT;
 
         \Log::info("Calling OpenAI model: $aiModel for keyword: $keyword");
@@ -192,65 +191,6 @@ PROMPT;
         }
 
         return $data;
-    }
-
-    // ============================================================
-    // OUTBOUND LINK INJECTION
-    // ============================================================
-    private function injectOutboundLinks($content, $keyword, $count)
-    {
-        \Log::info("Injecting $count outbound links for: $keyword");
-
-        $allLinks = [];
-
-        // First: try Google Custom Search for REAL article URLs
-        $search1 = $this->fetchFromGoogle($keyword, 'web');
-        if ($search1 && !empty($search1['url'])) $allLinks[] = $search1;
-
-        if (count($allLinks) < $count) {
-            $search2 = $this->fetchFromGoogle($keyword . ' guide explained', 'web');
-            if ($search2 && !empty($search2['url'])) $allLinks[] = $search2;
-        }
-
-        // Fallback: real Wikipedia article URL (not search)
-        if (count($allLinks) < $count) {
-            $wikiSlug = urlencode(str_replace(' ', '_', ucwords($keyword)));
-            $allLinks[] = [
-                'url'   => "https://en.wikipedia.org/wiki/{$wikiSlug}",
-                'title' => $keyword . ' - Wikipedia',
-            ];
-        }
-
-        // Additional fallbacks with REAL article-level URLs
-        $fallbacks = [
-            ['url' => 'https://www.investopedia.com/terms/' . strtolower(substr($keyword, 0, 1)) . '/' . Str::slug($keyword) . '.asp', 'title' => $keyword . ' Definition - Investopedia'],
-            ['url' => 'https://www.statista.com/topics/' . Str::slug($keyword) . '/', 'title' => $keyword . ' Statistics - Statista'],
-        ];
-        foreach ($fallbacks as $fb) {
-            if (count($allLinks) >= $count) break;
-            $allLinks[] = $fb;
-        }
-
-        $allLinks = array_slice($allLinks, 0, $count);
-
-        // Inject into content
-        $paragraphs = explode('</p>', $content);
-        $total      = count($paragraphs);
-
-        if ($total < 3) return $content;
-
-        foreach ($allLinks as $index => $link) {
-            $pos    = (int) floor($total / (count($allLinks) + 1)) * ($index + 1);
-            $pos    = max(1, min($pos, $total - 2));
-            $anchor = htmlspecialchars($link['title'] ?? $keyword);
-            $url    = htmlspecialchars($link['url']);
-            // Append link before closing </p>
-            $paragraphs[$pos] = rtrim($paragraphs[$pos])
-                . " <a href=\"{$url}\" target=\"_blank\" rel=\"noopener nofollow\" style=\"color:#4f46e5;font-weight:700;\">{$anchor}</a>";
-        }
-
-        \Log::info("Outbound links injected: " . count($allLinks));
-        return implode('</p>', $paragraphs);
     }
 
     // ============================================================
@@ -417,8 +357,9 @@ PROMPT;
     {
         if (!$apiKey) return null;
 
-        $dallePrompt = "A professional, realistic editorial photograph for a news article about: \"{$query}\". "
-            . "High-quality journalism photography style. Natural lighting. Sharp focus. No text, no watermarks, no logos.";
+        $dallePrompt = "A photorealistic, highly detailed editorial photograph for a news article about: \"{$query}\". "
+            . "Shot with a high-end DSLR camera, professional studio lighting, sharp focus. "
+            . "CRITICAL: NO text, NO words, NO letters, NO watermarks, NO logos, NO signatures anywhere in the image. Purely visual.";
 
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $apiKey,
