@@ -265,6 +265,63 @@
         </div>
     </div>
 
+    <!-- Progress Modal -->
+    <div id="progress-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all">
+            <div class="bg-indigo-600 p-6 text-white relative">
+                <div class="absolute top-0 right-0 p-4 opacity-20">
+                    <svg class="w-20 h-20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
+                </div>
+                <h3 class="text-xl font-bold">Generating Masterpiece</h3>
+                <p class="text-indigo-100 text-sm">Please wait while our AI constructs your high-authority article.</p>
+            </div>
+            <div class="p-8">
+                <div class="space-y-6">
+                    <div id="step-1" class="flex items-center gap-4 text-slate-400 transition-all duration-500">
+                        <div class="step-icon w-8 h-8 rounded-full border-2 border-current flex items-center justify-center text-xs font-bold">1</div>
+                        <div class="flex-1">
+                            <p class="font-bold text-slate-800">Topic Research & Outline</p>
+                            <p class="text-xs">Analyzing keywords and structuring the article...</p>
+                        </div>
+                    </div>
+                    <div id="step-2" class="flex items-center gap-4 text-slate-400 transition-all duration-500">
+                        <div class="step-icon w-8 h-8 rounded-full border-2 border-current flex items-center justify-center text-xs font-bold">2</div>
+                        <div class="flex-1">
+                            <p class="font-bold text-slate-800">Content Writing (EEAT Focus)</p>
+                            <p class="text-xs">Generating detailed content and analysis...</p>
+                        </div>
+                    </div>
+                    <div id="step-3" class="flex items-center gap-4 text-slate-400 transition-all duration-500">
+                        <div class="step-icon w-8 h-8 rounded-full border-2 border-current flex items-center justify-center text-xs font-bold">3</div>
+                        <div class="flex-1">
+                            <p class="font-bold text-slate-800">Media & Authority Links</p>
+                            <p class="text-xs">Sourcing HD images and real-time outbound links...</p>
+                        </div>
+                    </div>
+                    <div id="step-4" class="flex items-center gap-4 text-slate-400 transition-all duration-500">
+                        <div class="step-icon w-8 h-8 rounded-full border-2 border-current flex items-center justify-center text-xs font-bold">4</div>
+                        <div class="flex-1">
+                            <p class="font-bold text-slate-800">Publishing & Finalizing</p>
+                            <p class="text-xs">Saving to database and SEO optimization...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-10 pt-6 border-t border-slate-100 text-center">
+                    <div class="inline-flex items-center px-4 py-2 bg-slate-50 rounded-full text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">
+                        System Processing...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .step-active { color: #4f46e5 !important; }
+        .step-active .step-icon { background: #4f46e5; color: white; border-color: #4f46e5; box-shadow: 0 0 15px rgba(79, 70, 229, 0.4); }
+        .step-done { color: #10b981 !important; }
+        .step-done .step-icon { background: #10b981; color: white; border-color: #10b981; }
+    </style>
     @push('scripts')
     <script>
         let countdownIntervals = {};
@@ -279,7 +336,24 @@
                 return;
             }
 
-            const keyword = keywords[0]; // Use first keyword for single generation
+            const modal = document.getElementById('progress-modal');
+            const steps = [
+                document.getElementById('step-1'),
+                document.getElementById('step-2'),
+                document.getElementById('step-3'),
+                document.getElementById('step-4')
+            ];
+
+            const setStep = (index, status) => {
+                steps.forEach(s => s.classList.remove('step-active'));
+                if (status === 'active') {
+                    steps[index].classList.add('step-active');
+                } else if (status === 'done') {
+                    steps[index].classList.add('step-done');
+                }
+            };
+
+            const keyword = keywords[0];
             const category_id = document.getElementById('category_id').value;
             const language = document.getElementById('language').value;
             const generate_title = document.getElementById('generate_title').value;
@@ -297,9 +371,17 @@
             const status = document.getElementById('status').value;
 
             btn.disabled = true;
-            btn.innerText = 'Generating Article...';
+            modal.classList.remove('hidden');
+            
+            // Step 1: Research
+            setStep(0, 'active');
 
             try {
+                // Simulate step 2 after a short delay for UX
+                setTimeout(() => setStep(1, 'active'), 2000);
+                setTimeout(() => setStep(2, 'active'), 15000); // Usually images/links happen later
+                setTimeout(() => setStep(3, 'active'), 25000);
+
                 const response = await fetch("{{ route('admin.ai-writer.generate') }}", {
                     method: 'POST',
                     headers: {
@@ -326,17 +408,24 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    alert(result.message);
-                    window.location.reload(); // Reload to see new post in history
+                    setStep(0, 'done');
+                    setStep(1, 'done');
+                    setStep(2, 'done');
+                    setStep(3, 'done');
+                    setTimeout(() => {
+                        alert(result.message);
+                        window.location.reload();
+                    }, 500);
                 } else {
                     alert('Error: ' + result.message);
+                    modal.classList.add('hidden');
                 }
             } catch (error) {
                 console.error("Single Gen Error:", error);
                 alert('An error occurred. Check console.');
+                modal.classList.add('hidden');
             } finally {
                 btn.disabled = false;
-                btn.innerText = 'Generate Single Article';
             }
         }
 

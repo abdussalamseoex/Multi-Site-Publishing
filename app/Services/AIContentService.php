@@ -21,6 +21,7 @@ class AIContentService
         $articleLength = $settings['article_length'] ?? 800;
         $generateTitle = $settings['generate_title'] ?? 'yes';
         $imageCount = $settings['in_content_images_count'] ?? 1;
+        $aiModel = $settings['ai_model'] ?? 'gpt-4o-mini';
         
         $featuredSources = $settings['featured_image_sources'] ?? ($settings['featured_image_source'] ?? []);
         $inContentSources = $settings['in_content_image_sources'] ?? ($settings['in_content_image_source'] ?? []);
@@ -28,68 +29,100 @@ class AIContentService
         $enableOutbound = $settings['enable_outbound_links'] ?? false;
         $outboundCount = $settings['outbound_links_count'] ?? 1;
 
-        // 1. Fetch REAL Outbound Links if enabled
-        $realLinks = [];
-        if ($enableOutbound) {
-            \Log::info("Searching for real outbound links for: " . $keyword);
-            for ($i = 0; $i < $outboundCount; $i++) {
-                $searchQuery = $keyword . " official news source " . ($i + 1);
-                $linkData = $this->fetchFromGoogle($searchQuery, 'web');
-                if ($linkData) {
-                    $realLinks[] = $linkData;
-                }
-            }
-        }
-
-        // 2. Generate Content with REAL links
-        $contentData = $this->generateContentFromOpenAI($keyword, $language, $imageCount, $articleLength, $openaiKey, $generateTitle, $enableOutbound, $realLinks);
+        // --- STEP 1: CONTENT GENERATION (Text Only Focus) ---
+        $contentData = $this->generateContentFromOpenAI($keyword, $language, $imageCount, $articleLength, $openaiKey, $generateTitle, $aiModel);
         if (!$contentData) {
             throw new \Exception('Failed to generate content from OpenAI.');
         }
 
-        // Sanitize Title
-        if (!empty($contentData['title']) && $generateTitle !== 'no') {
-            $contentData['title'] = $this->sanitizeTitle($contentData['title']);
-        }
+        $content = $contentData['content'];
+        $title = $contentData['title'];
 
-        // 3. Handle Featured Image
-        $featuredImageUrl = null;
-        if (!empty($featuredSources) && $featuredSources !== 'none') {
-            $imgData = $this->fetchImage($keyword, $featuredSources);
-            if ($imgData) {
-                $featuredImageUrl = $imgData['url'];
+        // --- STEP 2: REAL OUTBOUND LINKS INJECTION (Manual) ---
+        if ($enableOutbound) {
+            \Log::info("Injecting real outbound links...");
+            $realLinks = [];
+            for ($i = 0; $i < $outboundCount; $i++) {
+                $linkQuery = $keyword . " authoritative source " . ($i + 1);
+                $link = $this->fetchFromGoogle($linkQuery, 'web');
+                if ($link) $realLinks[] = $link;
+            }
+
+            if (!empty($realLinks)) {
+                $paragraphs = explode('</p>', $content);
+                foreach ($realLinks as $index => $link) {
+                    $pos = floor(count($paragraphs) / (count($realLinks) + 1)) * ($index + 1);
+                    $pos = max(1, min($pos, count($paragraphs) - 1));
+                    $linkHtml = " <a href='{$link['url']}' target='_blank' rel='noopener nofollow' class='text-indigo-600 font-bold hover:underline'>{$link['title']}</a>";
+                    // Inject into the end of the paragraph
+                    $paragraphs[$pos] .= $linkHtml;
+                }
+                $content = implode('</p>', $paragraphs);
             }
         }
 
-        // 4. Handle In-Content Images
-        $content = $contentData['content'];
+        // --- STEP 3: FEATURED IMAGE ---
+        $featuredImageUrl = null;
+        if (!empty($featuredSources) && $featuredSources !== 'none') {
+            $imgData = $this->fetchImage($keyword, $featuredSources);
+            if ($imgData) $featuredImageUrl = $imgData['url'];
+        }
+
+        // --- STEP 4: IN-CONTENT IMAGES INJECTION (Manual) ---
         if ($imageCount > 0 && !empty($inContentSources) && $inContentSources !== 'none') {
             $batchImages = $this->fetchImage($keyword, $inContentSources, $imageCount);
-            
             if (!empty($batchImages) && is_array($batchImages)) {
+                $paragraphs = explode('</p>', $content);
                 foreach ($batchImages as $i => $imgData) {
                     $imgUrl = $imgData['url'];
                     $credit = $imgData['credit'];
                     
-                    $imageTag = '<figure class="my-10 overflow-hidden rounded-2xl bg-gray-50 border border-gray-100 shadow-lg p-3">';
-                    $imageTag .= '<img src="' . $imgUrl . '" alt="' . htmlspecialchars($keyword) . '" class="w-full h-auto rounded-xl transition-transform duration-500 hover:scale-[1.02]">';
+                    $imageTag = '<figure class="my-12 overflow-hidden rounded-3xl bg-slate-50 border border-slate-200 shadow-2xl p-4 transition-all duration-700 hover:shadow-indigo-100">';
+                    $imageTag .= '<img src="' . $imgUrl . '" alt="' . htmlspecialchars($keyword) . '" class="w-full h-auto rounded-2xl shadow-sm hover:scale-[1.01] transition-transform duration-500">';
                     if (!empty($credit)) {
-                        $imageTag .= '<figcaption class="flex items-center justify-center space-x-2 text-xs text-gray-400 mt-4 italic font-medium tracking-tight uppercase"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span>Image: ' . $credit . '</span></figcaption>';
+                        $imageTag .= '<figcaption class="flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest text-slate-400 mt-5 font-bold italic"><span class="bg-indigo-600 w-1 h-1 rounded-full"></span> IMAGE SOURCE: ' . $credit . '</figcaption>';
                     }
                     $imageTag .= '</figure>';
                     
-                    if (strpos($content, '[IMAGE_PLACEHOLDER]') !== false) {
-                        $content = preg_replace('/\[IMAGE_PLACEHOLDER\]/', $imageTag, $content, 1);
-                    } else {
-                        $paragraphs = explode('</p>', $content);
-                        $insertPos = floor(count($paragraphs) / ($imageCount + 1)) * ($i + 1);
-                        $insertPos = max(1, min($insertPos, count($paragraphs) - 1));
-                        array_splice($paragraphs, $insertPos, 0, $imageTag);
-                        $content = implode('</p>', $paragraphs);
-                    }
+                    $pos = floor(count($paragraphs) / ($imageCount + 1)) * ($i + 1);
+                    $pos = max(1, min($pos, count($paragraphs) - 1));
+                    array_splice($paragraphs, $pos, 0, $imageTag);
                 }
+                $content = implode('</p>', $paragraphs);
             }
         }
+
+        // Final Cleanup
+        $content = str_replace('[IMAGE_PLACEHOLDER]', '', $content);
+        $content = $this->stripHeadingsBeforeFirstParagraph($content);
+        $content = trim($content);
+
+        // --- STEP 5: SAVE POST ---
+        $cleanTitle = str_replace(['"', '\''], '', $title);
+        $slug = Str::slug($cleanTitle);
+        if (Post::where('slug', $slug)->exists()) $slug .= '-' . time();
+
+        $status = $settings['status'] ?? 'published';
+        $createdAt = now();
+
+        $post = new Post();
+        $post->user_id = $userId ?? auth()->id() ?? 1;
+        $post->category_id = $settings['category_id'];
+        $post->title = $title;
+        $post->slug = $slug;
+        $post->summary = $contentData['meta_description'] ?? '';
+        $post->content = $content;
+        $post->featured_image = $featuredImageUrl;
+        $post->status = $status === 'scheduled' ? 'published' : $status; 
+        $post->meta_title = $title;
+        $post->meta_description = $contentData['meta_description'] ?? '';
+        $post->meta_keywords = $contentData['meta_keywords'] ?? '';
+        $post->created_at = $createdAt;
+        $post->updated_at = $createdAt;
+        $post->save();
+
+        return $post;
+    }
 
         $content = str_replace('[IMAGE_PLACEHOLDER]', '', $content);
         $content = preg_replace('/<h[1-6][^>]*>.*?(Introduction|ভূমিকা|পরিचय|Introducción|Overview|Background|সারসংক্ষেপ).*?<\/h[1-6]>/is', '', $content);
@@ -119,67 +152,34 @@ class AIContentService
         $post->summary = $contentData['meta_description'] ?? '';
         $post->content = $content;
         $post->featured_image = $featuredImageUrl;
-        $post->status = $status === 'scheduled' ? 'published' : $status; 
-        $post->meta_title = $contentData['title'];
-        $post->meta_description = $contentData['meta_description'] ?? '';
-        $post->meta_keywords = $contentData['meta_keywords'] ?? '';
-        $post->created_at = $createdAt;
-        $post->updated_at = $createdAt;
-        $post->save();
-
-        return $post;
-    }
-
-    private function generateContentFromOpenAI($keyword, $language, $imageCount, $articleLength, $apiKey, $generateTitle = 'yes', $enableOutbound = false, $realLinks = [])
+    private function generateContentFromOpenAI($keyword, $language, $imageCount, $articleLength, $apiKey, $generateTitle = 'yes', $aiModel = 'gpt-4o-mini')
     {
-        $imageInstruction = $imageCount > 0 ? "IMPORTANT: You MUST insert the exact text '[IMAGE_PLACEHOLDER]' at logical breaks between major sections exactly $imageCount times. Spread them out logically." : "";
-
-        $outboundInstruction = "";
-        if ($enableOutbound && !empty($realLinks)) {
-            $linksHtml = "SEO REQUIREMENT: You MUST naturally integrate the following REAL outbound links into the article content using descriptive anchor text:\n";
-            foreach ($realLinks as $link) {
-                $linksHtml .= "- <a href='{$link['url']}'>{$link['title']}</a>\n";
-            }
-            $outboundInstruction = $linksHtml . "Ensure these links flow naturally within the paragraphs.";
-        }
-
         $titleInstruction = $generateTitle === 'no' 
             ? "- 'title': MUST BE EXACTLY THE STRING '{keyword}' without any modifications."
             : "- 'title': A catchy, SEO-friendly title without the year unless necessary. DO NOT use colons (:) in the title. DO NOT start the title with clichés like 'Unlocking', 'Discovering', 'The Secret', or 'Guide'.";
 
-        $defaultPrompt = "Write an EXTENSIVE, high-quality, SEO-optimized article about '{keyword}' in {language}.\n\nSTRICT REQUIREMENT: The article MUST be approximately {article_length} words long. Provide deep analysis, detailed explanations, and sub-sections to achieve this length.\n\nSTRUCTURE:\n- Use <p> for paragraphs.\n- Use <h2> and <h3> for subheadings.\n- DO NOT use <h1> or horizontal lines (<hr>).\n- DO NOT start with an 'Introduction' heading.\n\nFORMAT:\nReturn ONLY a valid JSON object with these keys:\n$titleInstruction\n- 'meta_description': A 150-160 character meta description.\n- 'meta_keywords': A comma-separated string of 5-8 SEO keywords.\n- 'content': Full HTML content.\n\n{image_instruction}\n{outbound_instruction}\n\nEEAT Guidelines: Ensure expertise and trust. Content should sound human, not AI-generated.";
+        $defaultPrompt = "Write a VERY DETAILED, professional, SEO-optimized article about '{keyword}' in {language}.\n\nSTRICT REQUIREMENT: The article MUST be approximately {article_length} words long. Use multiple subheadings (h2, h3), detailed paragraphs, and deep analysis to reach this length. DO NOT summarize.\n\nSTRUCTURE:\n- Use <p> for paragraphs.\n- Use <h2> and <h3> for headings.\n- DO NOT use <h1> or horizontal lines (<hr>).\n- DO NOT start with an 'Introduction' heading.\n\nFORMAT:\nReturn ONLY a valid JSON object with these keys:\n$titleInstruction\n- 'meta_description': 150-160 characters.\n- 'meta_keywords': 5-8 SEO keywords.\n- 'content': Full HTML article content.\n\nEEAT Guidelines: Ensure expertise, trust, and a professional journalistic tone. Content should sound like it was written by a human expert, not an AI.";
+        
         $promptTemplate = Setting::get('ai_writer_prompt', $defaultPrompt);
 
-        // Fallback: If template doesn't contain placeholders, append them
-        if (strpos($promptTemplate, '{image_instruction}') === false) {
-            $promptTemplate .= "\n{image_instruction}";
-        }
-        if (strpos($promptTemplate, '{outbound_instruction}') === false) {
-            $promptTemplate .= "\n{outbound_instruction}";
-        }
-
-        if ($generateTitle === 'no') {
-            $promptTemplate = preg_replace('/-\s*\'title\':[^\n]+/', "- 'title': MUST BE EXACTLY THE STRING '{keyword}' without any modifications.", $promptTemplate);
-        }
-
         $prompt = str_replace(
-            ['{keyword}', '{language}', '{article_length}', '{image_instruction}', '{outbound_instruction}', '{current_year}'],
-            [$keyword, $language, $articleLength, $imageInstruction, $outboundInstruction, date('Y')],
+            ['{keyword}', '{language}', '{article_length}', '{current_year}'],
+            [$keyword, $language, $articleLength, date('Y')],
             $promptTemplate
         );
 
-        // Final enforcement for gpt-4o-mini
-        $prompt .= "\n\nCRITICAL: The 'content' MUST be very long, extremely detailed, and reach the {article_length} word goal. Provide multiple sections, in-depth analysis, and comprehensive coverage. DO NOT summarize.";
+        // Remove placeholders if they exist in the template since we handle them manually now
+        $prompt = str_replace(['{image_instruction}', '{outbound_instruction}'], '', $prompt);
 
-        $aiModel = $settings['ai_model'] ?? 'gpt-4o-mini';
+        $prompt .= "\n\nCRITICAL: The 'content' field MUST contain at least $articleLength words of detailed text. This is a hard requirement. Go deep into the topic.";
 
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $apiKey,
             'Content-Type' => 'application/json',
-        ])->timeout(120)->post('https://api.openai.com/v1/chat/completions', [
+        ])->timeout(180)->post('https://api.openai.com/v1/chat/completions', [
             'model' => $aiModel,
             'messages' => [
-                ['role' => 'system', 'content' => 'You are a professional SEO news journalist and senior editor. You output ONLY valid JSON.'],
+                ['role' => 'system', 'content' => 'You are a senior SEO editor. You output ONLY valid JSON.'],
                 ['role' => 'user', 'content' => $prompt]
             ],
             'response_format' => ['type' => 'json_object'],
