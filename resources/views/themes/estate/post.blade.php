@@ -27,10 +27,10 @@
         body { font-family: 'Lato', sans-serif; background-color: #fafafa; color: #1c1917; }
         .font-elegant { font-family: 'Playfair Display', serif; }
         
-        header { background-color: #1c1917 !important; border-bottom: none !important; padding: 1rem 0;}
-        header a, header svg { color: #f5f5f4 !important; }
-        header .text-primary { color: #d97706 !important; }
-        header .bg-primary { background-color: var(--primary) !important; color: white !important; }
+        .site-header { background-color: #1c1917 !important; border-bottom: none !important; padding: 1rem 0;}
+        .site-header a, .site-header svg { color: #f5f5f4 !important; }
+        .site-header .text-primary { color: #d97706 !important; }
+        .site-header .bg-primary { background-color: var(--primary) !important; color: white !important; }
 
         .prose p { margin-bottom: 2rem; font-size: 1.125rem; line-height: 1.9; color: #44403c; font-weight: 300; }
         .prose p::first-letter { font-family: 'Playfair Display', serif; font-size: 3.5rem; float: left; line-height: 0.8; padding-right: 0.5rem; color: #1c1917; font-weight: 800; }
