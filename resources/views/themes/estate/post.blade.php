@@ -33,7 +33,7 @@
         .site-header .bg-primary { background-color: var(--primary) !important; color: white !important; }
 
         .prose p { margin-bottom: 2rem; font-size: 1.125rem; line-height: 1.9; color: #44403c; font-weight: 300; }
-        .prose p::first-letter { font-family: 'Playfair Display', serif; font-size: 3.5rem; float: left; line-height: 0.8; padding-right: 0.5rem; color: #1c1917; font-weight: 800; }
+        .prose p:first-of-type::first-letter { font-family: 'Playfair Display', serif; font-size: 3.5rem; float: left; line-height: 0.8; padding-right: 0.5rem; color: #1c1917; font-weight: 800; }
         .prose img { width: 100%; margin: 3rem 0; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border: 1px solid #e7e5e4; }
         .prose h2 { font-family: 'Playfair Display', serif; font-size: 2.5rem; font-weight: 800; color: #1c1917; margin-top: 4rem; margin-bottom: 1.5rem; }
         .prose h3 { font-family: 'Playfair Display', serif; font-size: 1.875rem; font-weight: 600; color: #1c1917; margin-top: 3rem; margin-bottom: 1rem; font-style: italic; }
