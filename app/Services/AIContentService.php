@@ -122,7 +122,7 @@ class AIContentService
     // ============================================================
     // OPENAI CONTENT GENERATION
     // ============================================================
-    private function callOpenAI($keyword, $language, $articleLength, $generateTitle, $aiModel, $apiKey)
+    private function callOpenAI($keyword, $language, $articleLength, $generateTitle, $aiModel, $apiKey, $enableOutbound = false, $outboundCount = 1)
     {
         if ($generateTitle === 'no') {
             $titleRule = "- \"title\": MUST be exactly this string: \"{$keyword}\" — do not change it at all.";
