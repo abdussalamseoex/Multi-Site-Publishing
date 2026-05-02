@@ -171,11 +171,13 @@ class AIContentService
         // Final enforcement for gpt-4o-mini
         $prompt .= "\n\nCRITICAL: The 'content' MUST be very long, extremely detailed, and reach the {article_length} word goal. Provide multiple sections, in-depth analysis, and comprehensive coverage. DO NOT summarize.";
 
+        $aiModel = $settings['ai_model'] ?? 'gpt-4o-mini';
+
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $apiKey,
             'Content-Type' => 'application/json',
         ])->timeout(120)->post('https://api.openai.com/v1/chat/completions', [
-            'model' => 'gpt-4o-mini',
+            'model' => $aiModel,
             'messages' => [
                 ['role' => 'system', 'content' => 'You are a professional SEO news journalist and senior editor. You output ONLY valid JSON.'],
                 ['role' => 'user', 'content' => $prompt]

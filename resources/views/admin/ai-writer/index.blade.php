@@ -59,6 +59,14 @@
                             </div>
 
                             <div>
+                                <label class="block font-medium text-sm text-gray-700">AI Model</label>
+                                <select id="ai_model" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm font-bold text-indigo-600">
+                                    <option value="gpt-4o">GPT-4o (Best Quality - Long Articles)</option>
+                                    <option value="gpt-4o-mini" selected>GPT-4o-mini (Faster - Standard)</option>
+                                </select>
+                            </div>
+
+                            <div>
                                 <label class="block font-medium text-sm text-gray-700 text-indigo-600 font-bold">Assign Author</label>
                                 <select id="user_id" class="mt-1 block w-full rounded-md border-indigo-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                                     @foreach($users as $user)
@@ -277,6 +285,7 @@
             const generate_title = document.getElementById('generate_title').value;
             const article_length = parseInt(document.getElementById('article_length').value);
             const user_id = document.getElementById('user_id').value;
+            const ai_model = document.getElementById('ai_model').value;
             
             const enable_outbound_links = document.getElementById('enable_outbound_links').checked;
             const outbound_links_count = document.getElementById('outbound_links_count').value;
@@ -304,6 +313,7 @@
                         generate_title,
                         article_length,
                         user_id,
+                        ai_model,
                         enable_outbound_links,
                         outbound_links_count,
                         featured_image_sources,
@@ -353,6 +363,7 @@
             const generate_title = document.getElementById('generate_title').value;
             const article_length = parseInt(document.getElementById('article_length').value);
             const user_id = document.getElementById('user_id').value;
+            const ai_model = document.getElementById('ai_model').value;
             const enable_outbound_links = document.getElementById('enable_outbound_links').checked;
             const outbound_links_count = document.getElementById('outbound_links_count').value;
             
@@ -381,6 +392,7 @@
                         generate_title,
                         article_length,
                         user_id,
+                        ai_model,
                         enable_outbound_links,
                         outbound_links_count,
                         featured_image_sources,

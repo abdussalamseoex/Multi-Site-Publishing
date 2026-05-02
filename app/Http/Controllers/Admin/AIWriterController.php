@@ -57,6 +57,7 @@ class AIWriterController extends Controller
             'article_length' => 'nullable|integer',
             'generate_title' => 'required|string',
             'user_id' => 'nullable|exists:users,id',
+            'ai_model' => 'nullable|string',
             'enable_outbound_links' => 'nullable|boolean',
             'outbound_links_count' => 'nullable|integer|min:1|max:5',
         ]);
@@ -90,6 +91,7 @@ class AIWriterController extends Controller
             'article_length' => 'nullable|integer',
             'generate_title' => 'required|string',
             'user_id' => 'required|exists:users,id',
+            'ai_model' => 'nullable|string',
             'enable_outbound_links' => 'nullable|boolean',
             'outbound_links_count' => 'nullable|integer|min:1|max:5',
         ]);
