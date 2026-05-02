@@ -22,15 +22,27 @@ class AIContentService
         $generateTitle = $settings['generate_title'] ?? 'yes';
         $imageCount = $settings['in_content_images_count'] ?? 1;
         
-        // Fix: Use plural keys from settings as set in controller/UI
         $featuredSources = $settings['featured_image_sources'] ?? ($settings['featured_image_source'] ?? []);
         $inContentSources = $settings['in_content_image_sources'] ?? ($settings['in_content_image_source'] ?? []);
         
         $enableOutbound = $settings['enable_outbound_links'] ?? false;
         $outboundCount = $settings['outbound_links_count'] ?? 1;
 
-        // 1. Generate Content
-        $contentData = $this->generateContentFromOpenAI($keyword, $language, $imageCount, $articleLength, $openaiKey, $generateTitle, $enableOutbound, $outboundCount);
+        // 1. Fetch REAL Outbound Links if enabled
+        $realLinks = [];
+        if ($enableOutbound) {
+            \Log::info("Searching for real outbound links for: " . $keyword);
+            for ($i = 0; $i < $outboundCount; $i++) {
+                $searchQuery = $keyword . " official news source " . ($i + 1);
+                $linkData = $this->fetchFromGoogle($searchQuery, 'web');
+                if ($linkData) {
+                    $realLinks[] = $linkData;
+                }
+            }
+        }
+
+        // 2. Generate Content with REAL links
+        $contentData = $this->generateContentFromOpenAI($keyword, $language, $imageCount, $articleLength, $openaiKey, $generateTitle, $enableOutbound, $realLinks);
         if (!$contentData) {
             throw new \Exception('Failed to generate content from OpenAI.');
         }
@@ -40,7 +52,7 @@ class AIContentService
             $contentData['title'] = $this->sanitizeTitle($contentData['title']);
         }
 
-        // 2. Handle Featured Image
+        // 3. Handle Featured Image
         $featuredImageUrl = null;
         if (!empty($featuredSources) && $featuredSources !== 'none') {
             $imgData = $this->fetchImage($keyword, $featuredSources);
@@ -49,7 +61,7 @@ class AIContentService
             }
         }
 
-        // 3. Handle In-Content Images
+        // 4. Handle In-Content Images
         $content = $contentData['content'];
         if ($imageCount > 0 && !empty($inContentSources) && $inContentSources !== 'none') {
             $batchImages = $this->fetchImage($keyword, $inContentSources, $imageCount);
@@ -59,17 +71,19 @@ class AIContentService
                     $imgUrl = $imgData['url'];
                     $credit = $imgData['credit'];
                     
+                    $imageTag = '<figure class="my-10 overflow-hidden rounded-2xl bg-gray-50 border border-gray-100 shadow-lg p-3">';
+                    $imageTag .= '<img src="' . $imgUrl . '" alt="' . htmlspecialchars($keyword) . '" class="w-full h-auto rounded-xl transition-transform duration-500 hover:scale-[1.02]">';
                     if (!empty($credit)) {
-                        $imageTag = '<figure class="my-8 overflow-hidden rounded-xl bg-gray-50 border border-gray-100 shadow-sm p-2"><img src="' . $imgUrl . '" alt="' . htmlspecialchars($keyword) . '" class="w-full h-auto rounded-lg"><figcaption class="flex items-center justify-center space-x-2 text-sm text-gray-500 mt-3 pb-1"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span>Image Credit: ' . $credit . '</span></figcaption></figure>';
-                    } else {
-                        $imageTag = '<figure class="my-8 overflow-hidden rounded-xl bg-gray-50 border border-gray-100 shadow-sm p-2"><img src="' . $imgUrl . '" alt="' . htmlspecialchars($keyword) . '" class="w-full h-auto rounded-lg"></figure>';
+                        $imageTag .= '<figcaption class="flex items-center justify-center space-x-2 text-xs text-gray-400 mt-4 italic font-medium tracking-tight uppercase"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span>Image: ' . $credit . '</span></figcaption>';
                     }
+                    $imageTag .= '</figure>';
                     
                     if (strpos($content, '[IMAGE_PLACEHOLDER]') !== false) {
                         $content = preg_replace('/\[IMAGE_PLACEHOLDER\]/', $imageTag, $content, 1);
                     } else {
                         $paragraphs = explode('</p>', $content);
-                        $insertPos = min($i + 1, count($paragraphs) - 1);
+                        $insertPos = floor(count($paragraphs) / ($imageCount + 1)) * ($i + 1);
+                        $insertPos = max(1, min($insertPos, count($paragraphs) - 1));
                         array_splice($paragraphs, $insertPos, 0, $imageTag);
                         $content = implode('</p>', $paragraphs);
                     }
@@ -116,20 +130,24 @@ class AIContentService
         return $post;
     }
 
-    private function generateContentFromOpenAI($keyword, $language, $imageCount, $articleLength, $apiKey, $generateTitle = 'yes', $enableOutbound = false, $outboundCount = 1)
+    private function generateContentFromOpenAI($keyword, $language, $imageCount, $articleLength, $apiKey, $generateTitle = 'yes', $enableOutbound = false, $realLinks = [])
     {
-        $imageInstruction = $imageCount > 0 ? "Also, insert the exact text '[IMAGE_PLACEHOLDER]' at appropriate places in the content $imageCount times." : "";
+        $imageInstruction = $imageCount > 0 ? "IMPORTANT: You MUST insert the exact text '[IMAGE_PLACEHOLDER]' at logical breaks between major sections exactly $imageCount times. Spread them out logically." : "";
 
         $outboundInstruction = "";
-        if ($enableOutbound) {
-            $outboundInstruction = "Also, identify and naturally insert exactly $outboundCount relevant outbound links to high-authority websites (like Wikipedia, Investopedia, BBC, .gov sites, etc.) within the content. Use descriptive anchor text. Ensure the links are functional and highly relevant to the topic.";
+        if ($enableOutbound && !empty($realLinks)) {
+            $linksHtml = "SEO REQUIREMENT: You MUST naturally integrate the following REAL outbound links into the article content using descriptive anchor text:\n";
+            foreach ($realLinks as $link) {
+                $linksHtml .= "- <a href='{$link['url']}'>{$link['title']}</a>\n";
+            }
+            $outboundInstruction = $linksHtml . "Ensure these links flow naturally within the paragraphs.";
         }
 
         $titleInstruction = $generateTitle === 'no' 
             ? "- 'title': MUST BE EXACTLY THE STRING '{keyword}' without any modifications."
             : "- 'title': A catchy, SEO-friendly title without the year unless necessary. DO NOT use colons (:) in the title. DO NOT start the title with clichés like 'Unlocking', 'Discovering', 'The Secret', or 'Guide'.";
 
-        $defaultPrompt = "Write a comprehensive, SEO-optimized, and highly engaging article about '{keyword}' in {language}. The article length should be approximately {article_length} words. The current year is {current_year}, ensure content is up-to-date.\nFollow Google's EEAT (Experience, Expertise, Authoritativeness, Trustworthiness) guidelines.\nFormat the output as a valid JSON object with four keys:\n$titleInstruction\n- 'meta_description': A 150-160 character meta description.\n- 'meta_keywords': A comma-separated string of 5-8 SEO keywords.\n- 'content': The main article content formatted in HTML (use <p> for paragraphs with logical spacing, <h2> for main sections, <h3> for sub-sections. Do NOT use <h1>). Do NOT start the content with an 'Introduction' heading. Start directly with the first paragraph and NO heading above it.\n{image_instruction}\n{outbound_instruction}\nMake the content sound natural, human-written, and provide deep value to the reader. Do not sound like an AI robot.";
+        $defaultPrompt = "Write an EXTENSIVE, high-quality, SEO-optimized article about '{keyword}' in {language}.\n\nSTRICT REQUIREMENT: The article MUST be approximately {article_length} words long. Provide deep analysis, detailed explanations, and sub-sections to achieve this length.\n\nSTRUCTURE:\n- Use <p> for paragraphs.\n- Use <h2> and <h3> for subheadings.\n- DO NOT use <h1> or horizontal lines (<hr>).\n- DO NOT start with an 'Introduction' heading.\n\nFORMAT:\nReturn ONLY a valid JSON object with these keys:\n$titleInstruction\n- 'meta_description': A 150-160 character meta description.\n- 'meta_keywords': A comma-separated string of 5-8 SEO keywords.\n- 'content': Full HTML content.\n\n{image_instruction}\n{outbound_instruction}\n\nEEAT Guidelines: Ensure expertise and trust. Content should sound human, not AI-generated.";
         $promptTemplate = Setting::get('ai_writer_prompt', $defaultPrompt);
 
         // Fallback: If template doesn't contain placeholders, append them
@@ -150,10 +168,8 @@ class AIContentService
             $promptTemplate
         );
 
-        // Stronger length instruction if not in template
-        if (strpos($prompt, 'article length') === false) {
-            $prompt .= "\nVERY IMPORTANT: The article MUST be at least $articleLength words long. Provide deep, detailed information.";
-        }
+        // Final enforcement for gpt-4o-mini
+        $prompt .= "\n\nCRITICAL: The 'content' MUST be very long, extremely detailed, and reach the {article_length} word goal. Provide multiple sections, in-depth analysis, and comprehensive coverage. DO NOT summarize.";
 
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $apiKey,
@@ -161,7 +177,7 @@ class AIContentService
         ])->timeout(120)->post('https://api.openai.com/v1/chat/completions', [
             'model' => 'gpt-4o-mini',
             'messages' => [
-                ['role' => 'system', 'content' => 'You are an expert SEO content writer and subject matter expert.'],
+                ['role' => 'system', 'content' => 'You are a professional SEO news journalist and senior editor. You output ONLY valid JSON.'],
                 ['role' => 'user', 'content' => $prompt]
             ],
             'response_format' => ['type' => 'json_object'],
@@ -171,9 +187,18 @@ class AIContentService
         if ($response->successful()) {
             $result = $response->json();
             $contentStr = $result['choices'][0]['message']['content'] ?? '';
-            return json_decode($contentStr, true);
+            $data = json_decode($contentStr, true);
+            
+            // Log word count for debugging
+            if ($data && isset($data['content'])) {
+                $wordCount = str_word_count(strip_tags($data['content']));
+                \Log::info("Generated content word count: $wordCount");
+            }
+            
+            return $data;
         }
 
+        \Log::error("OpenAI Error: " . $response->body());
         return false;
     }
 
