@@ -382,7 +382,7 @@
                 setTimeout(() => setStep(2, 'active'), 15000); // Usually images/links happen later
                 setTimeout(() => setStep(3, 'active'), 25000);
 
-                const response = await fetch("{{ route('admin.ai-writer.generate') }}", {
+                const response = await fetch("{{ route('admin.ai-writer.generate', [], false) }}", {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -468,7 +468,7 @@
             btn.innerText = 'Starting Campaign...';
 
             try {
-                const response = await fetch("{{ route('admin.ai-writer.bulk-start') }}", {
+                const response = await fetch("{{ route('admin.ai-writer.bulk-start', [], false) }}", {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

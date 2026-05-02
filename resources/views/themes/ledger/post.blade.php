@@ -35,7 +35,7 @@
         .prose { font-family: 'Inter', sans-serif; }
         .prose p { margin-bottom: 1.5rem; font-size: 1.125rem; line-height: 1.8; color: #334155; }
         .prose img { width: 100%; margin: 2rem 0; border: 1px solid #cbd5e1; border-radius: 4px; }
-        .prose h2 { font-family: 'Inter', sans-serif; font-size: 2.25rem; font-weight: 800; color: #0f172a; margin-top: 3.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid #0f172a; padding-bottom: 0.5rem; letter-spacing: -0.025em;}
+        .prose h2 { font-family: 'Inter', sans-serif; font-size: 2.25rem; font-weight: 800; color: #0f172a; margin-top: 3.5rem; margin-bottom: 1.5rem; padding-bottom: 0.5rem; letter-spacing: -0.025em;}
         .prose h3 { font-family: 'Inter', sans-serif; font-size: 1.75rem; font-weight: 700; color: #0f172a; margin-top: 2.5rem; margin-bottom: 1.25rem; }
         .prose a { color: var(--primary); text-decoration: none; font-weight: 700; border-bottom: 2px solid rgba(3, 105, 161, 0.2); transition: border-color 0.2s; }
         .prose a:hover { border-bottom-color: var(--primary); }
