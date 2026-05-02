@@ -132,6 +132,14 @@ class AIContentService
         $defaultPrompt = "Write a comprehensive, SEO-optimized, and highly engaging article about '{keyword}' in {language}. The article length should be approximately {article_length} words. The current year is {current_year}, ensure content is up-to-date.\nFollow Google's EEAT (Experience, Expertise, Authoritativeness, Trustworthiness) guidelines.\nFormat the output as a valid JSON object with four keys:\n$titleInstruction\n- 'meta_description': A 150-160 character meta description.\n- 'meta_keywords': A comma-separated string of 5-8 SEO keywords.\n- 'content': The main article content formatted in HTML (use <p> for paragraphs with logical spacing, <h2> for main sections, <h3> for sub-sections. Do NOT use <h1>). Do NOT start the content with an 'Introduction' heading. Start directly with the first paragraph and NO heading above it.\n{image_instruction}\n{outbound_instruction}\nMake the content sound natural, human-written, and provide deep value to the reader. Do not sound like an AI robot.";
         $promptTemplate = Setting::get('ai_writer_prompt', $defaultPrompt);
 
+        // Fallback: If template doesn't contain placeholders, append them
+        if (strpos($promptTemplate, '{image_instruction}') === false) {
+            $promptTemplate .= "\n{image_instruction}";
+        }
+        if (strpos($promptTemplate, '{outbound_instruction}') === false) {
+            $promptTemplate .= "\n{outbound_instruction}";
+        }
+
         if ($generateTitle === 'no') {
             $promptTemplate = preg_replace('/-\s*\'title\':[^\n]+/', "- 'title': MUST BE EXACTLY THE STRING '{keyword}' without any modifications.", $promptTemplate);
         }
@@ -141,6 +149,11 @@ class AIContentService
             [$keyword, $language, $articleLength, $imageInstruction, $outboundInstruction, date('Y')],
             $promptTemplate
         );
+
+        // Stronger length instruction if not in template
+        if (strpos($prompt, 'article length') === false) {
+            $prompt .= "\nVERY IMPORTANT: The article MUST be at least $articleLength words long. Provide deep, detailed information.";
+        }
 
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $apiKey,
@@ -307,7 +320,7 @@ class AIContentService
             'Content-Type' => 'application/json',
         ])->timeout(60)->post('https://api.openai.com/v1/images/generations', [
             'model' => 'dall-e-3',
-            'prompt' => 'A high-quality photographic editorial image for: ' . $query . '. No text or signatures.',
+            'prompt' => "A high-end, professional, realistic editorial photograph for a news article about: " . $query . ". The image should look like it was shot with a high-end DSLR camera (like a Canon EOS or Nikon D850), featuring natural lighting, sharp focus, and a professional journalistic aesthetic. DO NOT include any text, typography, words, watermarks, signatures, or logos. Purely visual and realistic.",
             'n' => 1,
             'size' => '1024x1024'
         ]);

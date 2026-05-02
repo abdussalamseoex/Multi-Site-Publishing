@@ -49,14 +49,16 @@ class AIWriterController extends Controller
             'keyword' => 'required|string',
             'category_id' => 'required|exists:categories,id',
             'language' => 'required|string',
-            'featured_image_source' => 'required|string',
+            'featured_image_sources' => 'nullable|array',
+            'in_content_image_sources' => 'nullable|array',
             'in_content_images_count' => 'required|integer|min:0|max:5',
-            'in_content_image_source' => 'required|string',
             'status' => 'required|string',
             'schedule_time' => 'nullable|date',
             'article_length' => 'nullable|integer',
             'generate_title' => 'required|string',
             'user_id' => 'nullable|exists:users,id',
+            'enable_outbound_links' => 'nullable|boolean',
+            'outbound_links_count' => 'nullable|integer|min:1|max:5',
         ]);
 
         try {

@@ -165,10 +165,20 @@
                             </div>
                         </div>
 
-                        <div>
-                            <button type="submit" id="start-btn" class="bg-indigo-600 text-white px-6 py-2 rounded shadow hover:bg-indigo-700">
-                                Start Generating
+                        <div class="flex items-center gap-4 bg-white p-6 rounded-xl border shadow-sm sticky bottom-0 z-10">
+                            <button type="submit" id="start-btn" class="bg-indigo-600 text-white px-8 py-3 rounded-lg font-bold shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                                Start Bulk Campaign
                             </button>
+                            
+                            <button type="button" id="single-gen-btn" onclick="generateSingle()" class="bg-white text-indigo-600 border-2 border-indigo-600 px-8 py-3 rounded-lg font-bold hover:bg-indigo-50 transition-all flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                Generate Single Article
+                            </button>
+
+                            <div class="ml-auto text-sm text-gray-500 italic">
+                                * Single generation uses the first keyword.
+                            </div>
                         </div>
                     </form>
 
@@ -250,6 +260,75 @@
     @push('scripts')
     <script>
         let countdownIntervals = {};
+
+        async function generateSingle() {
+            const btn = document.getElementById('single-gen-btn');
+            const keywordsRaw = document.getElementById('keywords').value;
+            const keywords = keywordsRaw.split('\n').map(k => k.trim()).filter(k => k !== '');
+            
+            if (keywords.length === 0) {
+                alert('Please enter at least one keyword');
+                return;
+            }
+
+            const keyword = keywords[0]; // Use first keyword for single generation
+            const category_id = document.getElementById('category_id').value;
+            const language = document.getElementById('language').value;
+            const generate_title = document.getElementById('generate_title').value;
+            const article_length = parseInt(document.getElementById('article_length').value);
+            const user_id = document.getElementById('user_id').value;
+            
+            const enable_outbound_links = document.getElementById('enable_outbound_links').checked;
+            const outbound_links_count = document.getElementById('outbound_links_count').value;
+            
+            const featured_image_sources = Array.from(document.querySelectorAll('input[name="featured_image_sources[]"]:checked')).map(cb => cb.value);
+            const in_content_image_sources = Array.from(document.querySelectorAll('input[name="in_content_image_sources[]"]:checked')).map(cb => cb.value);
+            const in_content_images_count = document.getElementById('in_content_images_count').value;
+            
+            const status = document.getElementById('status').value;
+
+            btn.disabled = true;
+            btn.innerText = 'Generating Article...';
+
+            try {
+                const response = await fetch("{{ route('admin.ai-writer.generate') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                    },
+                    body: JSON.stringify({
+                        keyword,
+                        category_id,
+                        language,
+                        generate_title,
+                        article_length,
+                        user_id,
+                        enable_outbound_links,
+                        outbound_links_count,
+                        featured_image_sources,
+                        in_content_image_sources,
+                        in_content_images_count,
+                        status
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(result.message);
+                    window.location.reload(); // Reload to see new post in history
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error("Single Gen Error:", error);
+                alert('An error occurred. Check console.');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Generate Single Article';
+            }
+        }
 
         document.getElementById('enable_outbound_links').addEventListener('change', function() {
             const wrapper = document.getElementById('outbound_count_wrapper');
