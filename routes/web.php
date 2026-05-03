@@ -156,6 +156,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/settings/limits', [SettingController::class, 'limitsIndex'])->name('settings.limits');
     Route::get('/settings/social', [SettingController::class, 'socialIndex'])->name('settings.social');
     Route::get('/settings/ads', [SettingController::class, 'adsIndex'])->name('settings.ads');
+    Route::get('/settings/adblock', [SettingController::class, 'adblockIndex'])->name('settings.adblock');
     Route::post('/settings', [SettingController::class, 'store'])->name('settings.store');
     
     // Theme Options / Homepage Builder

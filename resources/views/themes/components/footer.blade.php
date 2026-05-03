@@ -144,5 +144,324 @@
             fetch('{{ url("/system/pseudo-cron") }}').catch(function() {});
         }, 3000); // Trigger after 3 seconds to not delay page load
     </script>
+
+    <!-- ============================================================ -->
+    <!-- ADVANCED ADBLOCK SHIELD v3 - Multi-Layer Scoring System      -->
+    <!-- ============================================================ -->
+    @if(\App\Models\Setting::get('adblock_detection_enabled') == '1')
+
+    {{-- Layer 1: Multiple DOM bait elements with different ad-network class names --}}
+    <div id="adblock-bait-dom" 
+         class="ad-placement adsense ads-banner ads-box ad-unit ads-wrapper adsbygoogle ad-slot ad-container"
+         style="position:absolute;left:-9999px;top:-9999px;height:1px;width:1px;opacity:0.001;"
+         aria-hidden="true">
+    </div>
+
+    {{-- The Shield Overlay --}}
+    <div id="adblock-shield" 
+         style="display:none;" 
+         class="fixed inset-0 z-[9999999] flex items-center justify-center p-4"
+         aria-modal="true" role="alertdialog">
+        
+        {{-- Animated background --}}
+        <div class="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-indigo-950/95 to-slate-900/95 backdrop-blur-2xl"></div>
+        
+        {{-- Animated orbs --}}
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-red-600/20 rounded-full blur-3xl animate-pulse" style="animation-delay:1s;"></div>
+        
+        {{-- Modal card --}}
+        <div id="adblock-modal-card"
+             class="relative z-10 bg-white/10 border border-white/20 shadow-2xl rounded-3xl max-w-md w-full p-8 text-center transform scale-90 transition-all duration-500 opacity-0"
+             style="backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);">
+
+            {{-- Pulse ring icon --}}
+            <div class="relative inline-flex mx-auto mb-6">
+                <span class="absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-40 animate-ping"></span>
+                <div class="relative w-20 h-20 bg-gradient-to-br from-red-500 to-red-700 rounded-2xl flex items-center justify-center shadow-lg shadow-red-500/30 rotate-3">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="mb-1 inline-flex items-center gap-1.5 bg-red-500/20 border border-red-500/30 text-red-300 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full">
+                <span class="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse inline-block"></span>
+                AD BLOCKER ACTIVE
+            </div>
+
+            <h2 class="text-2xl font-black text-white mt-4 mb-3 tracking-tight">
+                {{ \App\Models\Setting::get('adblock_message_title', 'Please Disable Your AdBlocker') }}
+            </h2>
+            <p class="text-slate-300 mb-6 leading-relaxed text-sm">
+                {{ \App\Models\Setting::get('adblock_message_body', "We've detected an active ad blocker. Our content is free because of ads — please whitelist our site to continue reading.") }}
+            </p>
+
+            {{-- How to steps --}}
+            <div class="text-left bg-white/5 border border-white/10 rounded-2xl p-4 mb-6 space-y-2.5">
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">How to whitelist:</p>
+                <div class="flex items-start gap-3">
+                    <span class="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-black flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
+                    <p class="text-slate-300 text-sm">Click the AdBlock icon in your browser toolbar.</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-black flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
+                    <p class="text-slate-300 text-sm">Select <strong class="text-white">"Don't run on this site"</strong> or <strong class="text-white">"Whitelist"</strong>.</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-black flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+                    <p class="text-slate-300 text-sm">Click the button below to reload.</p>
+                </div>
+            </div>
+
+            <button id="adblock-refresh-btn"
+                    onclick="window.location.reload()" 
+                    class="w-full py-3.5 px-8 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white rounded-2xl font-bold shadow-lg shadow-indigo-500/30 transition-all duration-200 active:scale-95 text-base">
+                {{ \App\Models\Setting::get('adblock_refresh_text', "I've disabled it — Reload") }}
+            </button>
+            <p class="text-xs text-slate-500 mt-4 uppercase tracking-widest font-semibold">Thank you for supporting us ❤️</p>
+        </div>
+    </div>
+
+    <style>
+        /* Blur body content behind shield */
+        body.adblock-active-lock {
+            overflow: hidden !important;
+            position: fixed !important;
+            width: 100% !important;
+        }
+        /* Blurred content layer */
+        .adblock-content-blurred {
+            filter: blur(10px) grayscale(60%) brightness(0.7) !important;
+            pointer-events: none !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            transition: filter 0.4s ease !important;
+        }
+        /* Shield fade-in animation */
+        #adblock-shield.shield-visible {
+            display: flex !important;
+        }
+        #adblock-modal-card.modal-in {
+            opacity: 1 !important;
+            transform: scale(1) !important;
+        }
+    </style>
+
+    <script>
+    /* ================================================================
+       ADVANCED ADBLOCK SHIELD v3
+       4-Layer Detection | MutationObserver | Scoring System | Anti-Bypass
+       ================================================================ */
+    (function() {
+        'use strict';
+
+        // --- Config from Admin Settings ---
+        const DETECTION_DELAY = {{ \App\Models\Setting::get('adblock_delay', 1000) }};
+        const BLUR_ENABLED    = {{ \App\Models\Setting::get('adblock_blur_enabled', 1) == '1' ? 'true' : 'false' }};
+        const RECHECK_INTERVAL = 4000; // ms between periodic checks
+        const SCORE_THRESHOLD  = 1;    // Trigger if at least 1 layer fires
+
+        let isShieldActive = false;
+        let mutationObserver = null;
+
+        // ---- LAYER 1: DOM Bait Element Check ----
+        function checkLayer1_BaitDOM() {
+            return new Promise(resolve => {
+                const bait = document.getElementById('adblock-bait-dom');
+                if (!bait) { resolve({ layer: 1, blocked: true, reason: 'bait-missing' }); return; }
+
+                const st = window.getComputedStyle(bait);
+                const blocked =
+                    bait.offsetHeight === 0 ||
+                    bait.offsetWidth  === 0 ||
+                    st.display        === 'none' ||
+                    st.visibility     === 'hidden' ||
+                    parseFloat(st.opacity) < 0.01;
+
+                resolve({ layer: 1, blocked, reason: 'dom-style' });
+            });
+        }
+
+        // ---- LAYER 2: Bait Script Load Check (/ads.js) ----
+        function checkLayer2_BaitScript() {
+            return new Promise(resolve => {
+                // uBlock Origin, Adblock Plus, Brave Shields all block files named "ads.js"
+                const s = document.createElement('script');
+                const done = (blocked) => {
+                    resolve({ layer: 2, blocked, reason: 'script-load' });
+                    try { document.head.removeChild(s); } catch(e) {}
+                };
+                s.src = '/ads.js?t=' + Date.now();
+                s.onload  = () => done(typeof window.__adblock_bait_loaded === 'undefined');
+                s.onerror = () => done(true);
+                // Safety timeout
+                const timer = setTimeout(() => done(true), 2500);
+                s.onload = () => { clearTimeout(timer); done(typeof window.__adblock_bait_loaded === 'undefined'); };
+                document.head.appendChild(s);
+            });
+        }
+
+        // ---- LAYER 3: Bait CSS Link Load Check (/css/adsense.css) ----
+        function checkLayer3_BaitCSS() {
+            return new Promise(resolve => {
+                // Most blockers also block CSS files matching ad network names
+                const link = document.createElement('link');
+                link.rel  = 'stylesheet';
+                link.href = '/css/adsense.css?t=' + Date.now();
+                const done = (blocked) => {
+                    resolve({ layer: 3, blocked, reason: 'css-load' });
+                    try { document.head.removeChild(link); } catch(e) {}
+                };
+                const timer = setTimeout(() => done(true), 2500);
+                link.onload  = () => { clearTimeout(timer); done(false); };
+                link.onerror = () => { clearTimeout(timer); done(true); };
+                document.head.appendChild(link);
+            });
+        }
+
+        // ---- LAYER 4: Fetch Request to Known Ad Network URL ----
+        function checkLayer4_FetchProbe() {
+            return new Promise(resolve => {
+                // Ad blockers (uBlock, Adblock Plus) block requests to ad network domains
+                fetch('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', {
+                    method: 'HEAD',
+                    mode:   'no-cors',
+                    cache:  'no-store'
+                })
+                .then(() => resolve({ layer: 4, blocked: false, reason: 'fetch-ok' }))
+                .catch(() => resolve({ layer: 4, blocked: true,  reason: 'fetch-failed' }));
+            });
+        }
+
+        // ---- MutationObserver: Detect DOM Tampering by Blockers ----
+        function setupMutationGuard() {
+            const body = document.body;
+            mutationObserver = new MutationObserver((mutations) => {
+                if (isShieldActive) return;
+                for (const mutation of mutations) {
+                    // Watch for bait element being hidden or removed
+                    if (mutation.type === 'attributes') {
+                        const t = mutation.target;
+                        if (t && t.id === 'adblock-bait-dom') {
+                            const st = window.getComputedStyle(t);
+                            if (st.display === 'none' || st.visibility === 'hidden') {
+                                activateShield('mutation-attr');
+                                return;
+                            }
+                        }
+                    }
+                    if (mutation.type === 'childList') {
+                        mutation.removedNodes.forEach(node => {
+                            if (node.nodeType === 1 && node.id === 'adblock-bait-dom') {
+                                activateShield('mutation-remove');
+                            }
+                        });
+                    }
+                }
+            });
+
+            const bait = document.getElementById('adblock-bait-dom');
+            if (bait) {
+                mutationObserver.observe(bait, { attributes: true, attributeFilter: ['style', 'class'] });
+            }
+            mutationObserver.observe(body, { childList: true, subtree: true });
+        }
+
+        // ---- Run All Layers and Score ----
+        async function runDetection() {
+            if (isShieldActive) return;
+
+            try {
+                // Run all layers concurrently for speed
+                const results = await Promise.all([
+                    checkLayer1_BaitDOM(),
+                    checkLayer2_BaitScript(),
+                    checkLayer3_BaitCSS(),
+                    checkLayer4_FetchProbe(),
+                ]);
+
+                let score = 0;
+                const triggers = [];
+                results.forEach(r => {
+                    if (r.blocked) {
+                        score++;
+                        triggers.push('L' + r.layer + ':' + r.reason);
+                    }
+                });
+
+                if (score >= SCORE_THRESHOLD) {
+                    activateShield(triggers.join(','));
+                }
+            } catch(e) {
+                // If detection itself errors, run a simple DOM check as fallback
+                checkLayer1_BaitDOM().then(r => { if (r.blocked) activateShield('fallback'); });
+            }
+        }
+
+        // ---- Activate the Shield UI ----
+        function activateShield(reason) {
+            if (isShieldActive) return;
+            isShieldActive = true;
+
+            // Hard-lock body scroll
+            document.body.classList.add('adblock-active-lock');
+
+            // Blur background content
+            if (BLUR_ENABLED) {
+                const selectors = ['main', 'article', 'header', '.site-header', '.site-nav', 
+                                   '.max-w-7xl', '#content', 'section', 'aside', '.hero'];
+                selectors.forEach(sel => {
+                    document.querySelectorAll(sel).forEach(el => {
+                        // Don't blur the shield itself
+                        if (!el.closest('#adblock-shield')) {
+                            el.classList.add('adblock-content-blurred');
+                        }
+                    });
+                });
+            }
+
+            // Show shield with animation
+            const shield = document.getElementById('adblock-shield');
+            const card   = document.getElementById('adblock-modal-card');
+            if (shield) {
+                shield.style.display = 'flex';
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        if (card) card.classList.add('modal-in');
+                    });
+                });
+            }
+        }
+
+        // ---- Init ----
+        function init() {
+            setupMutationGuard();
+
+            // Initial check after delay
+            setTimeout(runDetection, DETECTION_DELAY);
+
+            // Periodic recheck (in case user installs blocker mid-session)
+            setInterval(() => {
+                if (!isShieldActive) runDetection();
+            }, RECHECK_INTERVAL);
+
+            // Recheck on tab return (user may have changed settings)
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden && !isShieldActive) {
+                    setTimeout(runDetection, 600);
+                }
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+    })();
+    </script>
+    @endif
 </footer>
 

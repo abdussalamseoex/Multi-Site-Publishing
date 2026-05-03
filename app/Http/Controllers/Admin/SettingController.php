@@ -38,6 +38,12 @@ class SettingController extends Controller
         return view('admin.settings_ads', compact('settings'));
     }
 
+    public function adblockIndex()
+    {
+        $settings = Setting::all()->pluck('value', 'key')->toArray();
+        return view('admin.settings_adblock', compact('settings'));
+    }
+
     public function store(Request $request)
     {
         $data = $request->except(['_token', 'site_logo', 'site_favicon']);
