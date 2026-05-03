@@ -138,5 +138,11 @@
         {!! \App\Models\Setting::get('ad_code_socialbar', '') !!}
     @endif
 
+    <!-- Pseudo-Cron Trigger (WP-Cron Alternative) -->
+    <script>
+        setTimeout(function() {
+            fetch('{{ url("/system/pseudo-cron") }}').catch(function() {});
+        }, 3000); // Trigger after 3 seconds to not delay page load
+    </script>
 </footer>
 

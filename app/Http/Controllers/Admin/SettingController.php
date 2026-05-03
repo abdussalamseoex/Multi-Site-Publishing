@@ -111,6 +111,11 @@ class SettingController extends Controller
         // Try to obtain a lock for 5 minutes so it doesn't run concurrently on many requests
         if (\Illuminate\Support\Facades\Cache::add('pseudo_cron_lock', true, 300)) {
             try {
+                // Ensure the background task doesn't die if the user closes the browser
+                ignore_user_abort(true);
+                // Allow enough time for AI fetching (e.g., 10 minutes)
+                set_time_limit(600);
+
                 // Call the scheduled commands
                 \Illuminate\Support\Facades\Artisan::call('schedule:run');
             } catch (\Exception $e) {
