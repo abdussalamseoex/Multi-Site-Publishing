@@ -17,8 +17,8 @@
         <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
         {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
-    <body class="font-sans antialiased text-gray-900 bg-gray-50 overflow-hidden">
-        <div class="flex h-screen" x-data="{ sidebarOpen: false }">
+    <body class="font-sans antialiased text-gray-900 bg-gray-50 flex flex-col h-screen overflow-hidden">
+        <div class="flex flex-1 overflow-hidden" x-data="{ sidebarOpen: false }">
             
             <!-- Mobile Sidebar Overlay -->
             <div x-show="sidebarOpen" class="fixed inset-0 z-20 transition-opacity bg-black bg-opacity-50 lg:hidden" @click="sidebarOpen = false" x-transition.opacity></div>
