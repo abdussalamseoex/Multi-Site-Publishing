@@ -250,27 +250,32 @@
 
     <script>
     /* ================================================================
-       ADVANCED ADBLOCK SHIELD v3
-       4-Layer Detection | MutationObserver | Scoring System | Anti-Bypass
+       ADVANCED ADBLOCK SHIELD v3.1 — Fixed False Positives
+       3-Layer Detection | Threshold=2 | MutationObserver | Anti-Bypass
        ================================================================ */
     (function() {
         'use strict';
 
         // --- Config from Admin Settings ---
-        const DETECTION_DELAY = {{ \App\Models\Setting::get('adblock_delay', 1000) }};
-        const BLUR_ENABLED    = {{ \App\Models\Setting::get('adblock_blur_enabled', 1) == '1' ? 'true' : 'false' }};
-        const RECHECK_INTERVAL = 4000; // ms between periodic checks
-        const SCORE_THRESHOLD  = 1;    // Trigger if at least 1 layer fires
+        const DETECTION_DELAY  = {{ \App\Models\Setting::get('adblock_delay', 1000) }};
+        const BLUR_ENABLED     = {{ \App\Models\Setting::get('adblock_blur_enabled', 1) == '1' ? 'true' : 'false' }};
+        const RECHECK_INTERVAL = 5000;
+        // Threshold=2: BOTH Layer1(DOM) AND Layer2(Script) must fire to avoid false positives.
+        // A single network hiccup will NOT trigger the shield.
+        const SCORE_THRESHOLD  = 2;
 
         let isShieldActive = false;
         let mutationObserver = null;
 
         // ---- LAYER 1: DOM Bait Element Check ----
+        // Most reliable — uBlock/ABP hide elements with ad-related class names.
         function checkLayer1_BaitDOM() {
             return new Promise(resolve => {
                 const bait = document.getElementById('adblock-bait-dom');
-                if (!bait) { resolve({ layer: 1, blocked: true, reason: 'bait-missing' }); return; }
-
+                if (!bait) {
+                    resolve({ layer: 1, blocked: true, reason: 'bait-missing' });
+                    return;
+                }
                 const st = window.getComputedStyle(bait);
                 const blocked =
                     bait.offsetHeight === 0 ||
@@ -284,69 +289,76 @@
         }
 
         // ---- LAYER 2: Bait Script Load Check (/ads.js) ----
+        // Ad blockers block scripts named "ads.js", "adsbygoogle.js", etc.
         function checkLayer2_BaitScript() {
             return new Promise(resolve => {
-                // uBlock Origin, Adblock Plus, Brave Shields all block files named "ads.js"
+                // Reset bait variable each run
+                window.__adblock_bait_loaded = undefined;
+
                 const s = document.createElement('script');
-                const done = (blocked) => {
-                    resolve({ layer: 2, blocked, reason: 'script-load' });
-                    try { document.head.removeChild(s); } catch(e) {}
-                };
+                s.async = true;
                 s.src = '/ads.js?t=' + Date.now();
-                s.onload  = () => done(typeof window.__adblock_bait_loaded === 'undefined');
-                s.onerror = () => done(true);
-                // Safety timeout
-                const timer = setTimeout(() => done(true), 2500);
-                s.onload = () => { clearTimeout(timer); done(typeof window.__adblock_bait_loaded === 'undefined'); };
+
+                let resolved = false;
+                const finish = (blocked) => {
+                    if (resolved) return;
+                    resolved = true;
+                    resolve({ layer: 2, blocked, reason: 'script-load' });
+                    try { if (s.parentNode) s.parentNode.removeChild(s); } catch(e) {}
+                };
+
+                // Safety timeout — if neither fires in 3s, assume blocked
+                const timer = setTimeout(() => finish(true), 3000);
+
+                s.onload = () => {
+                    clearTimeout(timer);
+                    // If the script loaded but bait var is missing, file may be empty/wrong
+                    finish(typeof window.__adblock_bait_loaded === 'undefined');
+                };
+                s.onerror = () => {
+                    clearTimeout(timer);
+                    finish(true); // Script was blocked
+                };
+
                 document.head.appendChild(s);
             });
         }
 
-        // ---- LAYER 3: Bait CSS Link Load Check (/css/adsense.css) ----
+        // ---- LAYER 3: Bait CSS Load Check (/css/adsense.css) ----
+        // Supplementary layer — only contributes to score, not required alone.
         function checkLayer3_BaitCSS() {
             return new Promise(resolve => {
-                // Most blockers also block CSS files matching ad network names
                 const link = document.createElement('link');
                 link.rel  = 'stylesheet';
                 link.href = '/css/adsense.css?t=' + Date.now();
-                const done = (blocked) => {
-                    resolve({ layer: 3, blocked, reason: 'css-load' });
-                    try { document.head.removeChild(link); } catch(e) {}
-                };
-                const timer = setTimeout(() => done(true), 2500);
-                link.onload  = () => { clearTimeout(timer); done(false); };
-                link.onerror = () => { clearTimeout(timer); done(true); };
-                document.head.appendChild(link);
-            });
-        }
 
-        // ---- LAYER 4: Fetch Request to Known Ad Network URL ----
-        function checkLayer4_FetchProbe() {
-            return new Promise(resolve => {
-                // Ad blockers (uBlock, Adblock Plus) block requests to ad network domains
-                fetch('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', {
-                    method: 'HEAD',
-                    mode:   'no-cors',
-                    cache:  'no-store'
-                })
-                .then(() => resolve({ layer: 4, blocked: false, reason: 'fetch-ok' }))
-                .catch(() => resolve({ layer: 4, blocked: true,  reason: 'fetch-failed' }));
+                let resolved = false;
+                const finish = (blocked) => {
+                    if (resolved) return;
+                    resolved = true;
+                    resolve({ layer: 3, blocked, reason: 'css-load' });
+                    try { if (link.parentNode) link.parentNode.removeChild(link); } catch(e) {}
+                };
+
+                const timer = setTimeout(() => finish(false), 3000); // On timeout, assume NOT blocked (no false positive)
+                link.onload  = () => { clearTimeout(timer); finish(false); };
+                link.onerror = () => { clearTimeout(timer); finish(true); };
+                document.head.appendChild(link);
             });
         }
 
         // ---- MutationObserver: Detect DOM Tampering by Blockers ----
         function setupMutationGuard() {
-            const body = document.body;
             mutationObserver = new MutationObserver((mutations) => {
                 if (isShieldActive) return;
                 for (const mutation of mutations) {
-                    // Watch for bait element being hidden or removed
                     if (mutation.type === 'attributes') {
                         const t = mutation.target;
                         if (t && t.id === 'adblock-bait-dom') {
                             const st = window.getComputedStyle(t);
                             if (st.display === 'none' || st.visibility === 'hidden') {
-                                activateShield('mutation-attr');
+                                // DOM bait was hidden by blocker. Run full check to confirm.
+                                runDetection();
                                 return;
                             }
                         }
@@ -354,7 +366,7 @@
                     if (mutation.type === 'childList') {
                         mutation.removedNodes.forEach(node => {
                             if (node.nodeType === 1 && node.id === 'adblock-bait-dom') {
-                                activateShield('mutation-remove');
+                                runDetection(); // Re-run full check on removal
                             }
                         });
                     }
@@ -365,7 +377,7 @@
             if (bait) {
                 mutationObserver.observe(bait, { attributes: true, attributeFilter: ['style', 'class'] });
             }
-            mutationObserver.observe(body, { childList: true, subtree: true });
+            mutationObserver.observe(document.body, { childList: true, subtree: false });
         }
 
         // ---- Run All Layers and Score ----
@@ -378,24 +390,20 @@
                     checkLayer1_BaitDOM(),
                     checkLayer2_BaitScript(),
                     checkLayer3_BaitCSS(),
-                    checkLayer4_FetchProbe(),
                 ]);
 
                 let score = 0;
-                const triggers = [];
-                results.forEach(r => {
-                    if (r.blocked) {
-                        score++;
-                        triggers.push('L' + r.layer + ':' + r.reason);
-                    }
-                });
+                results.forEach(r => { if (r.blocked) score++; });
 
+                // Only trigger if score meets threshold (prevents false positives from
+                // random network failures on a single layer)
                 if (score >= SCORE_THRESHOLD) {
-                    activateShield(triggers.join(','));
+                    activateShield('score:' + score);
                 }
             } catch(e) {
-                // If detection itself errors, run a simple DOM check as fallback
-                checkLayer1_BaitDOM().then(r => { if (r.blocked) activateShield('fallback'); });
+                // On error, fall back to DOM-only check (most reliable)
+                const r = await checkLayer1_BaitDOM();
+                if (r.blocked) activateShield('fallback');
             }
         }
 
@@ -409,11 +417,10 @@
 
             // Blur background content
             if (BLUR_ENABLED) {
-                const selectors = ['main', 'article', 'header', '.site-header', '.site-nav', 
+                const selectors = ['main', 'article', 'header', '.site-header', '.site-nav',
                                    '.max-w-7xl', '#content', 'section', 'aside', '.hero'];
                 selectors.forEach(sel => {
                     document.querySelectorAll(sel).forEach(el => {
-                        // Don't blur the shield itself
                         if (!el.closest('#adblock-shield')) {
                             el.classList.add('adblock-content-blurred');
                         }
@@ -421,7 +428,7 @@
                 });
             }
 
-            // Show shield with animation
+            // Show shield with smooth animation
             const shield = document.getElementById('adblock-shield');
             const card   = document.getElementById('adblock-modal-card');
             if (shield) {
@@ -437,19 +444,14 @@
         // ---- Init ----
         function init() {
             setupMutationGuard();
-
-            // Initial check after delay
+            // Initial detection after configured delay
             setTimeout(runDetection, DETECTION_DELAY);
-
-            // Periodic recheck (in case user installs blocker mid-session)
-            setInterval(() => {
-                if (!isShieldActive) runDetection();
-            }, RECHECK_INTERVAL);
-
-            // Recheck on tab return (user may have changed settings)
+            // Periodic recheck
+            setInterval(() => { if (!isShieldActive) runDetection(); }, RECHECK_INTERVAL);
+            // Recheck when user returns to tab
             document.addEventListener('visibilitychange', () => {
                 if (!document.hidden && !isShieldActive) {
-                    setTimeout(runDetection, 600);
+                    setTimeout(runDetection, 800);
                 }
             });
         }
