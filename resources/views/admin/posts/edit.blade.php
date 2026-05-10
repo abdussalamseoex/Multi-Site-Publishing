@@ -222,7 +222,7 @@
       });
 
       // Intercept the form submission to apply the mapped rel attributes
-      var form = document.querySelector('form');
+      var form = document.getElementById('content-hidden').closest('form');
       if (form) {
           form.addEventListener('submit', function(e) {
               var html = quill.root.innerHTML;
