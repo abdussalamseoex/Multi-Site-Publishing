@@ -146,7 +146,11 @@
       cbContainer.style.marginTop = '10px';
       cbContainer.style.display = 'block';
       
-      cbContainer.innerHTML = '<label style="font-size:12px; color:#16a34a;"><input type="checkbox" id="ql-nofollow-cb"> Make this link Nofollow</label>';
+      @if(isset($userHasDofollowPermission) && !$userHasDofollowPermission)
+          cbContainer.innerHTML = '<label style="font-size:12px; color:#ef4444;"><input type="checkbox" id="ql-nofollow-cb" checked disabled> Nofollow (No Permission)</label>';
+      @else
+          cbContainer.innerHTML = '<label style="font-size:12px; color:#16a34a;"><input type="checkbox" id="ql-nofollow-cb"> Make this link Nofollow</label>';
+      @endif
       
       qlTooltip.appendChild(cbContainer);
 
