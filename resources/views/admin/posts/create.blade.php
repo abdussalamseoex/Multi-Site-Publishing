@@ -190,20 +190,15 @@
       
       var originalEdit = tooltip.edit;
       tooltip.edit = function(mode, preview) {
-          originalEdit.call(this, mode, preview);
           var isChecked = false;
-          var range = this.quill.getSelection(true);
-          if (range) {
-              var format = this.quill.getFormat(range);
-              if (format.link && typeof format.link === 'string') {
-                  if (format.link.indexOf('|||nofollow') !== -1) {
-                      isChecked = true;
-                      this.textbox.value = format.link.split('|||')[0];
-                  } else {
-                      this.textbox.value = format.link;
-                  }
-              }
+          var actualPreview = preview;
+          
+          if (preview && typeof preview === 'string' && preview.indexOf('|||nofollow') !== -1) {
+              isChecked = true;
+              actualPreview = preview.split('|||')[0];
           }
+          
+          originalEdit.call(this, mode, actualPreview);
           document.getElementById('ql-nofollow-cb').checked = isChecked;
       };
     </script>
