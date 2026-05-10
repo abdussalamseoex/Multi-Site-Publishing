@@ -50,7 +50,9 @@
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Editor</label>
-                                <textarea id="summernote" name="content">{!! old('content') !!}</textarea>
+                                <!-- Quill Editor -->
+                                <div id="quill-editor" style="height: 400px; background: white;">{!! old('content') !!}</div>
+                                <input type="hidden" name="content" id="content-hidden">
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -86,7 +88,7 @@
                             </div>
 
                             <div class="pt-4 border-t flex justify-end">
-                                <button type="submit" class="px-6 py-3 bg-indigo-600 text-white rounded-md font-medium text-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
+                                <button type="submit" onclick="document.getElementById('content-hidden').value = quill.root.innerHTML" class="px-6 py-3 bg-indigo-600 text-white rounded-md font-medium text-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
                                     Submit
                                 </button>
                             </div>
@@ -98,81 +100,27 @@
         </div>
     </div>
 
-    <!-- Summernote Lite CSS/JS -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
+    <!-- Quill.js CDN Init -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script>
-      $(document).ready(function() {
-          $('#summernote').summernote({
-              placeholder: 'Write your post content here...',
-              tabsize: 2,
-              height: 400,
-              toolbar: [
-                  ['style', ['style']],
-                  ['font', ['bold', 'italic', 'underline', 'clear']],
-                  ['color', ['color']],
-                  ['para', ['ul', 'ol', 'paragraph']],
-                  ['table', ['table']],
-                  ['insert', ['link', 'picture', 'video']],
-                  ['view', ['fullscreen', 'codeview', 'help']]
-              ]
-          });
-
-          // Inject Nofollow/Dofollow option into link dialog
-          $('#summernote').on('summernote.dialog.shown', function(we, e) {
-              var $dialog = $(e.target).closest('.note-modal');
-              if ($dialog.hasClass('note-link-dialog')) {
-                  if (!$dialog.find('.link-rel-option').length) {
-                      $dialog.find('.checkbox').last().after(`
-                          <div class="checkbox link-rel-option" style="margin-top:10px;">
-                              <label style="font-weight:bold;">
-                                  <input type="checkbox" id="sn-nofollow-checkbox" checked> Add rel="nofollow" to this link
-                              </label>
-                              <br>
-                              @if(!$userHasDofollowPermission)
-                                  <span style="font-size:12px; color:#888;">(You only have permission for Nofollow links)</span>
-                              @else
-                                  <span style="font-size:12px; color:#22c55e;">(Uncheck to make it Dofollow)</span>
-                              @endif
-                          </div>
-                      `);
-                      
-                      @if(!$userHasDofollowPermission)
-                          $('#sn-nofollow-checkbox').prop('checked', true).prop('disabled', true);
-                      @endif
-                  }
-
-                  var $btn = $dialog.find('.note-btn-primary');
-                  $btn.off('click.snRel').on('click.snRel', function() {
-                      var url = $dialog.find('.note-link-url').val();
-                      var isNofollow = $('#sn-nofollow-checkbox').is(':checked');
-                      
-                      setTimeout(function() {
-                          var $editorLinks = $('.note-editable').find('a[href="' + url + '"]');
-                          $editorLinks.each(function() {
-                              if (isNofollow) {
-                                  $(this).attr('rel', 'nofollow');
-                              } else {
-                                  $(this).removeAttr('rel');
-                                  // explicit dofollow to be safe if processLinks ignores removal
-                                  $(this).attr('rel', 'dofollow'); 
-                              }
-                          });
-                          // Update raw text area value
-                          $('#summernote').val($('#summernote').summernote('code'));
-                      }, 150);
-                  });
-              }
-          });
-
-          $('form').on('submit', function() {
-              if ($('#summernote').summernote('isEmpty')) {
-                  alert('Content cannot be empty');
-                  return false;
-              }
-              return true;
-          });
+      var quill = new Quill('#quill-editor', {
+        theme: 'snow',
+        modules: {
+          toolbar: [
+            ['bold', 'italic', 'underline', 'strike'], 
+            ['blockquote', 'code-block'],
+            [{ 'header': 1 }, { 'header': 2 }],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            [{ 'indent': '-1'}, { 'indent': '+1' }], 
+            [{ 'size': ['small', false, 'large', 'huge'] }], 
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'align': [] }],
+            ['link', 'image', 'video'],
+            ['clean']                                         
+          ]
+        }
       });
     </script>
 </x-app-layout>
