@@ -108,7 +108,7 @@
     <script>
       // Pre-process existing links to build the nofollow map
       window.quillNofollowLinks = {};
-      var editorDiv = document.getElementById('editor-container');
+      var editorDiv = document.getElementById('quill-editor');
       if (editorDiv) {
           var existingLinks = editorDiv.getElementsByTagName('a');
           for (var i = 0; i < existingLinks.length; i++) {
@@ -122,7 +122,7 @@
           }
       }
 
-      var quill = new Quill('#editor-container', {
+      var quill = new Quill('#quill-editor', {
         theme: 'snow',
         modules: {
           toolbar: [
