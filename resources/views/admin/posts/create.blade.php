@@ -106,46 +106,23 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script>
-      // Properly extend Link blot to preserve rel attribute on <a> tags
-      var Link = Quill.import('formats/link');
-      class CustomLink extends Link {
-          static create(value) {
-              var parts = typeof value === 'string' ? value.split('|||') : [value];
-              var href = parts[0] || '';
-              var node = super.create(href);
-              if (parts[1] === 'nofollow') {
-                  node.setAttribute('rel', 'nofollow');
-              }
-              return node;
-          }
-          static formats(domNode) {
-              var href = domNode.getAttribute('href') || '';
-              var rel  = domNode.getAttribute('rel');
-              return rel && rel.toLowerCase().indexOf('nofollow') !== -1 ? href + '|||nofollow' : href;
-          }
-          format(name, value) {
-              if (name === 'link') {
-                  if (value) {
-                      var parts = typeof value === 'string' ? value.split('|||') : [value];
-                      this.domNode.setAttribute('href', parts[0] || '');
-                      if (parts[1] === 'nofollow') {
-                          this.domNode.setAttribute('rel', 'nofollow');
-                      } else {
-                          this.domNode.removeAttribute('rel');
-                      }
-                  } else {
-                      super.format(name, value);
-                  }
-              } else {
-                  super.format(name, value);
+      // Pre-process existing links to build the nofollow map
+      window.quillNofollowLinks = {};
+      var editorDiv = document.getElementById('editor-container');
+      if (editorDiv) {
+          var existingLinks = editorDiv.getElementsByTagName('a');
+          for (var i = 0; i < existingLinks.length; i++) {
+              var href = existingLinks[i].getAttribute('href');
+              var rel = existingLinks[i].getAttribute('rel');
+              if (href && rel && rel.toLowerCase().indexOf('nofollow') !== -1) {
+                  window.quillNofollowLinks[href] = true;
+              } else if (href) {
+                  window.quillNofollowLinks[href] = false;
               }
           }
       }
-      CustomLink.blotName = 'link';
-      CustomLink.tagName  = 'A';
-      Quill.register(CustomLink, true);
 
-      var quill = new Quill('#quill-editor', {
+      var quill = new Quill('#editor-container', {
         theme: 'snow',
         modules: {
           toolbar: [
@@ -179,8 +156,10 @@
       tooltip.save = function() {
           var value = this.textbox.value;
           if (value) {
+              var Link = Quill.import('formats/link');
+              var sanitizedValue = Link.sanitize(value);
               var isNofollow = document.getElementById('ql-nofollow-cb').checked;
-              var linkValue = isNofollow ? value + '|||nofollow' : value;
+              window.quillNofollowLinks[sanitizedValue] = isNofollow;
               
               var range = this.quill.getSelection();
               if (range && range.length === 0) {
@@ -194,27 +173,41 @@
                       node = node.parent;
                   }
               }
-              
-              this.quill.format('link', linkValue);
-          } else {
-              this.quill.format('link', false);
           }
-          this.hide();
+          originalSave.call(this);
       };
       
       var originalEdit = tooltip.edit;
       tooltip.edit = function(mode, preview) {
+          originalEdit.call(this, mode, preview);
           var isChecked = false;
-          var actualPreview = preview;
-          
-          if (preview && typeof preview === 'string' && preview.indexOf('|||nofollow') !== -1) {
+          if (preview && window.quillNofollowLinks[preview] === true) {
               isChecked = true;
-              actualPreview = preview.split('|||')[0];
           }
-          
-          originalEdit.call(this, mode, actualPreview);
           document.getElementById('ql-nofollow-cb').checked = isChecked;
       };
+
+      // Intercept the form submission to apply the mapped rel attributes
+      var form = document.querySelector('form');
+      if (form) {
+          form.addEventListener('submit', function(e) {
+              var html = quill.root.innerHTML;
+              var tempDiv = document.createElement('div');
+              tempDiv.innerHTML = html;
+              var links = tempDiv.getElementsByTagName('a');
+              for (var i = 0; i < links.length; i++) {
+                  var href = links[i].getAttribute('href');
+                  if (href && window.quillNofollowLinks.hasOwnProperty(href)) {
+                      if (window.quillNofollowLinks[href]) {
+                          links[i].setAttribute('rel', 'nofollow');
+                      } else {
+                          links[i].removeAttribute('rel');
+                      }
+                  }
+              }
+              document.getElementById('content-hidden').value = tempDiv.innerHTML;
+          });
+      }
     </script>
 </x-app-layout>
 
