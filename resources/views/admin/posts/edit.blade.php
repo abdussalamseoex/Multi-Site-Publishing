@@ -112,11 +112,39 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script>
-      var Parchment = Quill.import('parchment');
-      var RelAttribute = new Parchment.Attributor.Attribute('rel', 'rel', {
-          scope: Parchment.Scope.INLINE
-      });
-      Quill.register(RelAttribute, true);
+      // Properly extend Link blot to preserve rel attribute on <a> tags
+      var Link = Quill.import('formats/link');
+      class CustomLink extends Link {
+          static create(value) {
+              // value can be plain URL string OR object {href, rel}
+              var href = (typeof value === 'object' && value !== null) ? (value.href || '') : value;
+              var node = super.create(href);
+              if (typeof value === 'object' && value !== null && value.rel) {
+                  node.setAttribute('rel', value.rel);
+              }
+              return node;
+          }
+          static formats(domNode) {
+              var href = domNode.getAttribute('href');
+              var rel  = domNode.getAttribute('rel');
+              // If rel exists return object so create() can reconstruct it
+              return rel ? { href: href, rel: rel } : href;
+          }
+          format(name, value) {
+              if (name === 'rel') {
+                  if (value) {
+                      this.domNode.setAttribute('rel', value);
+                  } else {
+                      this.domNode.removeAttribute('rel');
+                  }
+              } else {
+                  super.format(name, value);
+              }
+          }
+      }
+      CustomLink.blotName = 'link';
+      CustomLink.tagName  = 'A';
+      Quill.register(CustomLink, true);
 
       var quill = new Quill('#quill-editor', {
         theme: 'snow',
@@ -171,7 +199,17 @@
       var originalEdit = tooltip.edit;
       tooltip.edit = function(mode, preview) {
           originalEdit.call(this, mode, preview);
-          document.getElementById('ql-nofollow-cb').checked = false;
+          var isChecked = false;
+          var range = this.quill.getSelection(true);
+          if (range) {
+              var format = this.quill.getFormat(range);
+              if (format.link && typeof format.link === 'object' && format.link.rel) {
+                  if (format.link.rel.indexOf('nofollow') !== -1) {
+                      isChecked = true;
+                  }
+              }
+          }
+          document.getElementById('ql-nofollow-cb').checked = isChecked;
       };
     </script>
 </x-app-layout>

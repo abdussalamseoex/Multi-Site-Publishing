@@ -10,7 +10,7 @@
     @endif
     <link rel="canonical" href="{{ url()->current() }}">
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
 <body class="bg-gray-100 text-gray-800">
