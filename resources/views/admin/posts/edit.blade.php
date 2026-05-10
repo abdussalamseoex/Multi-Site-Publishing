@@ -71,8 +71,7 @@
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Detailed Content</label>
-                                <div id="quill-editor" style="height: 400px; background: white;">{!! old('content', $post->content) !!}</div>
-                                <input type="hidden" name="content" id="content-hidden">
+                                <textarea id="summernote" name="content">{!! old('content', $post->content) !!}</textarea>
                             </div>
 
                             <!-- SEO Settings Box -->
@@ -96,7 +95,7 @@
                             </div>
 
                             <div class="pt-4 border-t flex justify-end">
-                                <button type="submit" onclick="document.getElementById('content-hidden').value = quill.root.innerHTML" class="px-6 py-3 bg-indigo-600 text-white rounded-md font-medium text-sm hover:bg-indigo-700 focus:outline-none transition">
+                                <button type="submit" class="px-6 py-3 bg-indigo-600 text-white rounded-md font-medium text-sm hover:bg-indigo-700 focus:outline-none transition">
                                     Update Post
                                 </button>
                             </div>
@@ -108,92 +107,69 @@
         </div>
     </div>
 
-    <!-- Quill.js CDN Init -->
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <!-- Summernote Lite CSS/JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
     <script>
-      // Custom Link to retain 'rel' attribute
-      var Link = Quill.import('formats/link');
-      class CustomLink extends Link {
-          static create(value) {
-              let node = super.create(value);
-              if (typeof value === 'string') {
-                  node.setAttribute('href', this.sanitize(value));
-              }
-              return node;
-          }
-          static formats(domNode) {
-              let format = super.formats(domNode);
-              format.rel = domNode.getAttribute('rel') || undefined;
-              return format;
-          }
-          format(name, value) {
-              if (name === 'rel') {
-                  if (value) {
-                      this.domNode.setAttribute('rel', value);
-                  } else {
-                      this.domNode.removeAttribute('rel');
+      $(document).ready(function() {
+          $('#summernote').summernote({
+              placeholder: 'Write your post content here...',
+              tabsize: 2,
+              height: 400,
+              toolbar: [
+                  ['style', ['style']],
+                  ['font', ['bold', 'italic', 'underline', 'clear']],
+                  ['color', ['color']],
+                  ['para', ['ul', 'ol', 'paragraph']],
+                  ['table', ['table']],
+                  ['insert', ['link', 'picture', 'video']],
+                  ['view', ['fullscreen', 'codeview', 'help']]
+              ]
+          });
+
+          // Inject Nofollow/Dofollow option into link dialog safely
+          $('#summernote').on('summernote.dialog.shown', function(we, e) {
+              var $dialog = $(e.target).closest('.note-modal');
+              if ($dialog.hasClass('note-link-dialog')) {
+                  if (!$dialog.find('.link-rel-option').length) {
+                      $dialog.find('.checkbox').last().after(`
+                          <div class="checkbox link-rel-option" style="margin-top:10px;">
+                              <label style="font-weight:bold; cursor:pointer;">
+                                  <input type="checkbox" id="sn-nofollow-checkbox"> Make this link Nofollow
+                              </label>
+                          </div>
+                      `);
+                      
+                      var $btn = $dialog.find('.note-btn-primary');
+                      // Listen to click without unbinding Summernote's handler
+                      $btn.on('click', function() {
+                          var url = $dialog.find('.note-link-url').val();
+                          var isNofollow = $('#sn-nofollow-checkbox').is(':checked');
+                          
+                          if (isNofollow && url) {
+                              setTimeout(function() {
+                                  var $editorLinks = $('.note-editable').find('a[href="' + url + '"]');
+                                  $editorLinks.attr('rel', 'nofollow');
+                                  // Update raw text area value
+                                  $('#summernote').val($('#summernote').summernote('code'));
+                              }, 150);
+                          }
+                      });
                   }
-              } else {
-                  super.format(name, value);
+                  // Reset checkbox on open
+                  $('#sn-nofollow-checkbox').prop('checked', false);
               }
-          }
-      }
-      Quill.register(CustomLink, true);
+          });
 
-      var quill = new Quill('#quill-editor', {
-        theme: 'snow',
-        modules: {
-          toolbar: [
-            ['bold', 'italic', 'underline', 'strike'], 
-            ['blockquote', 'code-block'],
-            [{ 'header': 1 }, { 'header': 2 }],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-            [{ 'indent': '-1'}, { 'indent': '+1' }], 
-            [{ 'size': ['small', false, 'large', 'huge'] }], 
-            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-            [{ 'color': [] }, { 'background': [] }],
-            [{ 'align': [] }],
-            ['link', 'image', 'video'],
-            ['clean']                                         
-          ]
-        }
+          $('form').on('submit', function() {
+              if ($('#summernote').summernote('isEmpty')) {
+                  alert('Content cannot be empty');
+                  return false;
+              }
+              return true;
+          });
       });
-
-      // Add Nofollow Checkbox to Quill Link Tooltip
-      var tooltip = quill.theme.tooltip;
-      var qlTooltip = document.querySelector('.ql-tooltip');
-      var cbContainer = document.createElement('div');
-      cbContainer.style.marginTop = '10px';
-      cbContainer.style.display = 'block';
-      
-      cbContainer.innerHTML = '<label style="font-size:12px; color:#16a34a;"><input type="checkbox" id="ql-nofollow-cb"> Make this link Nofollow</label>';
-      
-      qlTooltip.appendChild(cbContainer);
-
-      var originalSave = tooltip.save;
-      tooltip.save = function() {
-          var value = this.textbox.value;
-          if (value) {
-              var isNofollow = document.getElementById('ql-nofollow-cb').checked;
-              this.quill.format('link', value);
-              if (isNofollow) {
-                  this.quill.format('rel', 'nofollow');
-              } else {
-                  this.quill.format('rel', false);
-              }
-          } else {
-              this.quill.format('link', false);
-              this.quill.format('rel', false);
-          }
-          this.hide();
-      };
-      
-      var originalEdit = tooltip.edit;
-      tooltip.edit = function(mode, preview) {
-          originalEdit.call(this, mode, preview);
-          document.getElementById('ql-nofollow-cb').checked = false;
-      };
     </script>
 </x-app-layout>
 
