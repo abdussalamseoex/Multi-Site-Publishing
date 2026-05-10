@@ -50,7 +50,9 @@
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Editor</label>
-                                <textarea id="summernote" name="content">{!! old('content') !!}</textarea>
+                                <!-- Quill Editor -->
+                                <div id="quill-editor" style="height: 400px; background: white;">{!! old('content') !!}</div>
+                                <input type="hidden" name="content" id="content-hidden">
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -86,7 +88,7 @@
                             </div>
 
                             <div class="pt-4 border-t flex justify-end">
-                                <button type="submit" class="px-6 py-3 bg-indigo-600 text-white rounded-md font-medium text-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
+                                <button type="submit" onclick="document.getElementById('content-hidden').value = quill.root.innerHTML" class="px-6 py-3 bg-indigo-600 text-white rounded-md font-medium text-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
                                     Submit
                                 </button>
                             </div>
@@ -98,77 +100,77 @@
         </div>
     </div>
 
-    <!-- Summernote Lite CSS/JS -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
+    <!-- Quill.js CDN Init -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script>
-      $(document).ready(function() {
-          $('#summernote').summernote({
-              placeholder: 'Write your post content here...',
-              tabsize: 2,
-              height: 400,
-              toolbar: [
-                  ['style', ['style']],
-                  ['font', ['bold', 'italic', 'underline', 'clear']],
-                  ['color', ['color']],
-                  ['para', ['ul', 'ol', 'paragraph']],
-                  ['table', ['table']],
-                  ['insert', ['link', 'picture', 'video']],
-                  ['view', ['fullscreen', 'codeview', 'help']]
-              ]
-          });
-
-          // Inject Nofollow/Dofollow option into link dialog safely
-          $('#summernote').on('summernote.dialog.shown', function(we, e) {
-              var $dialog = $(e.target).closest('.note-modal');
-              if ($dialog.hasClass('note-link-dialog')) {
-                  if (!$dialog.find('.link-rel-option').length) {
-                      $dialog.find('.checkbox').last().after(`
-                          <div class="checkbox link-rel-option" style="margin-top:10px;">
-                              <label style="font-weight:bold; cursor:pointer;">
-                                  <input type="checkbox" id="sn-nofollow-checkbox"> Make this link Nofollow
-                              </label>
-                              @if(isset($userHasDofollowPermission) && !$userHasDofollowPermission)
-                                  <br><span style="font-size:12px; color:#ef4444;">(You only have permission for Nofollow links)</span>
-                              @endif
-                          </div>
-                      `);
-                      
-                      var $btn = $dialog.find('.note-btn-primary');
-                      // Listen to click without unbinding Summernote's handler
-                      $btn.on('click', function() {
-                          var url = $dialog.find('.note-link-url').val();
-                          var isNofollow = $('#sn-nofollow-checkbox').is(':checked');
-                          
-                          if (isNofollow && url) {
-                              setTimeout(function() {
-                                  var $editorLinks = $('.note-editable').find('a[href="' + url + '"]');
-                                  $editorLinks.attr('rel', 'nofollow');
-                                  // Update raw text area value
-                                  $('#summernote').val($('#summernote').summernote('code'));
-                              }, 150);
-                          }
-                      });
-                  }
-                  
-                  // Reset checkbox on open, or force check if no permission
-                  @if(isset($userHasDofollowPermission) && !$userHasDofollowPermission)
-                      $('#sn-nofollow-checkbox').prop('checked', true).prop('disabled', true);
-                  @else
-                      $('#sn-nofollow-checkbox').prop('checked', false).prop('disabled', false);
-                  @endif
-              }
-          });
-
-          $('form').on('submit', function() {
-              if ($('#summernote').summernote('isEmpty')) {
-                  alert('Content cannot be empty');
-                  return false;
-              }
-              return true;
-          });
+      var Parchment = Quill.import('parchment');
+      var RelAttribute = new Parchment.Attributor.Attribute('rel', 'rel', {
+          scope: Parchment.Scope.INLINE
       });
+      Quill.register(RelAttribute, true);
+
+      var quill = new Quill('#quill-editor', {
+        theme: 'snow',
+        modules: {
+          toolbar: [
+            ['bold', 'italic', 'underline', 'strike'], 
+            ['blockquote', 'code-block'],
+            [{ 'header': 1 }, { 'header': 2 }],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            [{ 'indent': '-1'}, { 'indent': '+1' }], 
+            [{ 'size': ['small', false, 'large', 'huge'] }], 
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'align': [] }],
+            ['link', 'image', 'video'],
+            ['clean']                                         
+          ]
+        }
+      });
+
+      // Add Nofollow Checkbox to Quill Link Tooltip
+      var tooltip = quill.theme.tooltip;
+      var qlTooltip = document.querySelector('.ql-tooltip');
+      var cbContainer = document.createElement('div');
+      cbContainer.style.marginTop = '10px';
+      cbContainer.style.display = 'block';
+      
+      @if(isset($userHasDofollowPermission) && !$userHasDofollowPermission)
+          cbContainer.innerHTML = '<label style="font-size:12px; color:#ef4444;"><input type="checkbox" id="ql-nofollow-cb" checked disabled> Nofollow Link (Default)</label>';
+      @else
+          cbContainer.innerHTML = '<label style="font-size:12px; color:#16a34a;"><input type="checkbox" id="ql-nofollow-cb"> Make this link Nofollow</label>';
+      @endif
+      
+      qlTooltip.appendChild(cbContainer);
+
+      var originalSave = tooltip.save;
+      tooltip.save = function() {
+          var value = this.textbox.value;
+          if (value) {
+              var isNofollow = document.getElementById('ql-nofollow-cb').checked;
+              this.quill.format('link', value);
+              
+              // Apply or remove rel="nofollow" to the selection using the new Attributor
+              if (isNofollow) {
+                  this.quill.format('rel', 'nofollow');
+              } else {
+                  this.quill.format('rel', false);
+              }
+          } else {
+              this.quill.format('link', false);
+              this.quill.format('rel', false);
+          }
+          this.hide();
+      };
+      
+      var originalEdit = tooltip.edit;
+      tooltip.edit = function(mode, preview) {
+          originalEdit.call(this, mode, preview);
+          @if(isset($userHasDofollowPermission) && $userHasDofollowPermission)
+              document.getElementById('ql-nofollow-cb').checked = false;
+          @endif
+      };
     </script>
 </x-app-layout>
 
