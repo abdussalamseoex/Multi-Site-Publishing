@@ -136,9 +136,9 @@ class PostController extends Controller
 
             $globalDofollow = \App\Models\Setting::get('default_dofollow_status', 0);
             $userHasPermission = is_null($user->dofollow_default) ? (bool)$globalDofollow : (bool)$user->dofollow_default;
-            $isDofollow = $userHasPermission && $request->input('link_policy') === 'dofollow';
+            $isDofollow = $userHasPermission;
         } else {
-            $isDofollow = $request->input('link_policy') === 'dofollow';
+            $isDofollow = true;
         }
 
         $post = Post::create([
@@ -239,7 +239,7 @@ class PostController extends Controller
             $globalDofollow = \App\Models\Setting::get('default_dofollow_status', 0);
             $userHasPermission = is_null($user->dofollow_default) ? (bool)$globalDofollow : (bool)$user->dofollow_default;
         }
-        $isDofollow = $userHasPermission && $request->input('link_policy') === 'dofollow';
+        $isDofollow = $userHasPermission;
 
         $post->update([
             'title' => $request->input('title'),
