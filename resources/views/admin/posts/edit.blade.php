@@ -116,7 +116,6 @@
       var Link = Quill.import('formats/link');
       class CustomLink extends Link {
           static create(value) {
-              // value can be plain URL string OR object {href, rel}
               var href = (typeof value === 'object' && value !== null) ? (value.href || '') : value;
               var node = super.create(href);
               if (typeof value === 'object' && value !== null && value.rel) {
@@ -127,13 +126,17 @@
           static formats(domNode) {
               var href = domNode.getAttribute('href');
               var rel  = domNode.getAttribute('rel');
-              // If rel exists return object so create() can reconstruct it
               return rel ? { href: href, rel: rel } : href;
           }
           format(name, value) {
-              if (name === 'rel') {
-                  if (value) {
-                      this.domNode.setAttribute('rel', value);
+              if (name === 'link') {
+                  var href = (typeof value === 'object' && value !== null) ? (value.href || '') : value;
+                  var rel = (typeof value === 'object' && value !== null) ? value.rel : null;
+                  if (href) {
+                      this.domNode.setAttribute('href', href);
+                  }
+                  if (rel) {
+                      this.domNode.setAttribute('rel', rel);
                   } else {
                       this.domNode.removeAttribute('rel');
                   }
@@ -181,17 +184,10 @@
           var value = this.textbox.value;
           if (value) {
               var isNofollow = document.getElementById('ql-nofollow-cb').checked;
-              this.quill.format('link', value);
-              
-              // Apply or remove rel="nofollow" to the selection using the new Attributor
-              if (isNofollow) {
-                  this.quill.format('rel', 'nofollow');
-              } else {
-                  this.quill.format('rel', false);
-              }
+              var linkValue = isNofollow ? { href: value, rel: 'nofollow' } : { href: value, rel: null };
+              this.quill.format('link', linkValue);
           } else {
               this.quill.format('link', false);
-              this.quill.format('rel', false);
           }
           this.hide();
       };
