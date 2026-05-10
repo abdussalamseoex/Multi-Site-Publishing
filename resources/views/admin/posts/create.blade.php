@@ -121,7 +121,7 @@
           static formats(domNode) {
               var href = domNode.getAttribute('href') || '';
               var rel  = domNode.getAttribute('rel');
-              return rel && rel.indexOf('nofollow') !== -1 ? href + '|||nofollow' : href;
+              return rel && rel.toLowerCase().indexOf('nofollow') !== -1 ? href + '|||nofollow' : href;
           }
           format(name, value) {
               if (name === 'link') {
@@ -181,6 +181,20 @@
           if (value) {
               var isNofollow = document.getElementById('ql-nofollow-cb').checked;
               var linkValue = isNofollow ? value + '|||nofollow' : value;
+              
+              var range = this.quill.getSelection();
+              if (range && range.length === 0) {
+                  var leaf = this.quill.getLeaf(range.index);
+                  var node = leaf ? leaf[0] : null;
+                  while (node && node.statics && node.statics.blotName !== 'scroll') {
+                      if (node.statics.blotName === 'link') {
+                          this.quill.setSelection(this.quill.getIndex(node), node.length(), 'silent');
+                          break;
+                      }
+                      node = node.parent;
+                  }
+              }
+              
               this.quill.format('link', linkValue);
           } else {
               this.quill.format('link', false);
