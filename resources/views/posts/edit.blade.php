@@ -109,29 +109,31 @@
       var Link = Quill.import('formats/link');
       class CustomLink extends Link {
           static create(value) {
-              var href = (typeof value === 'object' && value !== null) ? (value.href || '') : value;
+              var parts = typeof value === 'string' ? value.split('|||') : [value];
+              var href = parts[0] || '';
               var node = super.create(href);
-              if (typeof value === 'object' && value !== null && value.rel) {
-                  node.setAttribute('rel', value.rel);
+              if (parts[1] === 'nofollow') {
+                  node.setAttribute('rel', 'nofollow');
               }
               return node;
           }
           static formats(domNode) {
-              var href = domNode.getAttribute('href');
+              var href = domNode.getAttribute('href') || '';
               var rel  = domNode.getAttribute('rel');
-              return rel ? { href: href, rel: rel } : href;
+              return rel && rel.indexOf('nofollow') !== -1 ? href + '|||nofollow' : href;
           }
           format(name, value) {
               if (name === 'link') {
-                  var href = (typeof value === 'object' && value !== null) ? (value.href || '') : value;
-                  var rel = (typeof value === 'object' && value !== null) ? value.rel : null;
-                  if (href) {
-                      this.domNode.setAttribute('href', href);
-                  }
-                  if (rel) {
-                      this.domNode.setAttribute('rel', rel);
+                  if (value) {
+                      var parts = typeof value === 'string' ? value.split('|||') : [value];
+                      this.domNode.setAttribute('href', parts[0] || '');
+                      if (parts[1] === 'nofollow') {
+                          this.domNode.setAttribute('rel', 'nofollow');
+                      } else {
+                          this.domNode.removeAttribute('rel');
+                      }
                   } else {
-                      this.domNode.removeAttribute('rel');
+                      super.format(name, value);
                   }
               } else {
                   super.format(name, value);
@@ -181,7 +183,7 @@
           var value = this.textbox.value;
           if (value) {
               var isNofollow = document.getElementById('ql-nofollow-cb').checked;
-              var linkValue = isNofollow ? { href: value, rel: 'nofollow' } : { href: value, rel: null };
+              var linkValue = isNofollow ? value + '|||nofollow' : value;
               this.quill.format('link', linkValue);
           } else {
               this.quill.format('link', false);
@@ -197,9 +199,12 @@
           var range = this.quill.getSelection(true);
           if (range) {
               var format = this.quill.getFormat(range);
-              if (format.link && typeof format.link === 'object' && format.link.rel) {
-                  if (format.link.rel.indexOf('nofollow') !== -1) {
+              if (format.link && typeof format.link === 'string') {
+                  if (format.link.indexOf('|||nofollow') !== -1) {
                       isChecked = true;
+                      this.textbox.value = format.link.split('|||')[0];
+                  } else {
+                      this.textbox.value = format.link;
                   }
               }
           }
