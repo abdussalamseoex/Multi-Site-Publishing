@@ -10,33 +10,43 @@ class SeoController extends Controller
 {
     public function sitemap()
     {
-        $posts = Post::where('status', 'published')->orderBy('updated_at', 'desc')->get();
-        $categories = Category::all();
+        // Increase memory and time limits for large sitemaps
+        @ini_set('memory_limit', '256M');
+        @set_time_limit(300);
 
-        $xml = '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
-        
-        // Homepage
-        $xml .= '<url><loc>' . url('/') . '</loc><changefreq>daily</changefreq><priority>1.0</priority></url>';
+        $xml = \Illuminate\Support\Facades\Cache::remember('sitemap_xml', 3600, function () {
+            $posts = Post::where('status', 'published')->orderBy('updated_at', 'desc')->get();
+            $categories = Category::all();
 
-        // Posts
-        foreach ($posts as $post) {
-            $xml .= '<url>';
-            $xml .= '<loc>' . route('frontend.post', $post->slug) . '</loc>';
-            $xml .= '<lastmod>' . $post->updated_at->toAtomString() . '</lastmod>';
-            $xml .= '<changefreq>weekly</changefreq>';
-            $xml .= '<priority>0.8</priority>';
-            $xml .= '</url>';
-        }
+            $xml = '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+            
+            // Homepage
+            $xml .= '<url><loc>' . url('/') . '</loc><changefreq>daily</changefreq><priority>1.0</priority></url>';
 
-        // Custom XML Injections
-        $customXml = \App\Models\Setting::get('custom_sitemap_xml', '');
-        if ($customXml) {
-            $xml .= "\n" . $customXml . "\n";
-        }
+            // Posts
+            foreach ($posts as $post) {
+                $xml .= '<url>';
+                $xml .= '<loc>' . route('frontend.post', $post->slug) . '</loc>';
+                $xml .= '<lastmod>' . $post->updated_at->toAtomString() . '</lastmod>';
+                $xml .= '<changefreq>weekly</changefreq>';
+                $xml .= '<priority>0.8</priority>';
+                $xml .= '</url>';
+            }
 
-        $xml .= '</urlset>';
+            // Custom XML Injections
+            $customXml = \App\Models\Setting::get('custom_sitemap_xml', '');
+            if ($customXml) {
+                $xml .= "\n" . $customXml . "\n";
+            }
 
-        return response($xml, 200)->header('Content-Type', 'text/xml');
+            $xml .= '</urlset>';
+            
+            return $xml;
+        });
+
+        return response($xml, 200)
+                ->header('Content-Type', 'text/xml')
+                ->header('Cache-Control', 'public, max-age=3600');
     }
 
     public function robots()

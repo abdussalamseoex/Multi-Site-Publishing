@@ -37,15 +37,11 @@ class Post extends Model
     protected static function booted()
     {
         static::creating(function ($post) {
-            // Default is false (Nofollow)
-            $post->is_dofollow = false;
-
-            if ($post->user_id) {
-                $user = \App\Models\User::find($post->user_id);
-                // Only set to Dofollow if the Admin has explicitly granted permission (dofollow_default = 1)
-                if ($user && $user->dofollow_default == 1) {
-                    $post->is_dofollow = true;
-                }
+            // We no longer blindly overwrite is_dofollow here because PostController 
+            // calculates and assigns it correctly based on user permissions or admin role.
+            // If it's not set at all, we can default it to false.
+            if (!isset($post->is_dofollow)) {
+                $post->is_dofollow = false;
             }
         });
 
@@ -53,6 +49,14 @@ class Post extends Model
             if ($post->content) {
                 $post->content = self::processLinks($post->content, $post->is_dofollow);
             }
+        });
+
+        static::saved(function ($post) {
+            \Illuminate\Support\Facades\Cache::forget('sitemap_xml');
+        });
+
+        static::deleted(function ($post) {
+            \Illuminate\Support\Facades\Cache::forget('sitemap_xml');
         });
     }
 
@@ -73,11 +77,20 @@ class Post extends Model
 
                 // If it's an external link
                 if ($host && $host !== $appUrl) {
+                    $existingRel = $link->getAttribute('rel');
+                    
                     if (!$isDofollow) {
+                        // User has no permission, force nofollow
                         $link->setAttribute('rel', 'nofollow sponsored');
                     } else {
-                        // User is allowed dofollow, so we can just use external or strip it
-                        $link->removeAttribute('rel');
+                        // User has permission. 
+                        // If they explicitly added rel="nofollow" in the editor, respect it.
+                        if ($existingRel && str_contains(strtolower($existingRel), 'nofollow')) {
+                            $link->setAttribute('rel', 'nofollow');
+                        } else {
+                            // Otherwise, it's dofollow. Remove rel or keep dofollow
+                            $link->removeAttribute('rel');
+                        }
                     }
                     $link->setAttribute('target', '_blank');
                 } else {

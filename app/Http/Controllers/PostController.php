@@ -57,7 +57,14 @@ class PostController extends Controller
         }
 
         $categories = Category::all();
-        return view('posts.create', compact('categories', 'eligibleForPromo', 'promoLimit', 'postsToday'));
+        $userHasDofollowPermission = false;
+        if ($user->hasRole('admin')) {
+            $userHasDofollowPermission = true;
+        } else {
+            $globalDofollow = \App\Models\Setting::get('default_dofollow_status', 0);
+            $userHasDofollowPermission = is_null($user->dofollow_default) ? (bool)$globalDofollow : (bool)$user->dofollow_default;
+        }
+        return view('posts.create', compact('categories', 'eligibleForPromo', 'promoLimit', 'postsToday', 'userHasDofollowPermission'));
     }
 
     public function store(Request $request)
@@ -171,7 +178,14 @@ class PostController extends Controller
         }
 
         $categories = Category::all();
-        return view('posts.edit', compact('post', 'categories'));
+        $userHasDofollowPermission = false;
+        if ($user->hasRole('admin')) {
+            $userHasDofollowPermission = true;
+        } else {
+            $globalDofollow = \App\Models\Setting::get('default_dofollow_status', 0);
+            $userHasDofollowPermission = is_null($user->dofollow_default) ? (bool)$globalDofollow : (bool)$user->dofollow_default;
+        }
+        return view('posts.edit', compact('post', 'categories', 'userHasDofollowPermission'));
     }
 
     public function update(Request $request, Post $post)
