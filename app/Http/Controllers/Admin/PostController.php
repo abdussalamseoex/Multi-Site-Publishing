@@ -90,6 +90,7 @@ class PostController extends Controller
             'meta_title' => $request->meta_title ?? $request->title,
             'meta_description' => $request->meta_description ?? substr(strip_tags($request->content), 0, 150),
             'meta_keywords' => $request->meta_keywords,
+            'is_dofollow' => $request->input('link_policy') === 'dofollow',
         ]);
 
         return redirect()->route('admin.posts.index')->with('status', 'Post created successfully.');
@@ -144,6 +145,7 @@ class PostController extends Controller
             'meta_title' => $request->meta_title ?? $request->title,
             'meta_description' => $request->meta_description ?? substr(strip_tags($request->content), 0, 150),
             'meta_keywords' => $request->meta_keywords,
+            'is_dofollow' => $request->input('link_policy') === 'dofollow',
         ]);
 
         return redirect()->route('admin.posts.index')->with('status', 'Post updated successfully.');

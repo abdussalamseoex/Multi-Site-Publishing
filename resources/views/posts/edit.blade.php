@@ -56,6 +56,25 @@
                                 <input type="hidden" name="content" id="content-hidden">
                             </div>
 
+                            <!-- Link Policy Settings -->
+                            <div class="border rounded-lg p-5 bg-blue-50 mt-6 border-blue-100">
+                                <h3 class="text-md font-semibold text-blue-800 mb-2">Outbound Link Settings</h3>
+                                @if(isset($userHasDofollowPermission) && $userHasDofollowPermission)
+                                    <p class="text-sm text-blue-600 mb-3">You have permission to use Dofollow links. Please select how outbound links in your article should be treated:</p>
+                                    <select name="link_policy" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                                        <option value="dofollow" {{ old('link_policy', $post->is_dofollow ? 'dofollow' : 'nofollow') == 'dofollow' ? 'selected' : '' }}>Dofollow (SEO Value Passed)</option>
+                                        <option value="nofollow" {{ old('link_policy', $post->is_dofollow ? 'dofollow' : 'nofollow') == 'nofollow' ? 'selected' : '' }}>Nofollow (No SEO Value Passed)</option>
+                                    </select>
+                                @else
+                                    <p class="text-sm text-blue-600 mb-2">How outbound links in your article are treated:</p>
+                                    <div class="bg-gray-100 px-4 py-2 rounded border border-gray-200 text-gray-600 flex items-center justify-between">
+                                        <span><strong>Nofollow</strong> (No SEO Value Passed)</span>
+                                        <span class="text-xs bg-gray-200 px-2 py-1 rounded">Default Permission</span>
+                                    </div>
+                                    <input type="hidden" name="link_policy" value="nofollow">
+                                @endif
+                            </div>
+
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Category (Optional)</label>

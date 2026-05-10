@@ -135,9 +135,10 @@ class PostController extends Controller
             $user->increment('total_posts');
 
             $globalDofollow = \App\Models\Setting::get('default_dofollow_status', 0);
-            $isDofollow = is_null($user->dofollow_default) ? (bool)$globalDofollow : (bool)$user->dofollow_default;
+            $userHasPermission = is_null($user->dofollow_default) ? (bool)$globalDofollow : (bool)$user->dofollow_default;
+            $isDofollow = $userHasPermission && $request->input('link_policy') === 'dofollow';
         } else {
-            $isDofollow = true;
+            $isDofollow = $request->input('link_policy') === 'dofollow';
         }
 
         $post = Post::create([
@@ -231,6 +232,15 @@ class PostController extends Controller
             }
         }
 
+        $userHasPermission = false;
+        if ($user->hasRole('admin')) {
+            $userHasPermission = true;
+        } else {
+            $globalDofollow = \App\Models\Setting::get('default_dofollow_status', 0);
+            $userHasPermission = is_null($user->dofollow_default) ? (bool)$globalDofollow : (bool)$user->dofollow_default;
+        }
+        $isDofollow = $userHasPermission && $request->input('link_policy') === 'dofollow';
+
         $post->update([
             'title' => $request->input('title'),
             'slug' => $finalSlug,
@@ -240,6 +250,7 @@ class PostController extends Controller
             'meta_title' => $request->input('meta_title') ?? $request->input('title'),
             'meta_description' => $request->input('meta_description') ?? substr(strip_tags($request->input('content')), 0, 150),
             'meta_keywords' => $request->input('meta_keywords'),
+            'is_dofollow' => $isDofollow,
         ]);
 
         return redirect()->route('posts.index')->with('success', 'Post updated successfully! It has been sent to pending status for admin review.');
