@@ -190,8 +190,36 @@
           if (preview && window.quillNofollowLinks[preview] === true) {
               isChecked = true;
           }
-          document.getElementById('ql-nofollow-cb').checked = isChecked;
+          var cb = document.getElementById('ql-nofollow-cb');
+          cb.checked = isChecked;
+          cb.dataset.activeHref = preview || '';
       };
+
+      quill.on('selection-change', function(range) {
+          if (range) {
+              var leaf = quill.getLeaf(range.index);
+              var node = leaf ? leaf[0] : null;
+              while (node && node.statics && node.statics.blotName !== 'scroll') {
+                  if (node.statics.blotName === 'link') {
+                      var href = node.domNode.getAttribute('href');
+                      var cb = document.getElementById('ql-nofollow-cb');
+                      if (cb && href) {
+                          cb.dataset.activeHref = href;
+                          cb.checked = window.quillNofollowLinks[href] === true;
+                      }
+                      break;
+                  }
+                  node = node.parent;
+              }
+          }
+      });
+
+      document.getElementById('ql-nofollow-cb').addEventListener('change', function() {
+          var activeHref = this.dataset.activeHref;
+          if (activeHref) {
+              window.quillNofollowLinks[activeHref] = this.checked;
+          }
+      });
 
       // Intercept the form submission to apply the mapped rel attributes
       var form = document.querySelector('form');

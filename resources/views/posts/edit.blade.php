@@ -184,12 +184,44 @@
               isChecked = true;
           }
           
+          var cb = document.getElementById('ql-nofollow-cb');
           @if(isset($userHasDofollowPermission) && !$userHasDofollowPermission)
-              document.getElementById('ql-nofollow-cb').checked = true;
+              cb.checked = true;
           @else
-              document.getElementById('ql-nofollow-cb').checked = isChecked;
+              cb.checked = isChecked;
           @endif
+          cb.dataset.activeHref = preview || '';
       };
+
+      quill.on('selection-change', function(range) {
+          if (range) {
+              var leaf = quill.getLeaf(range.index);
+              var node = leaf ? leaf[0] : null;
+              while (node && node.statics && node.statics.blotName !== 'scroll') {
+                  if (node.statics.blotName === 'link') {
+                      var href = node.domNode.getAttribute('href');
+                      var cb = document.getElementById('ql-nofollow-cb');
+                      if (cb && href) {
+                          cb.dataset.activeHref = href;
+                          @if(isset($userHasDofollowPermission) && !$userHasDofollowPermission)
+                              cb.checked = true;
+                          @else
+                              cb.checked = window.quillNofollowLinks[href] === true;
+                          @endif
+                      }
+                      break;
+                  }
+                  node = node.parent;
+              }
+          }
+      });
+
+      document.getElementById('ql-nofollow-cb').addEventListener('change', function() {
+          var activeHref = this.dataset.activeHref;
+          if (activeHref) {
+              window.quillNofollowLinks[activeHref] = this.checked;
+          }
+      });
 
       // Intercept the form submission to apply the mapped rel attributes
       var form = document.querySelector('form');
