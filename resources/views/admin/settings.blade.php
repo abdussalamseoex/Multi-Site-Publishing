@@ -173,6 +173,40 @@
                                     <span class="ml-2 text-sm text-gray-600">Show Latest Posts Section</span>
                                 </div>
                             </div>
+
+                            {{-- Header & Footer Style --}}
+                            <div class="mt-4 border-t pt-4">
+                                <h4 class="text-sm font-bold text-gray-900 mb-3">Header & Footer Design Style</h4>
+                                <p class="text-xs text-gray-500 mb-4">Switch between different header and footer designs to make each site look unique. Style 1 is your existing design. Changing this will NOT affect any other settings.</p>
+
+                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Header Style</label>
+                                        <select name="header_style" class="block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                                            <option value="1" {{ ($settings['header_style'] ?? '1') == '1' ? 'selected' : '' }}>Style 1 — Classic Light (Default)</option>
+                                            <option value="2" {{ ($settings['header_style'] ?? '1') == '2' ? 'selected' : '' }}>Style 2 — Modern Dark</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Footer Style</label>
+                                        <select name="footer_style" class="block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                                            <option value="1" {{ ($settings['footer_style'] ?? '1') == '1' ? 'selected' : '' }}>Style 1 — Classic Light (Default)</option>
+                                            <option value="2" {{ ($settings['footer_style'] ?? '1') == '2' ? 'selected' : '' }}>Style 2 — Modern Dark</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {{-- Top Bar --}}
+                                <div class="flex items-center mb-3">
+                                    <input type="hidden" name="show_top_bar" value="0">
+                                    <input type="checkbox" name="show_top_bar" value="1" {{ ($settings['show_top_bar'] ?? '0') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                    <span class="ml-2 text-sm text-gray-600">Show Top Bar above Header <span class="text-gray-400 font-normal">(Style 2 only)</span></span>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Top Bar Text (optional)</label>
+                                    <input type="text" name="top_bar_text" value="{{ $settings['top_bar_text'] ?? '' }}" placeholder="e.g. 📰 Stay updated with the latest news" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                                </div>
+                            </div>
                         </div>
                     </div>
 
