@@ -170,4 +170,75 @@ class ImageService
 
         return $result;
     }
+
+    /**
+     * Upload an OG image, resize exactly to 1200x630, and convert to WebP.
+     */
+    public static function uploadAndConvertOgImage(UploadedFile $file, $directory = 'posts', $quality = 85)
+    {
+        if (!$file) return null;
+
+        try {
+            $filename = time() . '_og_' . uniqid() . '.webp';
+            $destinationPath = public_path("uploads/{$directory}");
+            
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+
+            $sourcePath = $file->getRealPath();
+            
+            if (!function_exists('imagewebp')) throw new \Exception('GD WebP not supported');
+
+            $info = getimagesize($sourcePath);
+            if (!$info) throw new \Exception('Invalid image');
+
+            $mime = $info['mime'];
+            switch ($mime) {
+                case 'image/jpeg': $image = imagecreatefromjpeg($sourcePath); break;
+                case 'image/png': $image = imagecreatefrompng($sourcePath); break;
+                case 'image/gif': $image = imagecreatefromgif($sourcePath); break;
+                case 'image/webp': $image = imagecreatefromwebp($sourcePath); break;
+                default: throw new \Exception('Unsupported image type');
+            }
+
+            if (!$image) throw new \Exception('Failed to create image from source');
+
+            $targetW = 1200;
+            $targetH = 630;
+            $width = imagesx($image);
+            $height = imagesy($image);
+            
+            $newImage = imagecreatetruecolor($targetW, $targetH);
+            
+            // Preserve transparency for PNG/WebP (even if filling with white bg is safer for OG)
+            $white = imagecolorallocate($newImage, 255, 255, 255);
+            imagefill($newImage, 0, 0, $white);
+            
+            // Resize proportionally to cover or fit? Let's do fit to prevent cropping important parts
+            $ratio = min($targetW / $width, $targetH / $height);
+            $w = $width * $ratio;
+            $h = $height * $ratio;
+            $x = ($targetW - $w) / 2;
+            $y = ($targetH - $h) / 2;
+            
+            imagecopyresampled($newImage, $image, $x, $y, 0, 0, $w, $h, $width, $height);
+            
+            $result = imagewebp($newImage, "{$destinationPath}/{$filename}", $quality);
+            
+            imagedestroy($image);
+            imagedestroy($newImage);
+
+            if ($result) {
+                return "/uploads/{$directory}/{$filename}";
+            }
+            
+            throw new \Exception('Failed to save WebP');
+
+        } catch (\Throwable $e) {
+            Log::error("ImageService OG Upload Error: " . $e->getMessage());
+            // Fallback to normal upload if resize fails
+            return self::uploadAndConvert($file, $directory);
+        }
+    }
 }

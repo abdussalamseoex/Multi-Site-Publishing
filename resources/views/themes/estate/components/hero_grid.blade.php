@@ -21,7 +21,7 @@
     <!-- Hero Showcase -->
     <div class="relative w-full h-[70vh] min-h-[500px] flex items-center justify-center">
         @if($hero->featured_image)
-            <img src="{{ Str::startsWith($hero->featured_image, 'http') ? $hero->featured_image : url($hero->featured_image) }}" class="absolute inset-0 w-full h-full object-cover">
+            <img src="{{ Str::startsWith($hero->featured_image, 'http') ? $hero->featured_image : url($hero->featured_image) }}" alt="{{ $hero->title }}" class="absolute inset-0 w-full h-full object-cover">
         @else
             <div class="absolute inset-0 bg-stone-800"></div>
         @endif
@@ -49,7 +49,7 @@
             <a href="{{ route('frontend.post', $post->slug) }}" class="absolute inset-0 z-0"></a>
             <div class="aspect-[4/3] overflow-hidden relative">
                 @if($post->featured_image)
-                    <img src="{{ Str::startsWith($post->featured_image, 'http') ? $post->featured_image : url($post->featured_image) }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
+                    <img src="{{ Str::startsWith($post->featured_image, 'http') ? $post->featured_image : url($post->featured_image) }}" alt="{{ $post->title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
                 @endif
                 <div class="absolute inset-0 bg-stone-900/20 group-hover:bg-transparent transition"></div>
             </div>

@@ -18,7 +18,7 @@
             <a href="{{ route('frontend.post', $post->slug) }}" class="absolute inset-0 z-0"></a>
             <a href="{{ route('frontend.post', $post->slug) }}" class="w-full md:w-5/12 aspect-[4/3] relative overflow-hidden bg-stone-100 z-10">
                 @if($post->featured_image)
-                    <img src="{{ Str::startsWith($post->featured_image, 'http') ? $post->featured_image : url($post->featured_image) }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
+                    <img src="{{ Str::startsWith($post->featured_image, 'http') ? $post->featured_image : url($post->featured_image) }}" alt="{{ $post->title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
                 @endif
             </a>
             <div class="w-full md:w-7/12 flex flex-col justify-center relative z-10">

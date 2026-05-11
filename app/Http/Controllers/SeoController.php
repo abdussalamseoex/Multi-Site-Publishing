@@ -19,7 +19,7 @@ class SeoController extends Controller
             $categories = Category::all();
             $pages = \App\Models\Page::all();
 
-            $xml = '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+            $xml = '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">';
             
             // Homepage
             $xml .= '<url><loc>' . url('/') . '</loc><changefreq>daily</changefreq><priority>1.0</priority></url>';
@@ -50,6 +50,15 @@ class SeoController extends Controller
                 $xml .= '<lastmod>' . $post->updated_at->toAtomString() . '</lastmod>';
                 $xml .= '<changefreq>weekly</changefreq>';
                 $xml .= '<priority>0.9</priority>';
+                
+                if ($post->featured_image) {
+                    $imgUrl = url($post->featured_image);
+                    $xml .= '<image:image>';
+                    $xml .= '<image:loc>' . htmlspecialchars($imgUrl) . '</image:loc>';
+                    $xml .= '<image:title>' . htmlspecialchars($post->title) . '</image:title>';
+                    $xml .= '</image:image>';
+                }
+                
                 $xml .= '</url>';
             }
 

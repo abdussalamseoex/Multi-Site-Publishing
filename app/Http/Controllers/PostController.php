@@ -85,7 +85,7 @@ class PostController extends Controller
 
         $ogImagePath = null;
         if ($request->hasFile('og_image')) {
-            $ogImagePath = \App\Services\ImageService::uploadAndConvert($request->file('og_image'), 'posts');
+            $ogImagePath = \App\Services\ImageService::uploadAndConvertOgImage($request->file('og_image'), 'posts');
         }
 
         $baseSlug = $request->input('slug') ? \Illuminate\Support\Str::slug($request->input('slug')) : \Illuminate\Support\Str::slug($request->input('title'));
@@ -222,7 +222,7 @@ class PostController extends Controller
         }
 
         if ($request->hasFile('og_image')) {
-            $post->og_image = \App\Services\ImageService::uploadAndConvert($request->file('og_image'), 'posts');
+            $post->og_image = \App\Services\ImageService::uploadAndConvertOgImage($request->file('og_image'), 'posts');
         }
 
         $requestedSlug = $request->input('slug') ? \Illuminate\Support\Str::slug($request->input('slug')) : \Illuminate\Support\Str::slug($request->input('title'));

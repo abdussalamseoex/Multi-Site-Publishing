@@ -11,7 +11,7 @@
             <a href="{{ route('frontend.post', $pop->slug) }}" class="absolute inset-0 z-0"></a>
             <a href="{{ route('frontend.post', $pop->slug) }}" class="w-24 h-24 shrink-0 overflow-hidden bg-stone-100 flex-1 relative z-10">
                 @if($pop->featured_image)
-                    <img src="{{ url($pop->featured_image) }}" class="w-full h-full object-cover group-hover:scale-105 transition">
+                    <img src="{{ url($pop->featured_image) }}" alt="{{ $pop->title }}" class="w-full h-full object-cover group-hover:scale-105 transition">
                 @endif
             </a>
             <div class="flex-[2] relative z-10">

@@ -63,7 +63,7 @@
 
         @if($post->featured_image)
             <div class="w-full aspect-video md:aspect-[21/9] bg-stone-100 mb-16 relative">
-                <img src="{{ Str::startsWith($post->featured_image, 'http') ? $post->featured_image : url($post->featured_image) }}" class="w-full h-full object-cover shadow-lg">
+                <img src="{{ Str::startsWith($post->featured_image, 'http') ? $post->featured_image : url($post->featured_image) }}" alt="{{ $post->title }}" class="w-full h-full object-cover shadow-lg">
             </div>
         @endif
 
@@ -81,7 +81,7 @@
                         <a href="{{ route('frontend.post', $rel->slug) }}" class="group block">
                             @if($rel->featured_image)
                                 <div class="w-full aspect-[4/3] bg-stone-100 mb-4 overflow-hidden border border-stone-200">
-                                    <img src="{{ url($rel->featured_image) }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700 opacity-90 group-hover:opacity-100">
+                                    <img src="{{ url($rel->featured_image) }}" alt="{{ $rel->title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700 opacity-90 group-hover:opacity-100">
                                 </div>
                             @endif
                             <h4 class="font-elegant font-bold text-xl text-stone-900 group-hover:text-amber-700 transition leading-snug line-clamp-2">{{ $rel->title }}</h4>
