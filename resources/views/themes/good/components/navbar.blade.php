@@ -1,13 +1,24 @@
-<!-- Top Bar -->
+{{-- Top Bar (Admin Controlled) --}}
+@if(\App\Models\Setting::get('show_top_bar', '1') == '1')
 <div class="bg-[#111] text-gray-400 text-[11px] py-2 px-4 flex justify-between items-center w-full border-b border-[#222]">
     <div class="max-w-[1200px] mx-auto w-full flex justify-between items-center">
-        <div class="flex space-x-4">
-            <span class="text-white font-bold mr-2"><i class="fas fa-bolt text-primary mr-1"></i> TRENDING:</span>
+        <div class="flex space-x-4 items-center">
             @php
-                $trendingTop = \App\Models\Post::where('status', 'published')->orderBy('views', 'desc')->first();
+                $topMenuId = \App\Models\Setting::get('top_bar_menu_id');
+                $goodTopMenu = $topMenuId ? \App\Models\Menu::with('items')->find($topMenuId) : null;
             @endphp
-            @if($trendingTop)
-                <a href="{{ route('frontend.post', $trendingTop->slug) }}" class="hover:text-primary transition line-clamp-1">{{ $trendingTop->title }}</a>
+            @if($goodTopMenu && $goodTopMenu->items->count() > 0)
+                @foreach($goodTopMenu->items->whereNull('parent_id')->sortBy('order') as $item)
+                    <a href="{{ $item->url }}" class="hover:text-primary transition">{{ $item->title }}</a>
+                @endforeach
+            @else
+                <span class="text-white font-bold mr-2"><i class="fas fa-bolt text-primary mr-1"></i> TRENDING:</span>
+                @php
+                    $trendingTop = \App\Models\Post::where('status', 'published')->orderBy('views', 'desc')->first();
+                @endphp
+                @if($trendingTop)
+                    <a href="{{ route('frontend.post', $trendingTop->slug) }}" class="hover:text-primary transition line-clamp-1">{{ $trendingTop->title }}</a>
+                @endif
             @endif
         </div>
         <div class="hidden md:flex space-x-4 items-center">
@@ -21,6 +32,7 @@
         </div>
     </div>
 </div>
+@endif
 
 <!-- Main Header -->
 <header class="bg-white shadow-sm sticky top-0 z-50 border-b-2 border-primary">
