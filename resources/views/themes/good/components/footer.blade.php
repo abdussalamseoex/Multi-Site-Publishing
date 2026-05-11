@@ -80,14 +80,16 @@
                 <a href="#" class="hover:text-primary transition">ABOUT US</a>
                 <a href="#" class="hover:text-primary transition">CONTACT</a>
                 
-                <span class="text-gray-700 hidden md:inline">|</span>
-                
-                @auth
-                    <a href="{{ route('dashboard') }}" class="hover:text-primary text-white transition font-bold"><i class="fas fa-tachometer-alt mr-1"></i> DASHBOARD</a>
-                @else
-                    <a href="{{ route('login') }}" class="hover:text-primary text-white transition font-bold"><i class="fas fa-sign-in-alt mr-1"></i> LOGIN</a>
-                    <a href="{{ route('register') }}" class="hover:text-primary text-white transition font-bold"><i class="fas fa-user-plus mr-1"></i> SIGN UP</a>
-                @endauth
+                @if(\App\Models\Setting::get('show_header_auth_buttons', '1') == '1')
+                    <span class="text-gray-700 hidden md:inline">|</span>
+
+                    @auth
+                        <a href="{{ route('dashboard') }}" class="hover:text-primary text-white transition font-bold"><i class="fas fa-tachometer-alt mr-1"></i> DASHBOARD</a>
+                    @else
+                        <a href="{{ route('login') }}" class="hover:text-primary text-white transition font-bold"><i class="fas fa-sign-in-alt mr-1"></i> LOGIN</a>
+                        <a href="{{ route('register') }}" class="hover:text-primary text-white transition font-bold"><i class="fas fa-user-plus mr-1"></i> SIGN UP</a>
+                    @endauth
+                @endif
             </div>
         </div>
     </div>

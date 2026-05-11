@@ -201,6 +201,12 @@
                             <div class="mt-4 border-t pt-4">
                                 <h4 class="text-sm font-bold text-gray-900 mb-3">Registration & Auth</h4>
                                 
+                                <div class="flex items-center mb-3">
+                                    <input type="hidden" name="show_header_auth_buttons" value="0">
+                                    <input type="checkbox" name="show_header_auth_buttons" value="1" {{ ($settings['show_header_auth_buttons'] ?? '1') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                    <span class="ml-2 text-sm text-gray-700">Show Auth/Dashboard Buttons in Theme Headers</span>
+                                </div>
+
                                 <div class="flex items-center mb-4">
                                     <input type="hidden" name="enable_registration" value="0">
                                     <input type="checkbox" name="enable_registration" value="1" {{ ($settings['enable_registration'] ?? '1') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
