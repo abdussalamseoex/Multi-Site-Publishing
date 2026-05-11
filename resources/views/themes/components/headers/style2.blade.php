@@ -10,11 +10,20 @@
     {{-- Top bar --}}
     @if(\App\Models\Setting::get('show_top_bar', '0') == '1')
     <div class="bg-gray-900 border-b border-gray-800 py-1.5 px-6 text-xs text-gray-400 flex justify-between items-center">
-        <div class="hidden md:flex items-center gap-6">
-            @if(\App\Models\Setting::get('top_bar_text'))
-                <span>{{ \App\Models\Setting::get('top_bar_text') }}</span>
+        <div class="flex items-center gap-4">
+            @php
+                $topMenuId = \App\Models\Setting::get('top_bar_menu_id');
+                $topMenu = $topMenuId ? \App\Models\Menu::with('items')->find($topMenuId) : null;
+            @endphp
+
+            @if($topMenu && $topMenu->items->count() > 0)
+                <div class="flex items-center gap-4 font-medium">
+                    @foreach($topMenu->items->whereNull('parent_id')->sortBy('order') as $item)
+                        <a href="{{ $item->url }}" class="hover:text-white transition">{{ $item->title }}</a>
+                    @endforeach
+                </div>
             @else
-                <span>📰 Stay updated with the latest news</span>
+                <span>{{ \App\Models\Setting::get('top_bar_text', '📰 Stay updated with the latest news') }}</span>
             @endif
         </div>
         <div class="flex items-center gap-4 ml-auto">

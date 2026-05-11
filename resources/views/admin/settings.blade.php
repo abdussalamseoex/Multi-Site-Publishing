@@ -210,6 +210,17 @@
                                     <label class="block text-sm font-medium text-gray-700">Top Bar Text (optional)</label>
                                     <input type="text" name="top_bar_text" value="{{ $settings['top_bar_text'] ?? '' }}" placeholder="e.g. 📰 Stay updated with the latest news" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
                                 </div>
+
+                                <div class="mt-3">
+                                    <label class="block text-sm font-medium text-gray-700">Select Top Bar Menu</label>
+                                    <select name="top_bar_menu_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
+                                        <option value="">None (Static Text Only)</option>
+                                        @foreach($menus as $menu)
+                                            <option value="{{ $menu->id }}" {{ ($settings['top_bar_menu_id'] ?? '') == $menu->id ? 'selected' : '' }}>{{ $menu->name }} ({{ $menu->location }})</option>
+                                        @endforeach
+                                    </select>
+                                    <p class="text-[10px] text-gray-500 mt-1">If a menu is selected, it will show links on the left side of the Top Bar instead of the static text.</p>
+                                </div>
                             </div>
                         </div>
                     </div>

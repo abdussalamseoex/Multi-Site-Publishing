@@ -33,7 +33,23 @@
     {{-- Optional Top Bar --}}
     @if(\App\Models\Setting::get('show_top_bar','0') == '1')
     <div class="{{ $topBarBg }} py-1.5 px-6 text-xs flex justify-between items-center border-b border-black/10">
-        <span class="{{ $navText }} opacity-70">{{ \App\Models\Setting::get('top_bar_text','📰 Stay updated') }}</span>
+        <div class="flex items-center gap-4">
+            @php
+                $topMenuId = \App\Models\Setting::get('top_bar_menu_id');
+                $topMenu = $topMenuId ? \App\Models\Menu::with('items')->find($topMenuId) : null;
+            @endphp
+
+            @if($topMenu && $topMenu->items->count() > 0)
+                <div class="flex items-center gap-4 {{ $navText }} font-medium">
+                    @foreach($topMenu->items->whereNull('parent_id')->sortBy('order') as $item)
+                        <a href="{{ $item->url }}" class="hover:opacity-100 opacity-70 transition">{{ $item->title }}</a>
+                    @endforeach
+                </div>
+            @else
+                <span class="{{ $navText }} opacity-70">{{ \App\Models\Setting::get('top_bar_text','📰 Stay updated') }}</span>
+            @endif
+        </div>
+        
         <div class="hidden md:flex items-center gap-4 {{ $navText }} opacity-60">
             @if(\App\Models\Setting::get('social_facebook'))
                 <a href="{{ \App\Models\Setting::get('social_facebook') }}" target="_blank" rel="noopener" class="hover:opacity-100 transition">

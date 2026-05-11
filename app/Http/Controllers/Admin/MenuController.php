@@ -23,6 +23,11 @@ class MenuController extends Controller
             Menu::create(['name' => 'Footer Categories', 'location' => 'footer_categories']);
             return redirect()->route('admin.menus.index');
         }
+
+        if (!Menu::where('location', 'top_menu')->exists()) {
+            Menu::create(['name' => 'Top Bar Navigation', 'location' => 'top_menu']);
+            return redirect()->route('admin.menus.index');
+        }
         
         $activeMenu = $menus->first();
         if(request('id')) {

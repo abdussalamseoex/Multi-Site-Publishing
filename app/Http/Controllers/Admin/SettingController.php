@@ -11,7 +11,8 @@ class SettingController extends Controller
     public function index()
     {
         $settings = Setting::all()->pluck('value', 'key')->toArray();
-        return view('admin.settings', compact('settings'));
+        $menus = \App\Models\Menu::all();
+        return view('admin.settings', compact('settings', 'menus'));
     }
 
     public function seoIndex()
