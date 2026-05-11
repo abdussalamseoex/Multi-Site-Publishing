@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\BlockIpMiddleware::class,
             \App\Http\Middleware\TrackVisitor::class,
             \App\Http\Middleware\CheckBannedUser::class,
+            \App\Http\Middleware\SeoMiddleware::class,
         ]);
         
         $middleware->alias([
@@ -28,5 +29,13 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, \Illuminate\Http\Request $request) {
+            if ($request->is('admin/*') || $request->is('api/*')) {
+                return null;
+            }
+            
+            if (\App\Models\Setting::get('redirect_404_to_home', '1') == '1') {
+                return redirect('/', 301);
+            }
+        });
     })->create();

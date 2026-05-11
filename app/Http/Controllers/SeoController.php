@@ -17,11 +17,31 @@ class SeoController extends Controller
         $xml = \Illuminate\Support\Facades\Cache::remember('sitemap_xml', 3600, function () {
             $posts = Post::where('status', 'published')->orderBy('updated_at', 'desc')->get();
             $categories = Category::all();
+            $pages = \App\Models\Page::all();
 
             $xml = '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
             
             // Homepage
             $xml .= '<url><loc>' . url('/') . '</loc><changefreq>daily</changefreq><priority>1.0</priority></url>';
+
+            // Categories
+            foreach ($categories as $category) {
+                $xml .= '<url>';
+                $xml .= '<loc>' . route('frontend.category', $category->slug) . '</loc>';
+                $xml .= '<changefreq>weekly</changefreq>';
+                $xml .= '<priority>0.8</priority>';
+                $xml .= '</url>';
+            }
+
+            // Pages
+            foreach ($pages as $page) {
+                $xml .= '<url>';
+                $xml .= '<loc>' . route('frontend.page', $page->slug) . '</loc>';
+                $xml .= '<lastmod>' . $page->updated_at->toAtomString() . '</lastmod>';
+                $xml .= '<changefreq>monthly</changefreq>';
+                $xml .= '<priority>0.7</priority>';
+                $xml .= '</url>';
+            }
 
             // Posts
             foreach ($posts as $post) {
@@ -29,7 +49,7 @@ class SeoController extends Controller
                 $xml .= '<loc>' . route('frontend.post', $post->slug) . '</loc>';
                 $xml .= '<lastmod>' . $post->updated_at->toAtomString() . '</lastmod>';
                 $xml .= '<changefreq>weekly</changefreq>';
-                $xml .= '<priority>0.8</priority>';
+                $xml .= '<priority>0.9</priority>';
                 $xml .= '</url>';
             }
 
@@ -51,7 +71,7 @@ class SeoController extends Controller
 
     public function robots()
     {
-        $defaultTxt = "User-agent: *\nDisallow: /admin/\nDisallow: /checkout/\nAllow: /\n\nSitemap: " . url('/sitemap.xml');
+        $defaultTxt = "User-agent: *\nDisallow: /admin/\nDisallow: /checkout/\nDisallow: /search\nDisallow: /login\nDisallow: /register\nDisallow: /dashboard\nAllow: /\n\nSitemap: " . url('/sitemap.xml');
         $txt = \App\Models\Setting::get('custom_robots_txt', $defaultTxt);
 
         return response($txt, 200)

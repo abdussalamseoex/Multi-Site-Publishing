@@ -14,7 +14,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('admin.seo.store') }}" method="POST">
+            <form action="{{ route('admin.seo.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 
                 <!-- Robots.txt Box -->
@@ -60,6 +60,72 @@
                             </p>
                             <textarea name="custom_sitemap_xml" rows="6" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm bg-gray-50" placeholder="<url>&#10;  <loc>https://yourdomain.com/custom-page</loc>&#10;  <changefreq>monthly</changefreq>&#10;</url>">{{ $settings['custom_sitemap_xml'] ?? '' }}</textarea>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Automated URL & Redirect Rules -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6 border border-gray-200">
+                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800">Global Redirects (404 Fallback)</h3>
+                            <p class="text-xs text-gray-500 mt-1">Manage what happens when Google or users hit old/deleted URLs (404 Not Found)</p>
+                        </div>
+                        <div class="text-sm text-gray-400">
+                            <i class="fas fa-random text-2xl"></i>
+                        </div>
+                    </div>
+                    <div class="p-6 text-gray-900 space-y-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <label class="text-sm font-bold text-gray-700">Redirect 404 Pages to Homepage (301)</label>
+                                <p class="text-xs text-gray-500 mt-1">Instead of showing a "Page Not Found" error, silently redirect old WordPress/dropped URLs to your homepage. Great for preserving SEO crawl budget.</p>
+                            </div>
+                            <div>
+                                <select name="redirect_404_to_home" class="mt-1 block w-40 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm font-bold">
+                                    <option value="1" {{ (isset($settings['redirect_404_to_home']) && $settings['redirect_404_to_home'] == '1') || !isset($settings['redirect_404_to_home']) ? 'selected' : '' }}>Enabled</option>
+                                    <option value="0" {{ (isset($settings['redirect_404_to_home']) && $settings['redirect_404_to_home'] == '0') ? 'selected' : '' }}>Disabled</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OG Image Settings -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6 border border-gray-200">
+                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800">Default Open Graph (OG) Image</h3>
+                            <p class="text-xs text-gray-500 mt-1">Configure the default image shown when your website is shared on Facebook, Twitter, LinkedIn, etc.</p>
+                        </div>
+                        <div class="text-sm text-gray-400">
+                            <i class="fas fa-image text-2xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6 text-gray-900 space-y-6">
+                        <div class="flex flex-col md:flex-row items-center gap-6 pb-6 border-b border-gray-100">
+                            <div class="w-full md:w-1/2">
+                                <label class="text-sm font-bold text-gray-700">Upload Image File</label>
+                                <p class="text-xs text-gray-500 mt-1">Upload an image directly from your computer.</p>
+                                <input type="file" name="default_og_image_file" class="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                            </div>
+                            <div class="w-full md:w-1/2">
+                                <label class="text-sm font-bold text-gray-700">OR Image URL</label>
+                                <p class="text-xs text-gray-500 mt-1">Provide a direct URL to the image (e.g. https://.../image.jpg).</p>
+                                <input type="text" name="default_og_image_url" value="{{ $settings['default_og_image'] ?? '' }}" class="mt-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                            </div>
+                        </div>
+                        <div class="bg-indigo-50 p-4 rounded-md">
+                            <p class="text-sm text-indigo-700"><strong>Note on Priority:</strong> The system will first try to use the specific Article's Featured Image. If the page is not an article or has no featured image, it will use this Default OG Image. If none is set, it falls back to the Main Site Logo.</p>
+                        </div>
+                        @if(isset($settings['default_og_image']) && $settings['default_og_image'])
+                        <div class="mt-4">
+                            <label class="text-sm font-bold text-gray-700">Current Default OG Image:</label>
+                            <div class="mt-2">
+                                <img src="{{ $settings['default_og_image'] }}" alt="OG Image" class="h-32 object-contain border rounded shadow-sm">
+                            </div>
+                        </div>
+                        @endif
                     </div>
                 </div>
 

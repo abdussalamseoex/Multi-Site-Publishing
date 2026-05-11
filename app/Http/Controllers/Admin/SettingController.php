@@ -46,7 +46,7 @@ class SettingController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->except(['_token', 'site_logo', 'site_favicon']);
+        $data = $request->except(['_token', 'site_logo', 'site_favicon', 'default_og_image_file', 'default_og_image_url']);
         
         foreach ($data as $key => $value) {
             Setting::set($key, $value);
@@ -82,6 +82,13 @@ class SettingController extends Controller
         if ($request->hasFile('site_favicon')) {
             $path = \App\Services\ImageService::uploadAndConvert($request->file('site_favicon'), 'logos');
             if ($path) Setting::set('site_favicon', $path);
+        }
+
+        if ($request->hasFile('default_og_image_file')) {
+            $path = \App\Services\ImageService::uploadAndConvert($request->file('default_og_image_file'), 'logos');
+            if ($path) Setting::set('default_og_image', url($path));
+        } elseif ($request->filled('default_og_image_url')) {
+            Setting::set('default_og_image', $request->input('default_og_image_url'));
         }
 
         return back()->with('status', 'Settings updated successfully.');

@@ -75,11 +75,17 @@ class PostController extends Controller
             'content' => 'required',
             'category_id' => 'required|exists:categories,id',
             'featured_image' => 'nullable|image|max:10240',
+            'og_image' => 'nullable|image|max:10240',
         ]);
 
         $featuredImagePath = null;
         if ($request->hasFile('featured_image')) {
             $featuredImagePath = \App\Services\ImageService::uploadAndConvert($request->file('featured_image'), 'posts');
+        }
+
+        $ogImagePath = null;
+        if ($request->hasFile('og_image')) {
+            $ogImagePath = \App\Services\ImageService::uploadAndConvert($request->file('og_image'), 'posts');
         }
 
         $baseSlug = $request->input('slug') ? \Illuminate\Support\Str::slug($request->input('slug')) : \Illuminate\Support\Str::slug($request->input('title'));
@@ -149,6 +155,7 @@ class PostController extends Controller
             'content' => \App\Services\ImageService::parseAndConvertHtmlImages($request->input('content'), 'posts'),
             'category_id' => $request->input('category_id'),
             'featured_image' => $featuredImagePath,
+            'og_image' => $ogImagePath,
             'status' => \App\Models\Setting::get('default_post_status', 'pending'), 
             'meta_title' => $request->input('meta_title') ?? $request->input('title'),
             'meta_description' => $request->input('meta_description') ?? substr(strip_tags($request->input('content')), 0, 150),
@@ -207,10 +214,15 @@ class PostController extends Controller
             'content' => 'required',
             'category_id' => 'required|exists:categories,id',
             'featured_image' => 'nullable|image|max:10240',
+            'og_image' => 'nullable|image|max:10240',
         ]);
 
         if ($request->hasFile('featured_image')) {
             $post->featured_image = \App\Services\ImageService::uploadAndConvert($request->file('featured_image'), 'posts');
+        }
+
+        if ($request->hasFile('og_image')) {
+            $post->og_image = \App\Services\ImageService::uploadAndConvert($request->file('og_image'), 'posts');
         }
 
         $requestedSlug = $request->input('slug') ? \Illuminate\Support\Str::slug($request->input('slug')) : \Illuminate\Support\Str::slug($request->input('title'));
