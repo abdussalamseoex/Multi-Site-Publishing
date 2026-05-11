@@ -185,14 +185,18 @@
                                         <select name="header_style" class="block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
                                             <option value="1" {{ ($settings['header_style'] ?? '1') == '1' ? 'selected' : '' }}>Style 1 — Classic Light (Default)</option>
                                             <option value="2" {{ ($settings['header_style'] ?? '1') == '2' ? 'selected' : '' }}>Style 2 — Modern Dark</option>
+                                            <option value="auto" {{ ($settings['header_style'] ?? '') == 'auto' ? 'selected' : '' }}>Auto — Theme Native (New Sites)</option>
                                         </select>
+                                        <p class="text-xs text-gray-400 mt-1">Auto loads the theme's own custom header if available.</p>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Footer Style</label>
                                         <select name="footer_style" class="block w-full border-gray-300 rounded-md shadow-sm sm:text-sm">
                                             <option value="1" {{ ($settings['footer_style'] ?? '1') == '1' ? 'selected' : '' }}>Style 1 — Classic Light (Default)</option>
                                             <option value="2" {{ ($settings['footer_style'] ?? '1') == '2' ? 'selected' : '' }}>Style 2 — Modern Dark</option>
+                                            <option value="auto" {{ ($settings['footer_style'] ?? '') == 'auto' ? 'selected' : '' }}>Auto — Theme Native (New Sites)</option>
                                         </select>
+                                        <p class="text-xs text-gray-400 mt-1">Auto loads the theme's own custom footer if available.</p>
                                     </div>
                                 </div>
 
