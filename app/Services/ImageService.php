@@ -241,4 +241,67 @@ class ImageService
             return self::uploadAndConvert($file, $directory);
         }
     }
+
+    /**
+     * Extract the most prominent color from an image.
+     * Useful for syncing primary theme color with the site logo.
+     */
+    public static function getProminentColor($filePath)
+    {
+        if (!file_exists($filePath)) return null;
+
+        try {
+            $info = getimagesize($filePath);
+            if (!$info) return null;
+
+            $mime = $info['mime'];
+            switch ($mime) {
+                case 'image/jpeg': $image = imagecreatefromjpeg($filePath); break;
+                case 'image/png': $image = imagecreatefrompng($filePath); break;
+                case 'image/gif': $image = imagecreatefromgif($filePath); break;
+                case 'image/webp': $image = imagecreatefromwebp($filePath); break;
+                default: return null;
+            }
+
+            if (!$image) return null;
+
+            // Resize to 20x20 and find dominant color
+            $thumbW = 20;
+            $thumbH = 20;
+            $thumb = imagecreatetruecolor($thumbW, $thumbH);
+            
+            imagealphablending($thumb, false);
+            imagesavealpha($thumb, true);
+            
+            imagecopyresampled($thumb, $image, 0, 0, 0, 0, $thumbW, $thumbH, imagesx($image), imagesy($image));
+            
+            $colors = [];
+            for ($x = 0; $x < $thumbW; $x++) {
+                for ($y = 0; $y < $thumbH; $y++) {
+                    $index = imagecolorat($thumb, $x, $y);
+                    $rgba = imagecolorsforindex($thumb, $index);
+                    
+                    if ($rgba['alpha'] > 100) continue;
+                    
+                    $brightness = ($rgba['red'] * 299 + $rgba['green'] * 587 + $rgba['blue'] * 114) / 1000;
+                    if ($brightness > 240 || $brightness < 15) continue;
+
+                    $hex = sprintf("#%02x%02x%02x", $rgba['red'], $rgba['green'], $rgba['blue']);
+                    $colors[$hex] = ($colors[$hex] ?? 0) + 1;
+                }
+            }
+
+            imagedestroy($image);
+            imagedestroy($thumb);
+
+            if (empty($colors)) return null;
+
+            arsort($colors);
+            return array_key_first($colors);
+
+        } catch (\Throwable $e) {
+            \Log::error("Color Extraction Error: " . $e->getMessage());
+            return null;
+        }
+    }
 }

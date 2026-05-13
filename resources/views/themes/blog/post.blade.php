@@ -1,14 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="{{ \App\Models\Setting::get('site_favicon') ? url(\App\Models\Setting::get('site_favicon')) : asset('favicon.ico') }}">
-    <meta charset="UTF-8">
-    <title>{{ $post->meta_title ?? $post->title }}</title>
-    <meta name="description" content="{{ $post->meta_description }}">
-    @if($post->meta_keywords)
-    <meta name="keywords" content="{{ $post->meta_keywords }}">
-    @endif
-    <link rel="canonical" href="{{ url()->current() }}">
+    @include('themes.components.meta_tags')
 
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     {!! \App\Models\Setting::get('custom_header_scripts', '') !!}

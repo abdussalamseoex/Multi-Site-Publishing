@@ -123,6 +123,14 @@
                                                     <textarea x-model="block.ad_code" rows="3" class="w-full border-gray-300 rounded shadow-sm text-xs py-1.5 font-mono text-purple-700" placeholder="Paste your ad code here..."></textarea>
                                                 </div>
                                             </template>
+
+                                            <template x-if="block.type === 'custom_html'">
+                                                <div class="col-span-1 md:col-span-2">
+                                                    <label class="block text-xs font-bold text-gray-700 mb-1">Custom HTML Code <span class="text-green-600 font-normal text-[10px]">(Full Width — outside sidebar)</span></label>
+                                                    <textarea x-model="block.html_code" rows="6" class="w-full border-gray-300 rounded shadow-sm text-xs py-1.5 font-mono text-green-800 bg-green-50" placeholder="<div class='my-banner'>...</div>&#10;<script>...</script>"></textarea>
+                                                    <p class="text-[10px] text-gray-400 mt-1">&#9888;&#65039; This block renders raw HTML at full page width, above the main content+sidebar grid. Use for banners, embeds, or custom widgets.</p>
+                                                </div>
+                                            </template>
                                         </div>
                                     </div>
                                 </template>
@@ -205,7 +213,8 @@
                     { id: 'latest_news', name: 'Latest Articles List' },
                     { id: 'category_spotlight', name: 'Category Spotlight' },
                     { id: 'category_grid', name: '3-Column Grid' },
-                    { id: 'ad_block', name: 'Advertisement Banner' }
+                    { id: 'ad_block', name: 'Advertisement Banner' },
+                    { id: 'custom_html', name: 'Custom HTML Block (Full Width)' }
                 ],
                 
                 sidebarTypes: [
@@ -223,7 +232,8 @@
                         title: this.getDefaultTitle(type),
                         category_id: '',
                         limit: this.getDefaultLimit(type),
-                        ad_code: ''
+                        ad_code: '',
+                        html_code: ''
                     };
                     this.blocks.push(newBlock);
                 },

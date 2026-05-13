@@ -1,21 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="{{ \App\Models\Setting::get('site_favicon') ? url(\App\Models\Setting::get('site_favicon')) : asset('favicon.ico') }}">
-    <meta charset="UTF-8">
-    <title>{{ $post->meta_title ?? $post->title }}</title>
-    <meta name="description" content="{{ $post->meta_description }}">
-    @if($post->meta_keywords)
-    <meta name="keywords" content="{{ $post->meta_keywords }}">
-    @endif
-    <link rel="canonical" href="{{ url()->current() }}">
-
-    
-    <meta property="og:title" content="{{ $post->meta_title ?? $post->title }}">
-    <meta property="og:description" content="{{ $post->meta_description }}">
-    @if($post->featured_image)
-    <meta property="og:image" content="{{ Str::startsWith($post->featured_image, 'http') ? $post->featured_image : url($post->featured_image) }}">
-    @endif
+    @include('themes.components.meta_tags')
     
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,800;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">

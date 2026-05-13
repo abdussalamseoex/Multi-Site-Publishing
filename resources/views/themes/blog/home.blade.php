@@ -1,11 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="{{ \App\Models\Setting::get('site_favicon') ? url(\App\Models\Setting::get('site_favicon')) : asset('favicon.ico') }}">
-    <meta charset="UTF-8">
-    <!-- BlogPost Standard Theme -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ isset($category) ? $category->name . ' - ' : '' }}{{ \App\Models\Setting::get('site_title', 'My Standard Blog') }}</title>
+    @php $isHomepage = !isset($isCategory); @endphp
+    @include('themes.components.meta_tags')
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
 </head>
@@ -39,6 +36,14 @@
             }
         @endphp
         
+        {{-- Render Custom HTML blocks at full width before the main/sidebar grid if any --}}
+        @foreach($blocks as $index => $block)
+            @if($block['type'] === 'custom_html')
+                @include('themes.components.custom_html', ['block' => $block])
+                @php unset($blocks[$index]); @endphp
+            @endif
+        @endforeach
+
         <main class="w-full md:w-2/3">
             @foreach($blocks as $block)
                 @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))

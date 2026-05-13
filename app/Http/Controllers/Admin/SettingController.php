@@ -77,7 +77,16 @@ class SettingController extends Controller
 
         if ($request->hasFile('site_logo')) {
             $path = \App\Services\ImageService::uploadAndConvert($request->file('site_logo'), 'logos');
-            if ($path) Setting::set('site_logo', $path);
+            if ($path) {
+                Setting::set('site_logo', $path);
+                
+                // Color Sync Feature: Extract prominent color from logo and set as primary
+                $fullPath = public_path($path);
+                $brandColor = \App\Services\ImageService::getProminentColor($fullPath);
+                if ($brandColor) {
+                    Setting::set('primary_color', $brandColor);
+                }
+            }
         }
 
         if ($request->hasFile('site_favicon')) {

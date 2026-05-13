@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="{{ \App\Models\Setting::get('site_favicon') ? url(\App\Models\Setting::get('site_favicon')) : asset('favicon.ico') }}">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ isset($category) ? $category->name . ' - ' : '' }}{{ \App\Models\Setting::get('site_title', 'My Minimal Blog') }} | {{ \App\Models\Setting::get('site_tagline', 'Less is more.') }}</title>
+    @php $isHomepage = !isset($isCategory); @endphp
+    @include('themes.components.meta_tags')
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     @php
@@ -55,7 +53,9 @@
 
         <div class="space-y-12">
             @foreach($blocks as $block)
-                @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
+                @if($block['type'] === 'custom_html')
+                    @include('themes.components.custom_html', ['block' => $block])
+                @elseif(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
                     @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
                 @else
                     @include("themes.good.components.{$block['type']}", ['block' => $block])

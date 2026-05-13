@@ -1,34 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="{{ \App\Models\Setting::get('site_favicon') ? url(\App\Models\Setting::get('site_favicon')) : asset('favicon.ico') }}">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $post->meta_title ?? $post->title }}</title>
-    <meta name="description" content="{{ $post->meta_description }}">
-    @if($post->meta_keywords)
-    <meta name="keywords" content="{{ $post->meta_keywords }}">
-    @endif
-    <link rel="canonical" href="{{ url()->current() }}">
-
-    
-    <!-- Open Graph & SEO -->
-    <meta property="og:title" content="{{ $post->meta_title ?? $post->title }}">
-    <meta property="og:description" content="{{ $post->meta_description }}">
-    <meta property="og:type" content="article">
-    <meta property="og:url" content="{{ request()->url() }}">
-    @if($post->featured_image)
-    <meta property="og:image" content="{{ Str::startsWith($post->featured_image, 'http') ? $post->featured_image : url($post->featured_image) }}">
-    @endif
-    <script type="application/ld+json">
-    {
-      "@@context": "https://schema.org",
-      "@@type": "Article",
-      "headline": "{{ $post->title }}",
-      "author": { "@@type": "Person", "name": "{{ $post->user->name ?? 'Author' }}" },
-      "datePublished": "{{ $post->created_at->toIso8601String() }}"
-    }
-    </script>
+    @include('themes.components.meta_tags')
     
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Roboto:wght@400;700&display=swap" rel="stylesheet">

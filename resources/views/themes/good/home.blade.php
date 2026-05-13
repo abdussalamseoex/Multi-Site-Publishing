@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="{{ \App\Models\Setting::get('site_favicon') ? url(\App\Models\Setting::get('site_favicon')) : asset('favicon.ico') }}">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ isset($category) ? $category->name . ' - ' : '' }}{{ \App\Models\Setting::get('site_title', 'GOOD Theme') }} | {{ \App\Models\Setting::get('site_tagline', 'The Ultimate News Experience') }}</title>
+    @php $isHomepage = !isset($isCategory); @endphp
+    @include('themes.components.meta_tags')
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -57,14 +55,18 @@
                 ];
             }
 
-            // Separate Hero grid from the rest, because Hero is full width
-            $heroBlocks = array_filter($blocks, fn($b) => $b['type'] === 'hero_grid');
-            $otherBlocks = array_filter($blocks, fn($b) => $b['type'] !== 'hero_grid');
+            // Separate Hero grid & custom_html from the rest (both render full-width)
+            $heroBlocks = array_filter($blocks, fn($b) => in_array($b['type'], ['hero_grid', 'custom_html']));
+            $otherBlocks = array_filter($blocks, fn($b) => !in_array($b['type'], ['hero_grid', 'custom_html']));
         @endphp
 
-        <!-- Full Width Hero Section -->
+        <!-- Full Width Blocks (Hero + Custom HTML) -->
         @foreach($heroBlocks as $block)
-            @include('themes.good.components.hero_grid', ['block' => $block])
+            @if($block['type'] === 'hero_grid')
+                @include('themes.good.components.hero_grid', ['block' => $block])
+            @elseif($block['type'] === 'custom_html')
+                @include('themes.components.custom_html', ['block' => $block])
+            @endif
         @endforeach
 
         <!-- Two Column Layout (Main Content + Sidebar) -->

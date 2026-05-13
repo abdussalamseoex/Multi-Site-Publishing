@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="{{ \App\Models\Setting::get('site_favicon') ? url(\App\Models\Setting::get('site_favicon')) : asset('favicon.ico') }}">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ isset($category) ? $category->name . ' - ' : '' }}{{ \App\Models\Setting::get('site_title', 'Voyage Escapes') }}</title>
+    @php $isHomepage = !isset($isCategory); @endphp
+    @include('themes.components.meta_tags')
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800;900&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     @php
@@ -57,8 +55,10 @@
             }
         @endphp
         @foreach($blocks as $block)
-            @if($block['type'] === 'hero_grid')
-                @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
+            @if(in_array($block['type'], ['hero_grid', 'custom_html']))
+                @if($block['type'] === 'custom_html')
+                    @include('themes.components.custom_html', ['block' => $block])
+                @elseif(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
                     @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
                 @else
                     @include("themes.good.components.{$block['type']}", ['block' => $block])
@@ -70,7 +70,7 @@
             <!-- Latest Stories -->
             <main class="lg:col-span-3">
                 @foreach($blocks as $block)
-                    @if($block['type'] !== 'hero_grid')
+                    @if(!in_array($block['type'], ['hero_grid', 'custom_html']))
                         @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
                             @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
                         @else

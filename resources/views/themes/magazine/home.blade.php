@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="{{ \App\Models\Setting::get('site_favicon') ? url(\App\Models\Setting::get('site_favicon')) : asset('favicon.ico') }}">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ isset($category) ? $category->name . ' - ' : '' }}{{ \App\Models\Setting::get('site_title', 'Magazine Layout') }}</title>
+    @php $isHomepage = !isset($isCategory); @endphp
+    @include('themes.components.meta_tags')
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     @php
@@ -24,6 +22,18 @@
 <body class="bg-[#faf9f6] text-[#333]">
 
     @include('themes.components.header')
+
+    {{-- Custom HTML blocks from theme builder (full-width injection) --}}
+    @php
+        $activeTheme = \App\Models\Setting::get('active_theme', 'minimal');
+        $themeBlocksRaw = \App\Models\Setting::get('theme_blocks_' . $activeTheme);
+        $allBlocks = $themeBlocksRaw ? json_decode($themeBlocksRaw, true) : [];
+        $customHtmlBlocks = array_filter($allBlocks, fn($b) => ($b['type'] ?? '') === 'custom_html');
+    @endphp
+    @foreach($customHtmlBlocks as $block)
+        @include('themes.components.custom_html', ['block' => $block])
+    @endforeach
+
 
     @if(isset($isCategory) && $isCategory)
     <div class="bg-slate-50/80 border-b border-slate-200" style="background-color: var(--bg-category, #f8fafc); border-bottom: 1px solid var(--border-category, #e2e8f0)">
