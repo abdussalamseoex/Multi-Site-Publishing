@@ -148,7 +148,7 @@ class SettingController extends Controller
         }
         return response()->json(['status' => 'ok']);
     }
-    public function syncColorFromLogo()
+    public function syncColorFromLogo(Request $request)
     {
         $logoPath = Setting::get('site_logo');
         if (!$logoPath) {
@@ -159,7 +159,30 @@ class SettingController extends Controller
         $brandColor = \App\Services\ImageService::getProminentColor($fullPath);
 
         if ($brandColor) {
-            return response()->json(['color' => $brandColor]);
+            $response = ['color' => $brandColor];
+
+            if ($request->input('full_sync')) {
+                // Set header background same as brand color
+                $response['header_bg'] = $brandColor;
+                
+                // Calculate contrast for text color (WCAG standard)
+                // Convert hex to RGB
+                $hex = str_replace('#', '', $brandColor);
+                if (strlen($hex) == 3) {
+                    $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+                }
+                $r = hexdec(substr($hex, 0, 2));
+                $g = hexdec(substr($hex, 2, 2));
+                $b = hexdec(substr($hex, 4, 2));
+                
+                // Brightness formula
+                $brightness = ($r * 299 + $g * 587 + $b * 114) / 1000;
+                
+                // If bright background, use dark text. If dark background, use white text.
+                $response['header_text'] = ($brightness > 155) ? '#1f2937' : '#ffffff';
+            }
+
+            return response()->json($response);
         }
 
         return response()->json(['error' => 'Could not extract color'], 400);

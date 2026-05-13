@@ -150,11 +150,16 @@
                                             Sync
                                         </button>
                                     </div>
+                                    <div class="mt-2 flex items-center">
+                                        <input type="checkbox" id="sync_full_scheme" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                        <label for="sync_full_scheme" class="ml-2 text-[10px] text-gray-500 font-medium">Sync Full Website Scheme (Header & Text)</label>
+                                    </div>
                                 </div>
 
                                 <script>
                                     function syncColorFromLogo() {
                                         const btn = event.currentTarget;
+                                        const isFullSync = document.getElementById('sync_full_scheme').checked;
                                         const originalContent = btn.innerHTML;
                                         btn.disabled = true;
                                         btn.innerHTML = '<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
@@ -165,13 +170,22 @@
                                                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                                                 'Content-Type': 'application/json',
                                                 'Accept': 'application/json'
-                                            }
+                                            },
+                                            body: JSON.stringify({ full_sync: isFullSync })
                                         })
                                         .then(response => response.json())
                                         .then(data => {
                                             if (data.color) {
                                                 document.getElementById('primary_color_input').value = data.color;
-                                                alert('Color synced successfully from logo!');
+                                                
+                                                if (data.header_bg) {
+                                                    document.getElementById('header_bg_color_input').value = data.header_bg;
+                                                }
+                                                if (data.header_text) {
+                                                    document.getElementById('header_text_color_input').value = data.header_text;
+                                                }
+
+                                                alert(isFullSync ? 'Full website scheme synced successfully!' : 'Primary color synced successfully!');
                                             } else {
                                                 alert('Could not extract color. Make sure you have a logo uploaded.');
                                             }
@@ -188,11 +202,11 @@
                                 </script>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Header Background</label>
-                                    <input type="color" name="header_bg_color" value="{{ $settings['header_bg_color'] ?? '#ffffff' }}" class="h-10 w-full cursor-pointer">
+                                    <input type="color" name="header_bg_color" id="header_bg_color_input" value="{{ $settings['header_bg_color'] ?? '#ffffff' }}" class="h-10 w-full cursor-pointer">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Header Text Color</label>
-                                    <input type="color" name="header_text_color" value="{{ $settings['header_text_color'] ?? '#1f2937' }}" class="h-10 w-full cursor-pointer">
+                                    <input type="color" name="header_text_color" id="header_text_color_input" value="{{ $settings['header_text_color'] ?? '#1f2937' }}" class="h-10 w-full cursor-pointer">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Typography</label>
