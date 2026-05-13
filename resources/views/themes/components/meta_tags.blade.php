@@ -134,10 +134,17 @@
   },
   "publisher": {
     "@type": "Organization",
-    "name": "{{ addslashes($siteTitle) }}"{{ $ogImage ? ',
-    "logo": { "@type": "ImageObject", "url": "' . addslashes($ogImage) . '" }' : '' }}
-  }{{ $ogImage ? ',
-  "image": "' . addslashes($ogImage) . '"' : '' }}
+    "name": "{{ addslashes($siteTitle) }}"
+    @if($ogImage)
+    ,"logo": {
+      "@type": "ImageObject",
+      "url": "{{ $ogImage }}"
+    }
+    @endif
+  }
+  @if($ogImage)
+  ,"image": "{{ $ogImage }}"
+  @endif
 }
 </script>
 @else
