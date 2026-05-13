@@ -5,20 +5,27 @@
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;600;700&family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
     @php
-        $primary = \App\Models\Setting::get('primary_color', '#ea580c');
-        $font = \App\Models\Setting::get('typography', 'Inter');
+        $primary    = \App\Models\Setting::get('primary_color', '#ea580c');
+        $headerBg   = \App\Models\Setting::get('header_bg_color', '#0f172a');
+        $headerText = \App\Models\Setting::get('header_text_color', '#e2e8f0');
+        $font       = \App\Models\Setting::get('typography', 'Inter');
     @endphp
     <style> 
-        :root { --primary: {{ $primary }}; }
+        :root { 
+            --primary: {{ $primary }}; 
+            --header-bg: {{ $headerBg }};
+            --header-text: {{ $headerText }};
+        }
         body { font-family: '{{ $font }}', sans-serif; background-color: #f1f5f9; }
         .font-gaming { font-family: 'Teko', sans-serif; }
         
         /* Dark Header Override */
-        header { background-color: #0f172a !important; border-bottom: 2px solid var(--primary) !important; backdrop-filter: none !important; }
-        header a, header svg { color: #e2e8f0 !important; }
+        header { background-color: var(--header-bg) !important; border-bottom: 2px solid var(--primary) !important; backdrop-filter: none !important; }
+        header a, header svg { color: var(--header-text) !important; }
         header .text-primary { color: var(--primary) !important; }
         header .bg-primary { background-color: var(--primary) !important; color: white !important; }
-        header .bg-gray-900 { background-color: #334155 !important; }
+        header .bg-gray-900 { background-color: var(--header-bg) !important; opacity: 0.9; }
+
 
         .prose p { margin-bottom: 1.5rem; font-size: 1.125rem; line-height: 1.8; color: #334155; }
         .prose img { width: 100%; border-radius: 0.75rem; margin-top: 2.5rem; margin-bottom: 2.5rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
