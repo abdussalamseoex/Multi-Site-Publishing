@@ -64,66 +64,48 @@
                     ['id' => uniqid(), 'type' => 'category_spotlight', 'title' => 'Deep Dive Blogs', 'category_id' => null, 'limit' => 4]
                 ];
             }
+
+            // Identify full-width vs sidebar-friendly blocks
+            $fullWidthTypes = ['hero_grid', 'custom_html', 'category_spotlight'];
         @endphp
-        <!-- Hero Section + Custom HTML (full-width blocks) -->
+
         @foreach($blocks as $block)
             @if(in_array($block['type'], ['hero_grid', 'custom_html']))
                 @if($block['type'] === 'custom_html')
                     @include('themes.components.custom_html', ['block' => $block])
-                @elseif(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
-                    @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
                 @else
-                    @include("themes.good.components.{$block['type']}", ['block' => $block])
+                    @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
                 @endif
+            @elseif($block['type'] === 'latest_news')
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 my-12">
+                    <main class="lg:col-span-3 space-y-12">
+                         @include("themes.{$activeTheme}.components.latest_news", ['block' => $block])
+                    </main>
+                    <aside class="space-y-8">
+                        @php
+                            $sidebarLayoutRaw = \App\Models\Setting::get('theme_sidebar_' . $activeTheme);
+                            $sidebarBlocks = $sidebarLayoutRaw ? json_decode($sidebarLayoutRaw, true) : [];
+                            if (empty($sidebarBlocks)) {
+                                $sidebarBlocks = [
+                                    ['id' => uniqid(), 'type' => 'popular_posts', 'title' => 'Most Popular', 'limit' => 5],
+                                    ['id' => uniqid(), 'type' => 'ad_block', 'title' => 'Sidebar Ad']
+                                ];
+                            }
+                        @endphp
+                        @foreach($sidebarBlocks as $block)
+                            @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
+                                @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
+                            @else
+                                @include("themes.good.components.{$block['type']}", ['block' => $block])
+                            @endif
+                        @endforeach
+                    </aside>
+                </div>
+            @elseif($block['type'] === 'category_spotlight')
+                 @include("themes.{$activeTheme}.components.category_spotlight", ['block' => $block])
             @endif
         @endforeach
 
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <main class="lg:col-span-3 space-y-12">
-                @foreach($blocks as $block)
-                    @if(!in_array($block['type'], ['category_spotlight', 'hero_grid', 'custom_html']))
-                        @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
-                            @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
-                        @else
-                            @include("themes.good.components.{$block['type']}", ['block' => $block])
-                        @endif
-                    @endif
-                @endforeach
-            </main>
-
-            <!-- Sidebar -->
-            <aside class="space-y-8">
-                @php
-                    $sidebarLayoutRaw = \App\Models\Setting::get('theme_sidebar_' . $activeTheme);
-                    $sidebarBlocks = $sidebarLayoutRaw ? json_decode($sidebarLayoutRaw, true) : [];
-                    
-                    if (empty($sidebarBlocks)) {
-                        $sidebarBlocks = [
-                            ['id' => uniqid(), 'type' => 'popular_posts', 'title' => 'Most Popular', 'limit' => 5],
-                            ['id' => uniqid(), 'type' => 'ad_block', 'title' => 'Sidebar Ad']
-                        ];
-                    }
-                @endphp
-
-                @foreach($sidebarBlocks as $block)
-                    @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
-                        @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
-                    @else
-                        @include("themes.good.components.{$block['type']}", ['block' => $block])
-                    @endif
-                @endforeach
-            </aside>
-        </div>
-
-        @foreach($blocks as $block)
-            @if($block['type'] === 'category_spotlight')
-                @if(view()->exists("themes.{$activeTheme}.components.{$block['type']}"))
-                    @include("themes.{$activeTheme}.components.{$block['type']}", ['block' => $block])
-                @else
-                    @include("themes.good.components.{$block['type']}", ['block' => $block])
-                @endif
-            @endif
-        @endforeach
     </div>
 
     @include('themes.components.footer')
