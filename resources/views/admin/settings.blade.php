@@ -155,51 +155,6 @@
                                         <label for="sync_full_scheme" class="ml-2 text-[10px] text-gray-500 font-medium">Sync Full Website Scheme (Header & Text)</label>
                                     </div>
                                 </div>
-
-                                <script>
-                                    function syncColorFromLogo() {
-                                        const btn = event.currentTarget;
-                                        const isFullSync = document.getElementById('sync_full_scheme').checked;
-                                        const originalContent = btn.innerHTML;
-                                        btn.disabled = true;
-                                        btn.innerHTML = '<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
-
-                                        fetch('{{ route('admin.settings.sync-color') }}', {
-                                            method: 'POST',
-                                            headers: {
-                                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                                'Content-Type': 'application/json',
-                                                'Accept': 'application/json'
-                                            },
-                                            body: JSON.stringify({ full_sync: isFullSync })
-                                        })
-                                        .then(response => response.json())
-                                        .then(data => {
-                                            if (data.color) {
-                                                document.getElementById('primary_color_input').value = data.color;
-                                                
-                                                if (data.header_bg) {
-                                                    document.getElementById('header_bg_color_input').value = data.header_bg;
-                                                }
-                                                if (data.header_text) {
-                                                    document.getElementById('header_text_color_input').value = data.header_text;
-                                                }
-
-                                                alert(isFullSync ? 'Full website scheme synced successfully!' : 'Primary color synced successfully!');
-                                            } else {
-                                                alert('Could not extract color. Make sure you have a logo uploaded.');
-                                            }
-                                        })
-                                        .catch(error => {
-                                            console.error('Error:', error);
-                                            alert('An error occurred while syncing.');
-                                        })
-                                        .finally(() => {
-                                            btn.disabled = false;
-                                            btn.innerHTML = originalContent;
-                                        });
-                                    }
-                                </script>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Header Background</label>
                                     <input type="color" name="header_bg_color" id="header_bg_color_input" value="{{ $settings['header_bg_color'] ?? '#ffffff' }}" class="h-10 w-full cursor-pointer">
@@ -216,6 +171,56 @@
                                         <option value="Roboto" {{ ($settings['typography'] ?? '') == 'Roboto' ? 'selected' : '' }}>Roboto</option>
                                     </select>
                                 </div>
+                            </div>
+
+                            <script>
+                                function syncColorFromLogo() {
+                                    const btn = event.currentTarget;
+                                    const syncFullCheckbox = document.getElementById('sync_full_scheme');
+                                    const isFullSync = syncFullCheckbox ? syncFullCheckbox.checked : false;
+                                    const originalContent = btn.innerHTML;
+                                    
+                                    btn.disabled = true;
+                                    btn.innerHTML = '<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+
+                                    fetch('{{ route('admin.settings.sync-color') }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                            'Content-Type': 'application/json',
+                                            'Accept': 'application/json'
+                                        },
+                                        body: JSON.stringify({ full_sync: isFullSync })
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.color) {
+                                            const primaryInput = document.getElementById('primary_color_input');
+                                            const headerBgInput = document.getElementById('header_bg_color_input');
+                                            const headerTextInput = document.getElementById('header_text_color_input');
+
+                                            if (primaryInput) primaryInput.value = data.color;
+                                            
+                                            if (isFullSync) {
+                                                if (headerBgInput && data.header_bg) headerBgInput.value = data.header_bg;
+                                                if (headerTextInput && data.header_text) headerTextInput.value = data.header_text;
+                                            }
+
+                                            alert(isFullSync ? 'Full website scheme synced successfully!' : 'Primary color synced successfully!');
+                                        } else {
+                                            alert('Could not extract color. Make sure you have a logo uploaded.');
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error:', error);
+                                        alert('An error occurred while syncing.');
+                                    })
+                                    .finally(() => {
+                                        btn.disabled = false;
+                                        btn.innerHTML = originalContent;
+                                    });
+                                }
+                            </script>
                             </div>
 
                             <div>
