@@ -1,15 +1,6 @@
 @php
     /**
      * Universal SEO Meta Tags Component
-     * Priority Logic:
-     *   Title:       Post Meta Title > Post Title > Homepage Title > Site Title
-     *   Description: Post Meta Desc  > Post Summary > Homepage Desc > Site Tagline
-     *   OG Image:    Post Featured Image > Default OG Image > Site Logo
-     *
-     * Variables:
-     *   $post        (optional) - Post model for article pages
-     *   $activeTheme (optional) - String, current theme name
-     *   $isHomepage  (optional) - Bool, true on homepage
      */
 
     $siteTitle    = \App\Models\Setting::get('site_title', config('app.name'));
@@ -54,19 +45,16 @@
     }
 
     // --- Build META KEYWORDS ---
+    $metaKeywords = null;
     if ($isPost && $post->meta_keywords) {
         $metaKeywords = $post->meta_keywords;
     } elseif ($isHome && $homepageMetaKw) {
         $metaKeywords = $homepageMetaKw;
-    } else {
-        $metaKeywords = null;
     }
 
     // --- Build OG IMAGE ---
     if ($isPost && $post->featured_image) {
-        $ogImage = Str::startsWith($post->featured_image, 'http')
-            ? $post->featured_image
-            : url($post->featured_image);
+        $ogImage = Str::startsWith($post->featured_image, 'http') ? $post->featured_image : url($post->featured_image);
     } elseif ($defaultOg) {
         $ogImage = Str::startsWith($defaultOg, 'http') ? $defaultOg : url($defaultOg);
     } elseif ($siteLogo) {
@@ -75,19 +63,49 @@
         $ogImage = null;
     }
 
-    // --- OG Type ---
     $ogType = $isPost ? 'article' : 'website';
-
-    // --- Favicon ---
     $favicon = \App\Models\Setting::get('site_favicon');
     $faviconUrl = $favicon ? url($favicon) : asset('favicon.ico');
+
+    // --- Generate JSON-LD schema to avoid Blade issues ---
+    $schema = [];
+    if ($isPost) {
+        $schema = [
+            "@context" => "https://schema.org",
+            "@type" => "Article",
+            "headline" => $post->title,
+            "description" => $metaDesc,
+            "url" => $canonicalUrl,
+            "datePublished" => $post->created_at->toIso8601String(),
+            "dateModified" => $post->updated_at->toIso8601String(),
+            "author" => [
+                "@type" => "Person",
+                "name" => $post->user->name ?? 'Author'
+            ],
+            "publisher" => [
+                "@type" => "Organization",
+                "name" => $siteTitle
+            ]
+        ];
+        if ($ogImage) {
+            $schema["publisher"]["logo"] = ["@type" => "ImageObject", "url" => $ogImage];
+            $schema["image"] = $ogImage;
+        }
+    } else {
+        $schema = [
+            "@context" => "https://schema.org",
+            "@type" => "WebSite",
+            "name" => $siteTitle,
+            "url" => $siteUrl,
+            "description" => $metaDesc
+        ];
+    }
+    $jsonLd = json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 @endphp
 
-{{-- Favicon --}}
 <link rel="icon" type="image/png" href="{{ $faviconUrl }}">
 <link rel="shortcut icon" href="{{ $faviconUrl }}">
 
-{{-- Core SEO --}}
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{ $metaTitle }}</title>
@@ -97,7 +115,6 @@
 @endif
 <link rel="canonical" href="{{ $canonicalUrl }}">
 
-{{-- Open Graph --}}
 <meta property="og:site_name" content="{{ $siteTitle }}">
 <meta property="og:type" content="{{ $ogType }}">
 <meta property="og:url" content="{{ $canonicalUrl }}">
@@ -109,7 +126,6 @@
 <meta property="og:image:height" content="630">
 @endif
 
-{{-- Twitter Card --}}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ $metaTitle }}">
 <meta name="twitter:description" content="{{ $metaDesc }}">
@@ -117,44 +133,6 @@
 <meta name="twitter:image" content="{{ $ogImage }}">
 @endif
 
-{{-- Article-specific Schema.org JSON-LD --}}
-@if($isPost)
 <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Article",
-  "headline": "{{ addslashes($post->title) }}",
-  "description": "{{ addslashes($metaDesc) }}",
-  "url": "{{ $canonicalUrl }}",
-  "datePublished": "{{ $post->created_at->toIso8601String() }}",
-  "dateModified": "{{ $post->updated_at->toIso8601String() }}",
-  "author": {
-    "@type": "Person",
-    "name": "{{ addslashes($post->user->name ?? 'Author') }}"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "{{ addslashes($siteTitle) }}"
-    @if($ogImage)
-    ,"logo": {
-      "@type": "ImageObject",
-      "url": "{{ $ogImage }}"
-    }
-    @endif
-  }
-  @if($ogImage)
-  ,"image": "{{ $ogImage }}"
-  @endif
-}
+{!! $jsonLd !!}
 </script>
-@else
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "{{ addslashes($siteTitle) }}",
-  "url": "{{ $siteUrl }}",
-  "description": "{{ addslashes($metaDesc) }}"
-}
-</script>
-@endif
