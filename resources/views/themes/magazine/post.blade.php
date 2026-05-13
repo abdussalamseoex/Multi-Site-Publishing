@@ -15,7 +15,7 @@
         body { font-family: '{{ $font }}', serif; }
         .text-primary { color: var(--primary); }
         .bg-primary { background-color: var(--primary); }
-        .prose p::first-letter { font-size: 3rem; font-weight: bold; font-family: '{{ $font }}', serif; float: left; margin-top:-0.5rem; margin-right: 0.5rem; color: var(--primary); }
+        .prose p:first-of-type::first-letter { font-size: 3rem; font-weight: bold; font-family: '{{ $font }}', serif; float: left; margin-top:-0.5rem; margin-right: 0.5rem; color: var(--primary); }
         .prose p { margin-bottom: 2rem; font-size: 1.125rem; line-height: 2; color: #444; font-family: 'Inter', sans-serif;}
         .prose img { width: 100%; border-radius: 8px; margin-bottom: 2rem;}
         .prose h2, .prose h3 { font-family: '{{ $font }}', serif; font-weight: black; color: #000; margin-top: 2rem; margin-bottom: 1rem; }
