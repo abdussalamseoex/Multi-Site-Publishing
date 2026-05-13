@@ -148,4 +148,20 @@ class SettingController extends Controller
         }
         return response()->json(['status' => 'ok']);
     }
+    public function syncColorFromLogo()
+    {
+        $logoPath = Setting::get('site_logo');
+        if (!$logoPath) {
+            return response()->json(['error' => 'No logo found'], 404);
+        }
+
+        $fullPath = public_path($logoPath);
+        $brandColor = \App\Services\ImageService::getProminentColor($fullPath);
+
+        if ($brandColor) {
+            return response()->json(['color' => $brandColor]);
+        }
+
+        return response()->json(['error' => 'Could not extract color'], 400);
+    }
 }

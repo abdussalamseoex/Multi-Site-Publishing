@@ -138,10 +138,54 @@
                             </div>
 
                             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                <div>
+                                <div class="col-span-1">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Primary Color</label>
-                                    <input type="color" name="primary_color" value="{{ $settings['primary_color'] ?? '#4f46e5' }}" class="h-10 w-full cursor-pointer">
+                                    <div class="flex items-center gap-2">
+                                        <input type="color" name="primary_color" id="primary_color_input" value="{{ $settings['primary_color'] ?? '#4f46e5' }}" class="h-10 w-12 cursor-pointer border-gray-300 rounded">
+                                        <button type="button" 
+                                            onclick="syncColorFromLogo()" 
+                                            class="inline-flex items-center px-2 py-2 bg-gray-100 border border-gray-300 rounded-md font-semibold text-[10px] text-gray-700 uppercase tracking-widest hover:bg-gray-200 active:bg-gray-300 focus:outline-none transition"
+                                            title="Extract color from current logo">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                            Sync
+                                        </button>
+                                    </div>
                                 </div>
+
+                                <script>
+                                    function syncColorFromLogo() {
+                                        const btn = event.currentTarget;
+                                        const originalContent = btn.innerHTML;
+                                        btn.disabled = true;
+                                        btn.innerHTML = '<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+
+                                        fetch('{{ route('admin.settings.sync-color') }}', {
+                                            method: 'POST',
+                                            headers: {
+                                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                                'Content-Type': 'application/json',
+                                                'Accept': 'application/json'
+                                            }
+                                        })
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            if (data.color) {
+                                                document.getElementById('primary_color_input').value = data.color;
+                                                alert('Color synced successfully from logo!');
+                                            } else {
+                                                alert('Could not extract color. Make sure you have a logo uploaded.');
+                                            }
+                                        })
+                                        .catch(error => {
+                                            console.error('Error:', error);
+                                            alert('An error occurred while syncing.');
+                                        })
+                                        .finally(() => {
+                                            btn.disabled = false;
+                                            btn.innerHTML = originalContent;
+                                        });
+                                    }
+                                </script>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Header Background</label>
                                     <input type="color" name="header_bg_color" value="{{ $settings['header_bg_color'] ?? '#ffffff' }}" class="h-10 w-full cursor-pointer">

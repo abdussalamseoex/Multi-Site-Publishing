@@ -158,6 +158,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/settings/ads', [SettingController::class, 'adsIndex'])->name('settings.ads');
     Route::get('/settings/adblock', [SettingController::class, 'adblockIndex'])->name('settings.adblock');
     Route::post('/settings', [SettingController::class, 'store'])->name('settings.store');
+    Route::post('/settings/sync-color', [SettingController::class, 'syncColorFromLogo'])->name('settings.sync-color');
     
     // Theme Options / Homepage Builder
     Route::get('/theme-options', [ThemeOptionsController::class, 'index'])->name('theme.options');
