@@ -14,4 +14,19 @@ class Page extends Model
         'meta_description',
         'meta_keywords',
     ];
+
+    protected static function booted()
+    {
+        static::saved(function ($page) {
+            try {
+                \App\Services\SeoService::submitSitemapPing();
+            } catch (\Exception $e) {}
+        });
+
+        static::deleted(function ($page) {
+            try {
+                \App\Services\SeoService::submitSitemapPing();
+            } catch (\Exception $e) {}
+        });
+    }
 }

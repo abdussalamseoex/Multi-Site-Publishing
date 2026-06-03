@@ -53,10 +53,22 @@ class Post extends Model
 
         static::saved(function ($post) {
             \Illuminate\Support\Facades\Cache::forget('sitemap_xml');
+
+            if ($post->status === 'published' && ($post->wasRecentlyCreated || $post->wasChanged('status') || $post->wasChanged('title') || $post->wasChanged('content') || $post->wasChanged('featured_image'))) {
+                try {
+                    \App\Services\SeoService::pingForPost($post);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('SeoService post save ping error: ' . $e->getMessage());
+                }
+            }
         });
 
         static::deleted(function ($post) {
             \Illuminate\Support\Facades\Cache::forget('sitemap_xml');
+
+            try {
+                \App\Services\SeoService::submitSitemapPing();
+            } catch (\Exception $e) {}
         });
     }
 

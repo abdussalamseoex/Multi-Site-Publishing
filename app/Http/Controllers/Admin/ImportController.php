@@ -250,6 +250,10 @@ class ImportController extends Controller
         $isFinished = ($itemsProcessed < $chunkSize);
         if ($isFinished) {
             @unlink($filePath);
+
+            try {
+                \App\Services\SeoService::submitSitemapPing();
+            } catch (\Exception $e) {}
         }
 
         return response()->json([

@@ -53,7 +53,19 @@ Route::middleware('auth')->group(function () {
     Route::post('orders/{post}/process', [\App\Http\Controllers\OrderController::class, 'process'])->name('orders.process');
 });
 
-Route::get('/sitemap.xml', [\App\Http\Controllers\SeoController::class, 'sitemap'])->name('sitemap');
+Route::get('/sitemap.xml', [\App\Http\Controllers\SeoController::class, 'sitemapIndex'])->name('sitemap.index');
+
+Route::get('/post-sitemap.xml', [\App\Http\Controllers\SeoController::class, 'postSitemap'])->name('sitemap.posts');
+Route::get('/post-sitemap{page}.xml', [\App\Http\Controllers\SeoController::class, 'postSitemap'])->where('page', '[0-9]+');
+
+Route::get('/page-sitemap.xml', [\App\Http\Controllers\SeoController::class, 'pageSitemap'])->name('sitemap.pages');
+Route::get('/page-sitemap{page}.xml', [\App\Http\Controllers\SeoController::class, 'pageSitemap'])->where('page', '[0-9]+');
+
+Route::get('/category-sitemap.xml', [\App\Http\Controllers\SeoController::class, 'categorySitemap'])->name('sitemap.categories');
+Route::get('/category-sitemap{page}.xml', [\App\Http\Controllers\SeoController::class, 'categorySitemap'])->where('page', '[0-9]+');
+
+Route::get('/custom-sitemap.xml', [\App\Http\Controllers\SeoController::class, 'customSitemap'])->name('sitemap.custom');
+Route::get('/{key}.txt', [\App\Http\Controllers\SeoController::class, 'indexNowKeyVerification'])->where('key', '[a-zA-Z0-9]{8,128}')->name('seo.indexnow-key');
 Route::get('/robots.txt', [\App\Http\Controllers\SeoController::class, 'robots'])->name('robots');
 
 // Pseudo-Cron for background tasks without cPanel (publicly accessible)

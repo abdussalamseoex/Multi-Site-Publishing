@@ -11,6 +11,21 @@ class Category extends Model
 
     protected $fillable = ['name', 'slug', 'description', 'meta_title', 'meta_description', 'meta_keywords'];
 
+    protected static function booted()
+    {
+        static::saved(function ($category) {
+            try {
+                \App\Services\SeoService::submitSitemapPing();
+            } catch (\Exception $e) {}
+        });
+
+        static::deleted(function ($category) {
+            try {
+                \App\Services\SeoService::submitSitemapPing();
+            } catch (\Exception $e) {}
+        });
+    }
+
     public function posts()
     {
         return $this->hasMany(Post::class);

@@ -187,10 +187,22 @@ class PostController extends Controller
 
         if ($request->action === 'delete') {
             Post::whereIn('id', $request->ids)->delete();
+            
+            try {
+                \App\Services\SeoService::submitSitemapPing();
+            } catch (\Exception $e) {}
+
             return back()->with('status', 'Selected posts have been permanently deleted.');
         }
 
         Post::whereIn('id', $request->ids)->update(['status' => $request->action]);
+
+        if ($request->action === 'published') {
+            try {
+                \App\Services\SeoService::submitSitemapPing();
+            } catch (\Exception $e) {}
+        }
+
         return back()->with('status', 'Status of selected posts has been updated.');
     }
 
