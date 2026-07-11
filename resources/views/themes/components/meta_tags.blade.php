@@ -159,4 +159,22 @@
 .prose ul ul, .ql-editor ul ul, article ul ul {
     list-style-type: circle !important;
 }
+.prose table, .ql-editor table, article table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 1.5rem 0 !important;
+}
+.prose th, .ql-editor th, article th {
+    background-color: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    padding: 0.75rem 1rem !important;
+    font-weight: 700 !important;
+    text-align: left !important;
+    color: #0f172a !important;
+}
+.prose td, .ql-editor td, article td {
+    border: 1px solid #e2e8f0 !important;
+    padding: 0.75rem 1rem !important;
+    color: #334155 !important;
+}
 </style>

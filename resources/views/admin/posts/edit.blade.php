@@ -84,10 +84,16 @@
                             <div>
                                 <div class="flex items-center justify-between mb-2">
                                     <label class="block text-sm font-medium text-gray-700">Detailed Content</label>
-                                    <button type="button" onclick="openQuillHtmlModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-black text-white text-xs font-bold rounded-md shadow transition">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                                        Edit Custom HTML (&lt;/&gt;)
-                                    </button>
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" onclick="openQuillTableModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-md shadow transition">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                            Insert Table
+                                        </button>
+                                        <button type="button" onclick="openQuillHtmlModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-black text-white text-xs font-bold rounded-md shadow transition">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                                            Edit Custom HTML (&lt;/&gt;)
+                                        </button>
+                                    </div>
                                 </div>
                                 <div id="quill-editor" style="height: 400px; background: white;">{!! old('content', $post->content) !!}</div>
                                 <input type="hidden" name="content" id="content-hidden">
@@ -266,10 +272,11 @@
       if (toolbarEl) {
           var customGroup = document.createElement('span');
           customGroup.className = 'ql-formats';
-          customGroup.innerHTML = '<button type="button" onclick="openQuillHtmlModal()" title="Edit HTML Code (< />)" style="width:auto; padding: 0 8px; font-weight:bold; font-size:12px; color:#4f46e5;">&lt;/&gt; HTML</button>';
+          customGroup.innerHTML = '<button type="button" onclick="openQuillTableModal()" title="Insert Table" style="width:auto; padding: 0 8px; font-weight:bold; font-size:12px; color:#16a34a;">+ Table</button><button type="button" onclick="openQuillHtmlModal()" title="Edit HTML Code (< />)" style="width:auto; padding: 0 8px; font-weight:bold; font-size:12px; color:#4f46e5;">&lt;/&gt; HTML</button>';
           toolbarEl.appendChild(customGroup);
       }
     </script>
     @include('components.quill-html-modal')
+    @include('components.quill-table-modal')
 </x-app-layout>
 

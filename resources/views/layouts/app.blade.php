@@ -20,6 +20,9 @@
             .ql-editor ul { list-style-type: disc !important; padding-left: 1.75rem !important; }
             .ql-editor ol { list-style-type: decimal !important; padding-left: 1.75rem !important; }
             .ql-editor ul li, .ql-editor ol li { margin-bottom: 0.25rem !important; display: list-item !important; }
+            .ql-editor table { width: 100% !important; border-collapse: collapse !important; margin: 1rem 0 !important; }
+            .ql-editor th { background: #f8fafc !important; border: 1px solid #cbd5e1 !important; padding: 0.5rem 0.75rem !important; font-weight: bold !important; }
+            .ql-editor td { border: 1px solid #e2e8f0 !important; padding: 0.5rem 0.75rem !important; }
         </style>
     </head>
     <body class="font-sans antialiased text-gray-900 bg-gray-50 flex flex-col h-screen overflow-hidden">
