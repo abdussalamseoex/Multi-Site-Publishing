@@ -40,7 +40,7 @@
             <div class="absolute bottom-0 left-0 p-8">
                 <a href="{{ isset($mainFeatured->category) ? route('frontend.category', $mainFeatured->category->slug) : '#' }}" class="hover:opacity-80 transition relative z-20"><span class="bg-indigo-600 text-white px-3 py-1 text-[10px] font-tech tracking-widest uppercase rounded shadow mb-4 inline-block">{{ $mainFeatured->category->name ?? 'Software' }}</span></a>
                 <h3 class="text-3xl md:text-4xl font-tech font-bold leading-tight mb-3 line-clamp-2 relative z-20"><a href="{{ route('frontend.post', $mainFeatured->slug) }}">{{ $mainFeatured->title }}</a></h3>
-                <p class="text-slate-300 text-sm mb-4 line-clamp-2 md:w-5/6 relative z-20">{{ strip_tags($mainFeatured->summary ?? $mainFeatured->content) }}</p>
+                <p class="text-slate-300 text-sm mb-4 line-clamp-2 md:w-5/6 relative z-20">{{ Str::limit(strip_tags($mainFeatured->summary ?? $mainFeatured->content), 150) }}</p>
                 <div class="flex items-center text-xs text-indigo-300 uppercase tracking-wider font-tech gap-3 relative z-20">
                     <span>{{ $mainFeatured->created_at->format('M d, Y') }}</span>
                     <span>&bull;</span>

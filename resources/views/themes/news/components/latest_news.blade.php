@@ -26,7 +26,7 @@
                 <div class="font-ui text-xs text-gray-500 font-medium mb-3">
                     <span class="text-black font-bold">{{ $post->user->name ?? 'Staff' }}</span> - {{ $post->created_at->format('F d, Y') }}
                 </div>
-                <p class="text-sm text-gray-600 line-clamp-2 md:line-clamp-3 mb-4 leading-relaxed">{{ strip_tags($post->summary ?? $post->content) }}</p>
+                <p class="text-sm text-gray-600 line-clamp-2 md:line-clamp-3 mb-4 leading-relaxed">{{ Str::limit(strip_tags($post->summary ?? $post->content), 150) }}</p>
             </div>
         </article>
         @endforeach

@@ -31,7 +31,7 @@
             <a href="{{ route('frontend.post', $hero->slug) }}" class="relative z-20">
                 <h2 class="text-4xl md:text-6xl font-wellness font-bold leading-tight mb-4 drop-shadow-md line-clamp-2">{{ $hero->title }}</h2>
             </a>
-            <p class="text-emerald-50 text-lg mb-8 font-light line-clamp-2 leading-relaxed relative z-20">{{ strip_tags($hero->summary ?? $hero->content) }}</p>
+            <p class="text-emerald-50 text-lg mb-8 font-light line-clamp-2 leading-relaxed relative z-20">{{ Str::limit(strip_tags($hero->summary ?? $hero->content), 150) }}</p>
             <a href="{{ route('frontend.post', $hero->slug) }}" class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white font-bold px-6 py-3 rounded-full transition shadow-lg shadow-emerald-500/30 relative z-20">
                 Read Guide <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
             </a>

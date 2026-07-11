@@ -71,7 +71,7 @@
                             <a href="{{ route('frontend.post', $post->slug) }}">
                                 <h4 class="text-2xl font-bold leading-tight mb-2 hover:text-primary transition line-clamp-2">{{ $post->title }}</h4>
                             </a>
-                            <p class="text-gray-600 text-sm mb-3 font-sans">{{ Str::limit(strip_tags($post->content), 100) }}</p>
+                            <p class="text-gray-600 text-sm mb-3 font-sans line-clamp-2">{{ Str::limit(strip_tags($post->summary ?? $post->content), 140) }}</p>
                             <div class="text-xs text-gray-400 font-bold uppercase font-sans">By {{ $post->user->name ?? 'Editor' }}</div>
                         </article>
                     @endforeach

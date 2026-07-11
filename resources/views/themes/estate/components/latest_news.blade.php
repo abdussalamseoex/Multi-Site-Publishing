@@ -26,7 +26,7 @@
                 <a href="{{ route('frontend.post', $post->slug) }}">
                     <h4 class="text-3xl font-elegant font-bold mb-4 text-stone-900 leading-tight group-hover:text-amber-700 transition line-clamp-2">{{ $post->title }}</h4>
                 </a>
-                <p class="text-stone-500 font-light leading-relaxed mb-6">{{ strip_tags($post->summary ?? $post->content) }}</p>
+                <p class="text-stone-500 font-light leading-relaxed mb-6 line-clamp-3">{{ Str::limit(strip_tags($post->summary ?? $post->content), 150) }}</p>
                 <div class="flex items-center text-[11px] text-stone-400 tracking-[0.1em] uppercase">
                     <span>{{ $post->created_at->format('M d, Y') }}</span>
                     <span class="mx-3 border-l border-stone-300 h-3"></span>

@@ -44,7 +44,40 @@
                         </p>
                     @endif
                 </div>
-            @endif
+        </div>
+
+        {{-- Bio Section --}}
+        <div>
+            <x-input-label for="bio" :value="__('Bio / About Me')" />
+            <textarea id="bio" name="bio" rows="4" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" placeholder="Write a short author bio...">{{ old('bio', $user->bio ?? '') }}</textarea>
+            <x-input-error class="mt-2" :messages="$errors->get('bio')" />
+        </div>
+
+        {{-- Website & Social Links --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+            <div>
+                <x-input-label for="website" :value="__('Website URL')" />
+                <x-text-input id="website" name="website" type="url" class="mt-1 block w-full" :value="old('website', $user->website ?? '')" placeholder="https://yourwebsite.com" />
+                <x-input-error class="mt-2" :messages="$errors->get('website')" />
+            </div>
+
+            <div>
+                <x-input-label for="twitter" :value="__('Twitter / X URL')" />
+                <x-text-input id="twitter" name="twitter" type="text" class="mt-1 block w-full" :value="old('twitter', $user->twitter ?? '')" placeholder="https://twitter.com/username" />
+                <x-input-error class="mt-2" :messages="$errors->get('twitter')" />
+            </div>
+
+            <div>
+                <x-input-label for="facebook" :value="__('Facebook URL')" />
+                <x-text-input id="facebook" name="facebook" type="text" class="mt-1 block w-full" :value="old('facebook', $user->facebook ?? '')" placeholder="https://facebook.com/username" />
+                <x-input-error class="mt-2" :messages="$errors->get('facebook')" />
+            </div>
+
+            <div>
+                <x-input-label for="linkedin" :value="__('LinkedIn URL')" />
+                <x-text-input id="linkedin" name="linkedin" type="text" class="mt-1 block w-full" :value="old('linkedin', $user->linkedin ?? '')" placeholder="https://linkedin.com/in/username" />
+                <x-input-error class="mt-2" :messages="$errors->get('linkedin')" />
+            </div>
         </div>
 
         <div class="flex items-center gap-4">

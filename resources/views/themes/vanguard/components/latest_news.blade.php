@@ -35,7 +35,7 @@
                 <a href="{{ route('frontend.post', $post->slug) }}" class="mb-auto">
                     <h4 class="text-xl font-black mb-3 group-hover:text-primary transition leading-tight line-clamp-2">{{ $post->title }}</h4>
                 </a>
-                <p class="text-gray-500 text-sm mb-4 line-clamp-2 mt-auto">{{ strip_tags($post->summary ?? $post->content) }}</p>
+                <p class="text-gray-500 text-sm mb-4 line-clamp-2 mt-auto">{{ Str::limit(strip_tags($post->summary ?? $post->content), 140) }}</p>
                 <div class="flex items-center text-xs text-gray-400 font-bold uppercase gap-2 border-t border-slate-100 pt-4">
                     <span>{{ $post->user->name ?? 'Staff' }}</span> &bull; 
                     <span>{{ $post->views }} Views</span>

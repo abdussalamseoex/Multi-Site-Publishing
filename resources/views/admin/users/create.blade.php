@@ -90,7 +90,25 @@
                                 <p class="mt-1 text-xs text-gray-400">This bio will appear on the author's public profile page.</p>
                                 @error('bio')
                                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                                @enderror
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-gray-100">
+                                <div>
+                                    <label for="website" class="block text-xs font-semibold text-gray-700 mb-1">Website URL</label>
+                                    <input type="url" name="website" id="website" value="{{ old('website') }}" placeholder="https://..." class="w-full border-gray-300 rounded-lg shadow-sm text-xs">
+                                </div>
+                                <div>
+                                    <label for="twitter" class="block text-xs font-semibold text-gray-700 mb-1">Twitter / X URL</label>
+                                    <input type="text" name="twitter" id="twitter" value="{{ old('twitter') }}" placeholder="https://twitter.com/..." class="w-full border-gray-300 rounded-lg shadow-sm text-xs">
+                                </div>
+                                <div>
+                                    <label for="facebook" class="block text-xs font-semibold text-gray-700 mb-1">Facebook URL</label>
+                                    <input type="text" name="facebook" id="facebook" value="{{ old('facebook') }}" placeholder="https://facebook.com/..." class="w-full border-gray-300 rounded-lg shadow-sm text-xs">
+                                </div>
+                                <div>
+                                    <label for="linkedin" class="block text-xs font-semibold text-gray-700 mb-1">LinkedIn URL</label>
+                                    <input type="text" name="linkedin" id="linkedin" value="{{ old('linkedin') }}" placeholder="https://linkedin.com/..." class="w-full border-gray-300 rounded-lg shadow-sm text-xs">
+                                </div>
                             </div>
                         </div>
                     </div>

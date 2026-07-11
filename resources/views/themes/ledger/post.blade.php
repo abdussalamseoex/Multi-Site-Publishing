@@ -47,7 +47,7 @@
                 <a href="{{ isset($post->category) ? route('frontend.category', $post->category->slug) : '#' }}" class="text-sky-700 hover:opacity-80 transition">{{ $post->category->name ?? 'Finance' }}</a>
             </nav>
 
-            <h1 class="text-4xl md:text-7xl font-black leading-[1.05] mb-10 text-slate-900 tracking-tightest">{{ $post->title }}</h1>
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-black leading-snug mb-6 text-slate-900 tracking-tight break-words">{{ $post->title }}</h1>
             
             <div class="flex flex-col md:flex-row md:items-center justify-between py-6 border-y-2 border-slate-900 gap-6">
                 <div class="flex items-center gap-6 font-mono-data text-[11px] text-slate-500 uppercase tracking-wider">

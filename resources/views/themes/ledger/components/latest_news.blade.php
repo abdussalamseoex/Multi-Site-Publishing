@@ -20,7 +20,7 @@
                         <span class="text-[10px] text-slate-500 font-mono-data">{{ $post->created_at->format('M d, H:i') }}</span>
                     </div>
                     <h4 class="text-2xl font-bold mb-2 leading-tight text-slate-900 line-clamp-2"><a href="{{ route('frontend.post', $post->slug) }}">{{ $post->title }}</a></h4>
-                    <p class="text-slate-600 text-sm mb-3 line-clamp-2 md:w-11/12">{{ strip_tags($post->summary ?? $post->content) }}</p>
+                    <p class="text-slate-600 text-sm mb-3 line-clamp-2 md:w-11/12">{{ Str::limit(strip_tags($post->summary ?? $post->content), 140) }}</p>
                 </div>
                 @if($post->featured_image)
                     <div class="w-full sm:w-32 h-24 shrink-0 rounded overflow-hidden bg-slate-200 border border-ledger mt-4 sm:mt-0">

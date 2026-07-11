@@ -65,9 +65,11 @@ class UserController extends Controller
             'is_unlimited'      => $request->has('is_unlimited'),
         ];
 
-        // Only include bio/avatar if those columns exist (migration safety for multi-site deployments)
-        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'bio')) {
-            $userData['bio'] = $request->bio;
+        // Only include bio/avatar/socials if those columns exist (migration safety for multi-site deployments)
+        foreach (['bio', 'website', 'facebook', 'twitter', 'linkedin', 'instagram'] as $col) {
+            if (\Illuminate\Support\Facades\Schema::hasColumn('users', $col)) {
+                $userData[$col] = $request->input($col);
+            }
         }
         if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'avatar')) {
             $userData['avatar'] = null;

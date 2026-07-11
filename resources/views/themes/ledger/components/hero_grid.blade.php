@@ -31,7 +31,7 @@
             @endif
             <a href="{{ isset($mainFeatured->category) ? route('frontend.category', $mainFeatured->category->slug) : '#' }}" class="hover:opacity-80 transition relative z-10"><span class="text-xs font-bold text-sky-700 uppercase tracking-wider mb-2 block border-l-4 border-sky-700 pl-2">{{ $mainFeatured->category->name ?? 'Markets' }}</span></a>
             <h2 class="text-4xl md:text-5xl font-black tracking-tight leading-tight mb-3 line-clamp-2 relative z-10"><a href="{{ route('frontend.post', $mainFeatured->slug) }}">{{ $mainFeatured->title }}</a></h2>
-            <p class="text-slate-600 text-lg mb-4 relative z-10">{{ strip_tags($mainFeatured->summary ?? $mainFeatured->content) }}</p>
+            <p class="text-slate-600 text-lg mb-4 relative z-10">{{ Str::limit(strip_tags($mainFeatured->summary ?? $mainFeatured->content), 160) }}</p>
             <div class="text-xs text-slate-500 font-mono-data uppercase relative z-10">{{ $mainFeatured->user->name ?? 'Editor' }} | {{ $mainFeatured->created_at->format('Y-m-d') }}</div>
         </article>
     </div>

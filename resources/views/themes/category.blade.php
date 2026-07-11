@@ -53,7 +53,7 @@
                             <a href="{{ route('frontend.post', $post->slug) }}">
                                 <h2 class="text-xl font-bold text-slate-900 leading-snug mb-3 hover:text-blue-600 transition-colors">{{ $post->title }}</h2>
                             </a>
-                            <p class="text-slate-600 text-sm line-clamp-3 mb-4 flex-1">{{ strip_tags($post->summary ?? $post->content) }}</p>
+                            <p class="text-slate-600 text-sm line-clamp-3 mb-4 flex-1">{{ Str::limit(strip_tags($post->summary ?? $post->content), 150) }}</p>
                             <div class="flex items-center mt-auto border-t border-slate-50 pt-4">
                                 <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center text-xs mr-3">
                                     {{ substr($post->user->name ?? 'A', 0, 1) }}

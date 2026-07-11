@@ -65,7 +65,7 @@
                         @endif
                         <div class="p-6 flex-1 flex flex-col relative z-10 pointer-events-none">
                             <h3 class="font-gaming font-bold text-xl leading-tight mb-3 text-slate-800 group-hover:text-primary transition pointer-events-auto line-clamp-2"><a href="{{ route('frontend.post', $post->slug) }}">{{ $post->title }}</a></h3>
-                            <p class="text-slate-500 text-sm line-clamp-3 mb-4 flex-1">{{ strip_tags($post->summary ?? $post->content) }}</p>
+                            <p class="text-slate-500 text-sm line-clamp-3 mb-4 flex-1">{{ Str::limit(strip_tags($post->summary ?? $post->content), 150) }}</p>
                             <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center justify-between border-t border-slate-100 pt-4 mt-auto">
                                 <span>{{ $post->user->name ?? 'Author' }}</span>
                                 <span>{{ $post->created_at->format('M d, Y') }}</span>

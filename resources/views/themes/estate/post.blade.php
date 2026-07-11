@@ -34,13 +34,13 @@
 
     @include('themes.components.header')
 
-    <div class="max-w-4xl mx-auto px-4 py-16">
+    <div class="max-w-4xl mx-auto px-4 py-10 md:py-14">
         
-        <header class="text-center mb-16">
-            <a href="{{ isset($post->category) ? route('frontend.category', $post->category->slug) : '#' }}" class="hover:opacity-80 transition"><span class="text-amber-600 font-bold uppercase tracking-[0.2em] text-[10px] mb-6 block">{{ $post->category->name ?? 'Editorial' }}</span></a>
-            <h1 class="text-5xl md:text-6xl lg:text-7xl font-elegant font-bold leading-tight mb-8 text-stone-900">{{ $post->title }}</h1>
+        <header class="text-center mb-10">
+            <a href="{{ isset($post->category) ? route('frontend.category', $post->category->slug) : '#' }}" class="hover:opacity-80 transition"><span class="text-amber-600 font-bold uppercase tracking-[0.2em] text-[10px] mb-4 block">{{ $post->category->name ?? 'Editorial' }}</span></a>
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-elegant font-bold leading-snug mb-6 text-stone-900 max-w-4xl mx-auto break-words">{{ $post->title }}</h1>
             
-            <div class="flex items-center justify-center gap-8 text-[11px] text-stone-400 tracking-[0.1em] uppercase font-bold border-t border-b border-stone-200 py-4">
+            <div class="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-[11px] text-stone-400 tracking-[0.1em] uppercase font-bold border-t border-b border-stone-200 py-4">
                 <span>By <a href="{{ route('frontend.author', $post->user->id ?? 0) }}" class="text-amber-700 hover:text-amber-900 transition">{{ $post->user->name ?? 'Agent' }}</a></span>
                 <span>{{ $post->created_at->format('F d, Y') }}</span>
                 <span>Visits: {{ number_format($post->views) }}</span>
@@ -48,8 +48,8 @@
         </header>
 
         @if($post->featured_image)
-            <div class="w-full aspect-video md:aspect-[21/9] bg-stone-100 mb-16 relative">
-                <img src="{{ Str::startsWith($post->featured_image, 'http') ? $post->featured_image : url($post->featured_image) }}" alt="{{ $post->title }}" class="w-full h-full object-cover shadow-lg">
+            <div class="w-full aspect-video md:aspect-[21/9] bg-stone-100 mb-12 relative rounded-lg overflow-hidden shadow">
+                <img src="{{ Str::startsWith($post->featured_image, 'http') ? $post->featured_image : url($post->featured_image) }}" alt="{{ $post->title }}" class="w-full h-full object-cover">
             </div>
         @endif
 
@@ -58,7 +58,38 @@
                 {!! \App\Helpers\AdHelper::injectInArticleAds($post->content) !!}
             </article>
 
+            {{-- Related Posts --}}
+            @php
+                $relatedPosts = \App\Models\Post::where('status', 'published')
+                    ->where('id', '!=', $post->id)
+                    ->when($post->category_id, function($q) use ($post) {
+                        return $q->where('category_id', $post->category_id);
+                    })
+                    ->latest()
+                    ->take(3)
+                    ->get();
+            @endphp
 
+            @if($relatedPosts->count() > 0)
+                <div class="mt-16 pt-12 border-t border-stone-200">
+                    <h3 class="text-2xl font-elegant font-bold text-stone-900 mb-8 text-center italic">Related Articles</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        @foreach($relatedPosts as $rel)
+                            <article class="group">
+                                <a href="{{ route('frontend.post', $rel->slug) }}" class="block aspect-[16/10] bg-stone-100 overflow-hidden mb-3 rounded shadow-sm">
+                                    @if($rel->featured_image)
+                                        <img src="{{ Str::startsWith($rel->featured_image, 'http') ? $rel->featured_image : url($rel->featured_image) }}" alt="{{ $rel->title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                                    @endif
+                                </a>
+                                <a href="{{ route('frontend.post', $rel->slug) }}">
+                                    <h4 class="font-elegant font-bold text-base text-stone-900 group-hover:text-amber-700 transition line-clamp-2 leading-snug mb-1">{{ $rel->title }}</h4>
+                                </a>
+                                <p class="text-xs text-stone-500 line-clamp-2">{{ Str::limit(strip_tags($rel->summary ?? $rel->content), 80) }}</p>
+                            </article>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 

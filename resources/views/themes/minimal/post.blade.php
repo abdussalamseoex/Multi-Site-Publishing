@@ -36,7 +36,7 @@
                     <span class="text-gray-400">{{ $post->created_at->format('M d, Y') }}</span>
                 </div>
                 
-                <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight leading-tight mb-6 text-gray-900">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-snug mb-6 text-gray-900 break-words">
                     {{ $post->title }}
                 </h1>
                 

@@ -35,7 +35,7 @@
                 <a href="{{ route('frontend.post', $mainFeatured->slug) }}" class="block">
                     <h2 class="text-4xl md:text-5xl lg:text-6xl font-light text-gray-900 leading-[1.1] hover:text-gray-600 transition">{{ $mainFeatured->title }}</h2>
                 </a>
-                <p class="text-gray-500 text-lg md:text-xl font-light leading-relaxed max-w-xl">{{ strip_tags($mainFeatured->summary ?? $mainFeatured->content) }}</p>
+                <p class="text-gray-500 text-lg md:text-xl font-light leading-relaxed max-w-xl">{{ Str::limit(strip_tags($mainFeatured->summary ?? $mainFeatured->content), 160) }}</p>
                 <div class="flex items-center gap-4 text-xs font-medium text-gray-400 uppercase tracking-widest mt-8">
                     <span>By {{ $mainFeatured->user->name ?? 'Photographer' }}</span>
                     <span>&bull;</span>

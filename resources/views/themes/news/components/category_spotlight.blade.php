@@ -22,7 +22,7 @@
                 @endif
                 <h4 class="text-2xl font-bold leading-snug mb-2 group-hover:text-blue-600 transition line-clamp-2">{{ $firstMiss->title }}</h4>
             </a>
-            <p class="text-sm text-gray-600 line-clamp-3 mb-3">{{ strip_tags($firstMiss->summary ?? $firstMiss->content) }}</p>
+            <p class="text-sm text-gray-600 line-clamp-3 mb-3">{{ Str::limit(strip_tags($firstMiss->summary ?? $firstMiss->content), 150) }}</p>
             <div class="font-ui text-[11px] text-gray-400 font-medium">
                 <span class="text-black font-bold">{{ $firstMiss->user->name ?? 'Editor' }}</span> - {{ $firstMiss->created_at->format('M d, Y') }}
             </div>

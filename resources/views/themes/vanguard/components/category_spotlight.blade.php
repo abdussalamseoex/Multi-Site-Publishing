@@ -22,7 +22,7 @@
             </div>
             <div>
                 <h4 class="text-lg font-bold leading-tight mb-2 group-hover:text-blue-400 transition line-clamp-2">{{ $post->title }}</h4>
-                <p class="text-slate-400 text-sm mb-3 line-clamp-2 leading-relaxed">{{ strip_tags($post->summary ?? $post->content) }}</p>
+                <p class="text-slate-400 text-sm mb-3 line-clamp-2 leading-relaxed">{{ Str::limit(strip_tags($post->summary ?? $post->content), 140) }}</p>
                 <span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">{{ $post->user->name ?? 'Writer' }} &bull; {{ $post->created_at->diffForHumans() }}</span>
             </div>
         </article>

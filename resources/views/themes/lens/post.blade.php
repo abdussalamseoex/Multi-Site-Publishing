@@ -37,7 +37,7 @@
                 <a href="{{ isset($post->category) ? route('frontend.category', $post->category->slug) : '#' }}" class="inline-block hover:opacity-80 transition mb-6 mt-8">
                     <span class="text-[10px] font-bold uppercase tracking-[0.2em] border border-gray-200 text-gray-500 px-4 py-1.5 hover:bg-gray-100 transition">{{ $post->category->name ?? 'Photoblog' }}</span>
                 </a>
-                <h1 class="text-4xl md:text-5xl lg:text-7xl font-medium text-gray-900 leading-[1.1] mb-8">{{ $post->title }}</h1>
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-medium text-gray-900 leading-snug mb-8 break-words">{{ $post->title }}</h1>
                 <div class="flex items-center justify-center gap-6 text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">
                     <span>By <a href="{{ route('frontend.author', $post->user->id ?? 0) }}" class="hover:text-gray-900 transition">{{ $post->user->name ?? 'Photographer' }}</a></span>
                     <span>&bull;</span>
@@ -100,6 +100,35 @@
                         <p class="text-gray-500 text-sm font-light leading-relaxed max-w-lg mx-auto">{{ $post->user->bio ?? 'Lead photographer documenting moments across the world. Specializes in elegant portraiture, editorial fashion, and fine art landscape photography.' }}</p>
                         <a href="{{ route('frontend.author', $post->user->id ?? 0) }}" class="mt-4 inline-block text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] hover:text-gray-900 transition">View all posts &rarr;</a>
                     </div>
+
+                    {{-- Related Posts --}}
+                    @php
+                        $relatedPosts = \App\Models\Post::where('status', 'published')
+                            ->where('id', '!=', $post->id)
+                            ->when($post->category_id, fn($q) => $q->where('category_id', $post->category_id))
+                            ->latest()
+                            ->take(3)
+                            ->get();
+                    @endphp
+                    @if($relatedPosts->count() > 0)
+                        <div class="mt-16 pt-12 border-t border-gray-100">
+                            <h3 class="text-xl font-medium text-gray-900 mb-8 text-center">Related Captures</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                @foreach($relatedPosts as $rel)
+                                    <div class="group">
+                                        @if($rel->featured_image)
+                                            <a href="{{ route('frontend.post', $rel->slug) }}" class="block aspect-[16/10] bg-gray-100 overflow-hidden mb-3">
+                                                <img src="{{ Str::startsWith($rel->featured_image, 'http') ? $rel->featured_image : url($rel->featured_image) }}" alt="{{ $rel->title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                                            </a>
+                                        @endif
+                                        <a href="{{ route('frontend.post', $rel->slug) }}">
+                                            <h4 class="font-medium text-sm text-gray-900 group-hover:text-gray-600 transition line-clamp-2">{{ $rel->title }}</h4>
+                                        </a>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Right Sidebar -->

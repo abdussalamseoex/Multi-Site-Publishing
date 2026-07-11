@@ -26,7 +26,7 @@
                 <a href="{{ route('frontend.post', $post->slug) }}">
                     <h4 class="text-2xl font-wellness font-bold mb-3 leading-snug text-slate-800 hover:text-emerald-600 transition line-clamp-2">{{ $post->title }}</h4>
                 </a>
-                <p class="text-slate-500 text-sm line-clamp-2 mb-4 leading-relaxed">{{ strip_tags($post->summary ?? $post->content) }}</p>
+                <p class="text-slate-500 text-sm line-clamp-2 mb-4 leading-relaxed">{{ Str::limit(strip_tags($post->summary ?? $post->content), 140) }}</p>
                 <div class="flex items-center text-xs text-slate-400 gap-3">
                     <span class="font-medium text-slate-600">{{ $post->user->name ?? 'Expert' }}</span>
                     <span>&bull;</span>

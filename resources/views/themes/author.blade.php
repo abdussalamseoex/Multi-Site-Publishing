@@ -62,9 +62,40 @@
                     </h1>
 
                     @if($author->bio)
-                        <p class="text-gray-500 text-lg leading-relaxed max-w-2xl mb-6">{{ $author->bio }}</p>
+                        <p class="text-gray-500 text-lg leading-relaxed max-w-2xl mb-4">{{ $author->bio }}</p>
                     @else
-                        <p class="text-gray-400 text-lg italic mb-6">No bio added yet.</p>
+                        <p class="text-gray-400 text-lg italic mb-4">No bio added yet.</p>
+                    @endif
+
+                    {{-- Social Links --}}
+                    @if(!empty($author->website) || !empty($author->twitter) || !empty($author->facebook) || !empty($author->linkedin) || !empty($author->instagram))
+                        <div class="flex flex-wrap items-center justify-center md:justify-start gap-2.5 mb-6">
+                            @if(!empty($author->website))
+                                <a href="{{ $author->website }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-full transition">
+                                    🌐 Website
+                                </a>
+                            @endif
+                            @if(!empty($author->twitter))
+                                <a href="{{ $author->twitter }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-1 bg-sky-50 hover:bg-sky-100 text-sky-600 text-xs font-semibold rounded-full transition">
+                                    𝕏 Twitter
+                                </a>
+                            @endif
+                            @if(!empty($author->facebook))
+                                <a href="{{ $author->facebook }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-semibold rounded-full transition">
+                                    Facebook
+                                </a>
+                            @endif
+                            @if(!empty($author->linkedin))
+                                <a href="{{ $author->linkedin }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-xs font-semibold rounded-full transition">
+                                    LinkedIn
+                                </a>
+                            @endif
+                            @if(!empty($author->instagram))
+                                <a href="{{ $author->instagram }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-1 bg-pink-50 hover:bg-pink-100 text-pink-600 text-xs font-semibold rounded-full transition">
+                                    Instagram
+                                </a>
+                            @endif
+                        </div>
                     @endif
 
                     {{-- Stats Row --}}

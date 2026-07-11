@@ -26,7 +26,7 @@
                 <a href="{{ route('frontend.post', $post->slug) }}" class="relative z-10">
                     <h4 class="text-xl font-tech font-bold mb-2 leading-snug hover:text-indigo-400 transition line-clamp-2">{{ $post->title }}</h4>
                 </a>
-                <p class="text-slate-400 text-sm line-clamp-2 mb-3 relative z-10">{{ strip_tags($post->summary ?? $post->content) }}</p>
+                <p class="text-slate-400 text-sm line-clamp-2 mb-3 relative z-10">{{ Str::limit(strip_tags($post->summary ?? $post->content), 140) }}</p>
                 <div class="text-xs text-slate-500 font-tech">By {{ $post->user->name ?? 'System' }} &bull; {{ $post->created_at->diffForHumans() }}</div>
             </div>
         </article>

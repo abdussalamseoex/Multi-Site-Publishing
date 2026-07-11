@@ -79,7 +79,7 @@
                         <div class="absolute bottom-0 left-0 p-8">
                             <a href="{{ isset($mainFeatured->category) ? route('frontend.category', $mainFeatured->category->slug) : '#' }}" class="hover:opacity-80 transition"><span class="bg-indigo-600 text-white px-3 py-1 text-[10px] font-tech tracking-widest uppercase rounded shadow mb-4 inline-block">{{ $mainFeatured->category->name ?? 'Software' }}</span></a>
                             <h3 class="text-3xl md:text-4xl font-tech font-bold leading-tight mb-3 line-clamp-2">{{ $mainFeatured->title }}</h3>
-                            <p class="text-slate-300 text-sm mb-4 line-clamp-2 md:w-5/6">{{ strip_tags($mainFeatured->summary ?? $mainFeatured->content) }}</p>
+                            <p class="text-slate-300 text-sm mb-4 line-clamp-2 md:w-5/6">{{ Str::limit(strip_tags($mainFeatured->summary ?? $mainFeatured->content), 150) }}</p>
                             <div class="flex items-center text-xs text-indigo-300 uppercase tracking-wider font-tech gap-3">
                                 <span>{{ $mainFeatured->created_at->format('M d, Y') }}</span>
                                 <span>&bull;</span>
@@ -129,7 +129,7 @@
                             <a href="{{ route('frontend.post', $post->slug) }}">
                                 <h4 class="text-xl font-tech font-bold mb-2 leading-snug hover:text-indigo-400 transition line-clamp-2">{{ $post->title }}</h4>
                             </a>
-                            <p class="text-slate-400 text-sm line-clamp-2 mb-3">{{ strip_tags($post->summary ?? $post->content) }}</p>
+                            <p class="text-slate-400 text-sm line-clamp-2 mb-3">{{ Str::limit(strip_tags($post->summary ?? $post->content), 140) }}</p>
                             <div class="text-xs text-slate-500 font-tech">By {{ $post->user->name ?? 'System' }} &bull; {{ $post->created_at->diffForHumans() }}</div>
                         </div>
                     </article>

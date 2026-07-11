@@ -31,7 +31,7 @@
             <a href="{{ route('frontend.post', $hero->slug) }}" class="relative z-20">
                 <h2 class="text-5xl md:text-7xl font-travel font-black tracking-tight leading-none mb-4 text-shadow hover:text-pink-300 transition line-clamp-2">{{ $hero->title }}</h2>
             </a>
-            <p class="text-gray-200 text-lg md:text-xl font-medium mb-6 line-clamp-2 md:w-3/4 relative z-20">{{ strip_tags($hero->summary ?? $hero->content) }}</p>
+            <p class="text-gray-200 text-lg md:text-xl font-medium mb-6 line-clamp-2 md:w-3/4 relative z-20">{{ Str::limit(strip_tags($hero->summary ?? $hero->content), 150) }}</p>
             <div class="flex items-center gap-4 text-sm font-bold uppercase tracking-wider relative z-20">
                 <div class="w-10 h-10 rounded-full bg-white text-pink-600 flex items-center justify-center -ml-2 border-2 border-white">{{ substr($hero->user->name ?? 'A', 0, 1) }}</div>
                 <span>By {{ $hero->user->name ?? 'Explorer' }}</span>
