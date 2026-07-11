@@ -32,7 +32,7 @@
                 <a href="{{ isset($post->category) ? route('frontend.category', $post->category->slug) : '#' }}" class="hover:opacity-80 transition"><div class="text-primary font-bold uppercase tracking-widest text-xs mb-4">{{ $post->category->name ?? 'Editorial' }}</div></a>
                 <h1 class="text-3xl sm:text-4xl md:text-5xl font-black leading-snug mb-6 break-words">{{ $post->title }}</h1>
                 <div class="flex items-center gap-4 text-sm font-bold uppercase tracking-wider text-gray-500 font-sans border-b-2 border-black pb-6">
-                    <span>By <a href="{{ route('frontend.author', $post->user->id ?? 0) }}" class="text-primary hover:underline transition">{{ $post->user->name ?? 'Editor' }}</a></span>
+                    <span>By <a href="{{ route('frontend.author', $post->user->slug ?? ($post->user->id ?? 1)) }}" class="text-primary hover:underline transition">{{ $post->user->name ?? 'Editor' }}</a></span>
                     <span>&bull;</span>
                     <span>{{ $post->created_at->format('d F Y') }}</span>
                     <span>&bull;</span>

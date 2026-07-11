@@ -42,7 +42,7 @@
                 
                 <div class="flex items-center gap-3">
                     <div>
-                        <p class="font-medium text-sm font-bold text-gray-700">By <a href="{{ route('frontend.author', $post->user->id ?? 0) }}" class="text-primary hover:underline transition">{{ $post->user->name ?? 'Author' }}</a></p>
+                        <p class="font-medium text-sm font-bold text-gray-700">By <a href="{{ route('frontend.author', $post->user->slug ?? ($post->user->id ?? 1)) }}" class="text-primary hover:underline transition">{{ $post->user->name ?? 'Author' }}</a></p>
                         <p class="text-xs text-gray-500">{{ $post->views }} Views</p>
                     </div>
                 </div>

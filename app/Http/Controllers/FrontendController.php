@@ -143,11 +143,31 @@ class FrontendController extends Controller
         return view($viewName, compact('posts', 'query', 'activeTheme'));
     }
 
-    public function authorProfile($id)
+    public function authorProfile($slug)
     {
-        $author = \App\Models\User::with('roles')->findOrFail($id);
+        $author = null;
 
-        $posts = Post::where('user_id', $id)
+        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'username')) {
+            $author = \App\Models\User::with('roles')->where('username', $slug)->first();
+        }
+
+        if (!$author) {
+            $author = \App\Models\User::with('roles')
+                ->get()
+                ->first(function ($user) use ($slug) {
+                    return \Illuminate\Support\Str::slug($user->name) === $slug;
+                });
+        }
+
+        if (!$author && is_numeric($slug)) {
+            $author = \App\Models\User::with('roles')->find($slug);
+        }
+
+        if (!$author) {
+            abort(404);
+        }
+
+        $posts = Post::where('user_id', $author->id)
                      ->where('status', 'published')
                      ->latest()
                      ->paginate(12);

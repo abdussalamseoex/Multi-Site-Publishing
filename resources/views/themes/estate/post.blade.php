@@ -41,7 +41,7 @@
             <h1 class="text-3xl sm:text-4xl md:text-5xl font-elegant font-bold leading-snug mb-6 text-stone-900 max-w-4xl mx-auto break-words">{{ $post->title }}</h1>
             
             <div class="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-[11px] text-stone-400 tracking-[0.1em] uppercase font-bold border-t border-b border-stone-200 py-4">
-                <span>By <a href="{{ route('frontend.author', $post->user->id ?? 0) }}" class="text-amber-700 hover:text-amber-900 transition">{{ $post->user->name ?? 'Agent' }}</a></span>
+                <span>By <a href="{{ route('frontend.author', $post->user->slug ?? ($post->user->id ?? 1)) }}" class="text-amber-700 hover:text-amber-900 transition">{{ $post->user->name ?? 'Agent' }}</a></span>
                 <span>{{ $post->created_at->format('F d, Y') }}</span>
                 <span>Visits: {{ number_format($post->views) }}</span>
             </div>

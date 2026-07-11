@@ -16,7 +16,7 @@
                 <a href="{{ isset($post->category) ? route('frontend.category', $post->category->slug) : '#' }}" class="hover:opacity-80 transition"><div class="text-indigo-600 font-bold uppercase tracking-wider text-sm mb-2">{{ $post->category->name ?? 'Uncategorized' }}</div></a>
                 <h1 class="text-3xl sm:text-4xl font-extrabold mb-4 break-words">{{ $post->title }}</h1>
                 <div class="text-gray-500">
-                    By <a href="{{ route('frontend.author', $post->user->id ?? 0) }}" class="font-bold text-indigo-600 hover:text-indigo-800 transition">{{ $post->user->name ?? 'Author' }}</a> &bull; {{ $post->created_at->format('F d, Y') }}
+                    By <a href="{{ route('frontend.author', $post->user->slug ?? ($post->user->id ?? 1)) }}" class="font-bold text-indigo-600 hover:text-indigo-800 transition">{{ $post->user->name ?? 'Author' }}</a> &bull; {{ $post->created_at->format('F d, Y') }}
                 </div>
             </header>
 

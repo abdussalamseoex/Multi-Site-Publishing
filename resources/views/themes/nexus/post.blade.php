@@ -44,7 +44,7 @@
             <div class="flex items-center justify-center gap-6 text-slate-400 text-xs font-tech tracking-wide border-y border-slate-800 py-4">
                 <span class="flex items-center gap-2">
                     <div class="w-6 h-6 bg-slate-800 rounded flex items-center justify-center text-indigo-400 border border-slate-700">{{ substr($post->user->name ?? 'S', 0, 1) }}</div>
-                    <a href="{{ route('frontend.author', $post->user->id ?? 0) }}" class="hover:text-indigo-400 transition">{{ $post->user->name ?? 'System Admin' }}</a>
+                    <a href="{{ route('frontend.author', $post->user->slug ?? ($post->user->id ?? 1)) }}" class="hover:text-indigo-400 transition">{{ $post->user->name ?? 'System Admin' }}</a>
                 </span>
                 <span>/</span>
                 <span>{{ $post->created_at->format('M d, Y') }}</span>

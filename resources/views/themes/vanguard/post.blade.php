@@ -54,7 +54,7 @@
             <div class="flex items-center justify-center gap-6 text-slate-300 text-sm font-bold uppercase tracking-wider font-sans bg-slate-800/50 inline-flex px-6 py-2 rounded-full border border-slate-700">
                 <span class="flex items-center gap-3">
                     <div class="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white text-[10px]">{{ substr($post->user->name ?? 'A', 0, 1) }}</div>
-                    <a href="{{ route('frontend.author', $post->user->id ?? 0) }}" class="hover:text-primary transition">{{ $post->user->name ?? 'Editorial Staff' }}</a>
+                    <a href="{{ route('frontend.author', $post->user->slug ?? ($post->user->id ?? 1)) }}" class="hover:text-primary transition">{{ $post->user->name ?? 'Editorial Staff' }}</a>
                 </span>
                 <span class="text-slate-500">|</span>
                 <span>{{ $post->created_at->format('M d, Y') }}</span>

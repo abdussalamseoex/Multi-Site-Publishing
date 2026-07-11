@@ -268,7 +268,7 @@ Route::get('/install/step2', [InstallController::class, 'step2'])->name('install
 Route::post('/install/process', [InstallController::class, 'processInstallation'])->name('install.processInstallation');
 
 // Author Profile Page
-Route::get('/author/{id}', [FrontendController::class, 'authorProfile'])->name('frontend.author');
+Route::get('/author/{slug}', [FrontendController::class, 'authorProfile'])->name('frontend.author');
 
 // Catch-all route for Posts (Must remain at the absolute bottom)
 Route::get('/{slug}', [FrontendController::class, 'showPost'])->name('frontend.post');

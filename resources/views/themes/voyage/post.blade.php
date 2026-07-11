@@ -52,7 +52,7 @@
             <div class="flex items-center gap-4">
                 <div class="w-12 h-12 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center font-bold text-xl">{{ substr($post->user->name ?? 'A', 0, 1) }}</div>
                 <div>
-                    <h5 class="font-bold text-gray-900"><a href="{{ route('frontend.author', $post->user->id ?? 0) }}" class="hover:text-pink-600 transition">{{ $post->user->name ?? 'Traveler' }}</a></h5>
+                    <h5 class="font-bold text-gray-900"><a href="{{ route('frontend.author', $post->user->slug ?? ($post->user->id ?? 1)) }}" class="hover:text-pink-600 transition">{{ $post->user->name ?? 'Traveler' }}</a></h5>
                     <p class="text-xs text-gray-500 font-medium">{{ $post->created_at->format('M d, Y') }}</p>
                 </div>
             </div>
