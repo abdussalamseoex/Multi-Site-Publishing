@@ -44,6 +44,7 @@
                         </p>
                     @endif
                 </div>
+            @endif
         </div>
 
         {{-- Bio Section --}}
