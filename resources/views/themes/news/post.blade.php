@@ -49,7 +49,7 @@
                     <h1 class="text-3xl md:text-5xl font-bold leading-[1.15] text-[#111] mb-5 tracking-tight">{{ $post->title }}</h1>
                     
                     <div class="flex items-center text-xs font-ui text-gray-500 border-b border-gray-200 pb-4 mb-6">
-                        <span class="font-bold text-black uppercase tracking-wider">{{ $post->user->name ?? 'Admin' }}</span>
+                        <a href="{{ route('frontend.author', $post->user->id ?? 0) }}" class="font-bold text-black uppercase tracking-wider hover:underline">{{ $post->user->name ?? 'Admin' }}</a>
                         <span class="mx-3">-</span>
                         <span class="uppercase tracking-wider">{{ $post->created_at->format('M d, Y') }}</span>
                         <span class="mx-3">-</span>
@@ -84,11 +84,15 @@
 
                         <!-- Author Box -->
                         <div class="bg-gray-50 border border-gray-200 p-6 flex flex-col sm:flex-row gap-6 items-center sm:items-start mb-12">
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode($post->user->name ?? 'Admin') }}&background=0ea5e9&color=fff&size=100" class="w-20 h-20 shrink-0">
+                            <a href="{{ route('frontend.author', $post->user->id ?? 0) }}">
+                                <img src="https://ui-avatars.com/api/?name={{ urlencode($post->user->name ?? 'Admin') }}&background=0ea5e9&color=fff&size=100" class="w-20 h-20 shrink-0 hover:opacity-80 transition">
+                            </a>
                             <div class="text-center sm:text-left">
-                                <h4 class="font-bold text-lg mb-1">{{ $post->user->name ?? 'Staff Editor' }}</h4>
-                                <p class="text-gray-600 text-sm mb-3">Professional journalist and editor specializing in breaking news, tech trends, and lifestyle analysis.</p>
-                                <a href="#" class="text-sky-600 font-bold text-xs uppercase tracking-widest hover:text-black transition">More from author</a>
+                                <h4 class="font-bold text-lg mb-1">
+                                    <a href="{{ route('frontend.author', $post->user->id ?? 0) }}" class="hover:text-sky-600 transition">{{ $post->user->name ?? 'Staff Editor' }}</a>
+                                </h4>
+                                <p class="text-gray-600 text-sm mb-3">{{ $post->user->bio ?? 'Professional journalist and editor specializing in breaking news, tech trends, and lifestyle analysis.' }}</p>
+                                <a href="{{ route('frontend.author', $post->user->id ?? 0) }}" class="text-sky-600 font-bold text-xs uppercase tracking-widest hover:text-black transition">More from author &rarr;</a>
                             </div>
                         </div>
 

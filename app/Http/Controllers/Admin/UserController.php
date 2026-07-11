@@ -36,6 +36,52 @@ class UserController extends Controller
         return view('admin.users.index', compact('users'));
     }
 
+    public function create()
+    {
+        return view('admin.users.create');
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name'                  => 'required|string|max:255',
+            'email'                 => 'required|email|unique:users,email',
+            'password'              => 'required|string|min:8|confirmed',
+            'role'                  => 'required|in:admin,editor,author,user',
+            'bio'                   => 'nullable|string|max:1000',
+            'points'                => 'nullable|integer|min:0',
+            'daily_post_limit'      => 'nullable|integer|min:1',
+            'total_post_limit'      => 'nullable|integer|min:1',
+        ]);
+
+        $userData = [
+            'name'              => $request->name,
+            'email'             => $request->email,
+            'password'          => bcrypt($request->password),
+            'status'            => 'active',
+            'points'            => $request->input('points', 0),
+            'daily_post_limit'  => $request->daily_post_limit,
+            'total_post_limit'  => $request->total_post_limit,
+            'is_unlimited'      => $request->has('is_unlimited'),
+        ];
+
+        // Only include bio/avatar if those columns exist (migration safety for multi-site deployments)
+        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'bio')) {
+            $userData['bio'] = $request->bio;
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'avatar')) {
+            $userData['avatar'] = null;
+        }
+
+        $user = User::create($userData);
+
+        $user->assignRole($request->role);
+
+        return redirect()->route('admin.users.index')
+                         ->with('status', "User '{$user->name}' created successfully.");
+    }
+
+
     public function updateRole(Request $request, User $user)
     {
         $request->validate([

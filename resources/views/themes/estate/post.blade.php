@@ -38,10 +38,10 @@
         
         <header class="text-center mb-16">
             <a href="{{ isset($post->category) ? route('frontend.category', $post->category->slug) : '#' }}" class="hover:opacity-80 transition"><span class="text-amber-600 font-bold uppercase tracking-[0.2em] text-[10px] mb-6 block">{{ $post->category->name ?? 'Editorial' }}</span></a>
-            <h1 class="text-5xl md:text-6xl lg:text-7xl font-elegant font-bold leading-tight mb-8 text-stone-900 line-clamp-2">{{ $post->title }}</h1>
+            <h1 class="text-5xl md:text-6xl lg:text-7xl font-elegant font-bold leading-tight mb-8 text-stone-900">{{ $post->title }}</h1>
             
             <div class="flex items-center justify-center gap-8 text-[11px] text-stone-400 tracking-[0.1em] uppercase font-bold border-t border-b border-stone-200 py-4">
-                <span>By {{ $post->user->name ?? 'Agent' }}</span>
+                <span>By <a href="{{ route('frontend.author', $post->user->id ?? 0) }}" class="text-amber-700 hover:text-amber-900 transition">{{ $post->user->name ?? 'Agent' }}</a></span>
                 <span>{{ $post->created_at->format('F d, Y') }}</span>
                 <span>Visits: {{ number_format($post->views) }}</span>
             </div>
@@ -58,23 +58,7 @@
                 {!! \App\Helpers\AdHelper::injectInArticleAds($post->content) !!}
             </article>
 
-            <!-- Curated Collection -->
-            <div class="mt-24 pt-16 border-t border-stone-200 text-center">
-                <h3 class="text-3xl font-elegant font-bold text-stone-900 mb-10 italic">Curated Properties</h3>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 text-left">
-                    @foreach(\App\Models\Post::where('category_id', $post->category_id)->where('id', '!=', $post->id)->where('status', 'published')->take(2)->get() as $rel)
-                        <a href="{{ route('frontend.post', $rel->slug) }}" class="group block">
-                            @if($rel->featured_image)
-                                <div class="w-full aspect-[4/3] bg-stone-100 mb-4 overflow-hidden border border-stone-200">
-                                    <img src="{{ url($rel->featured_image) }}" alt="{{ $rel->title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700 opacity-90 group-hover:opacity-100">
-                                </div>
-                            @endif
-                            <h4 class="font-elegant font-bold text-xl text-stone-900 group-hover:text-amber-700 transition leading-snug line-clamp-2">{{ $rel->title }}</h4>
-                        </a>
-                    @endforeach
-                </div>
-            </div>
+
         </div>
     </div>
 

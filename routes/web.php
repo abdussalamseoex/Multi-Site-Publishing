@@ -248,6 +248,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('/categories/{category}', [\App\Http\Controllers\Admin\CategoryController::class, 'destroy'])->name('categories.destroy');
 
     Route::post('/users/bulk-action', [\App\Http\Controllers\Admin\UserController::class, 'bulkAction'])->name('users.bulk-action');
+    Route::get('/users/create', [\App\Http\Controllers\Admin\UserController::class, 'create'])->name('users.create');
+    Route::post('/users', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('users.store');
     Route::get('/users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
     Route::post('/users/{user}/role', [\App\Http\Controllers\Admin\UserController::class, 'updateRole'])->name('users.role');
     Route::patch('/users/{user}/toggle-ban', [\App\Http\Controllers\Admin\UserController::class, 'toggleBan'])->name('users.toggle-ban');
@@ -264,6 +266,9 @@ Route::get('/install', [InstallController::class, 'index'])->name('install.index
 Route::post('/install/database', [InstallController::class, 'processDatabase'])->name('install.processDatabase');
 Route::get('/install/step2', [InstallController::class, 'step2'])->name('install.step2');
 Route::post('/install/process', [InstallController::class, 'processInstallation'])->name('install.processInstallation');
+
+// Author Profile Page
+Route::get('/author/{id}', [FrontendController::class, 'authorProfile'])->name('frontend.author');
 
 // Catch-all route for Posts (Must remain at the absolute bottom)
 Route::get('/{slug}', [FrontendController::class, 'showPost'])->name('frontend.post');

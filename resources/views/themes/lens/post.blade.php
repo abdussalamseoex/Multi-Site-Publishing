@@ -39,7 +39,7 @@
                 </a>
                 <h1 class="text-4xl md:text-5xl lg:text-7xl font-medium text-gray-900 leading-[1.1] mb-8">{{ $post->title }}</h1>
                 <div class="flex items-center justify-center gap-6 text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">
-                    <span>By {{ $post->user->name ?? 'Photographer' }}</span>
+                    <span>By <a href="{{ route('frontend.author', $post->user->id ?? 0) }}" class="hover:text-gray-900 transition">{{ $post->user->name ?? 'Photographer' }}</a></span>
                     <span>&bull;</span>
                     <span>{{ $post->created_at->format('M d, Y') }}</span>
                     <span>&bull;</span>
@@ -90,10 +90,15 @@
 
                     <!-- Author Box -->
                     <div class="mt-20 bg-gray-50 p-10 text-center">
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode($post->user->name ?? 'Photographer') }}&background=111&color=fff&size=100" class="w-20 h-20 rounded-full mx-auto mb-4 object-cover border border-gray-200">
+                        <a href="{{ route('frontend.author', $post->user->id ?? 0) }}">
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode($post->user->name ?? 'Photographer') }}&background=111&color=fff&size=100" class="w-20 h-20 rounded-full mx-auto mb-4 object-cover border border-gray-200 hover:opacity-80 transition">
+                        </a>
                         <span class="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] block mb-2">Captured By</span>
-                        <h3 class="text-xl font-medium text-gray-900 mb-3">{{ $post->user->name ?? 'Photographer' }}</h3>
-                        <p class="text-gray-500 text-sm font-light leading-relaxed max-w-lg mx-auto">Lead photographer documenting moments across the world. Specializes in elegant portraiture, editorial fashion, and fine art landscape photography.</p>
+                        <h3 class="text-xl font-medium text-gray-900 mb-3">
+                            <a href="{{ route('frontend.author', $post->user->id ?? 0) }}" class="hover:underline">{{ $post->user->name ?? 'Photographer' }}</a>
+                        </h3>
+                        <p class="text-gray-500 text-sm font-light leading-relaxed max-w-lg mx-auto">{{ $post->user->bio ?? 'Lead photographer documenting moments across the world. Specializes in elegant portraiture, editorial fashion, and fine art landscape photography.' }}</p>
+                        <a href="{{ route('frontend.author', $post->user->id ?? 0) }}" class="mt-4 inline-block text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] hover:text-gray-900 transition">View all posts &rarr;</a>
                     </div>
                 </div>
 

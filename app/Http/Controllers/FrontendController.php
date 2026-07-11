@@ -142,4 +142,19 @@ class FrontendController extends Controller
 
         return view($viewName, compact('posts', 'query', 'activeTheme'));
     }
+
+    public function authorProfile($id)
+    {
+        $author = \App\Models\User::with('roles')->findOrFail($id);
+
+        $posts = Post::where('user_id', $id)
+                     ->where('status', 'published')
+                     ->latest()
+                     ->paginate(12);
+
+        $activeTheme = Setting::get('active_theme', 'minimal');
+
+        return view('themes.author', compact('author', 'posts', 'activeTheme'));
+    }
 }
+

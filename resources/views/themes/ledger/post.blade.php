@@ -53,7 +53,7 @@
                 <div class="flex items-center gap-6 font-mono-data text-[11px] text-slate-500 uppercase tracking-wider">
                     <div class="flex items-center gap-2">
                         <span class="text-slate-300">BY</span>
-                        <span class="text-slate-900 font-bold">{{ $post->user->name ?? 'THE DESK' }}</span>
+                        <span class="text-slate-900 font-bold"><a href="{{ route('frontend.author', $post->user->id ?? 0) }}" class="hover:text-sky-700 transition">{{ $post->user->name ?? 'THE DESK' }}</a></span>
                     </div>
                     <div class="w-1 h-1 bg-slate-300 rounded-full"></div>
                     <div class="flex items-center gap-2">

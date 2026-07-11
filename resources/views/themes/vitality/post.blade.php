@@ -41,7 +41,7 @@
             <div class="flex items-center justify-center gap-4 text-slate-500 text-sm font-medium">
                 <div class="flex items-center gap-2">
                     <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">{{ substr($post->user->name ?? 'A', 0, 1) }}</div>
-                    <span class="text-slate-700 font-bold">{{ $post->user->name ?? 'Health Editor' }}</span>
+                    <span class="text-slate-700 font-bold"><a href="{{ route('frontend.author', $post->user->id ?? 0) }}" class="hover:text-emerald-600 transition">{{ $post->user->name ?? 'Health Editor' }}</a></span>
                 </div>
                 <span class="text-slate-300">|</span>
                 <span>{{ $post->created_at->format('F d, Y') }}</span>
