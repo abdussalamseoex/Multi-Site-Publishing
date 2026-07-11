@@ -82,7 +82,13 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Detailed Content</label>
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="block text-sm font-medium text-gray-700">Detailed Content</label>
+                                    <button type="button" onclick="openQuillHtmlModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-black text-white text-xs font-bold rounded-md shadow transition">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                                        Edit Custom HTML (&lt;/&gt;)
+                                    </button>
+                                </div>
                                 <div id="quill-editor" style="height: 400px; background: white;">{!! old('content', $post->content) !!}</div>
                                 <input type="hidden" name="content" id="content-hidden">
                             </div>
@@ -254,6 +260,16 @@
               document.getElementById('content-hidden').value = tempDiv.innerHTML;
           });
       }
+
+      // Add Custom HTML button directly into Quill toolbar
+      var toolbarEl = document.querySelector('.ql-toolbar');
+      if (toolbarEl) {
+          var customGroup = document.createElement('span');
+          customGroup.className = 'ql-formats';
+          customGroup.innerHTML = '<button type="button" onclick="openQuillHtmlModal()" title="Edit HTML Code (< />)" style="width:auto; padding: 0 8px; font-weight:bold; font-size:12px; color:#4f46e5;">&lt;/&gt; HTML</button>';
+          toolbarEl.appendChild(customGroup);
+      }
     </script>
+    @include('components.quill-html-modal')
 </x-app-layout>
 

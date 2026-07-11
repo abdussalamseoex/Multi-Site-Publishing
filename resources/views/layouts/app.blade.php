@@ -16,7 +16,12 @@
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
         {!! \App\Models\Setting::get('custom_header_scripts', '') !!}
-</head>
+        <style>
+            .ql-editor ul { list-style-type: disc !important; padding-left: 1.75rem !important; }
+            .ql-editor ol { list-style-type: decimal !important; padding-left: 1.75rem !important; }
+            .ql-editor ul li, .ql-editor ol li { margin-bottom: 0.25rem !important; display: list-item !important; }
+        </style>
+    </head>
     <body class="font-sans antialiased text-gray-900 bg-gray-50 flex flex-col h-screen overflow-hidden">
         <div class="flex flex-1 overflow-hidden" x-data="{ sidebarOpen: false }">
             

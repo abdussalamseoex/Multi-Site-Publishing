@@ -136,3 +136,27 @@
 <script type="application/ld+json">
 {!! $jsonLd !!}
 </script>
+
+<style>
+/* Global fix for Tailwind CSS reset on lists inside prose/post content */
+.prose ul, .ql-editor ul, article ul {
+    list-style-type: disc !important;
+    padding-left: 1.75rem !important;
+    margin-top: 0.75rem !important;
+    margin-bottom: 0.75rem !important;
+}
+.prose ol, .ql-editor ol, article ol {
+    list-style-type: decimal !important;
+    padding-left: 1.75rem !important;
+    margin-top: 0.75rem !important;
+    margin-bottom: 0.75rem !important;
+}
+.prose ul li, .ql-editor ul li, article ul li,
+.prose ol li, .ql-editor ol li, article ol li {
+    margin-bottom: 0.35rem !important;
+    display: list-item !important;
+}
+.prose ul ul, .ql-editor ul ul, article ul ul {
+    list-style-type: circle !important;
+}
+</style>
