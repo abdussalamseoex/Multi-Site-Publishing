@@ -47,6 +47,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/topup', [\App\Http\Controllers\User\TopupController::class, 'index'])->name('user.topup');
     Route::post('/topup', [\App\Http\Controllers\User\TopupController::class, 'store'])->name('user.topup.store');
 
+    // TinyMCE Image Upload
+    Route::post('/tinymce/upload', [\App\Http\Controllers\PostController::class, 'uploadImage'])->name('tinymce.upload');
+
     // Posts & Guest Post Checkouts
     Route::resource('posts', \App\Http\Controllers\PostController::class);
     Route::get('orders/{post}/checkout', [\App\Http\Controllers\OrderController::class, 'checkout'])->name('orders.checkout');

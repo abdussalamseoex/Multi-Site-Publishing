@@ -267,4 +267,18 @@ class PostController extends Controller
 
         return redirect()->route('posts.index')->with('success', 'Post updated successfully! It has been sent to pending status for admin review.');
     }
+
+    public function uploadImage(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|image|max:10240',
+        ]);
+
+        if ($request->hasFile('file')) {
+            $path = \App\Services\ImageService::uploadAndConvert($request->file('file'), 'posts/content');
+            return response()->json(['location' => asset('storage/' . $path)]);
+        }
+
+        return response()->json(['error' => 'No file uploaded'], 400);
+    }
 }

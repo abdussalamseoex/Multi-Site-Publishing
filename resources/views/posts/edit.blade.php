@@ -64,20 +64,9 @@
                             <div>
                                 <div class="flex items-center justify-between mb-2">
                                     <label class="block text-sm font-medium text-gray-700">Editor Content</label>
-                                    <div class="flex items-center gap-2">
-                                        <button type="button" onclick="openQuillTableModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-md shadow transition">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                                            Insert Table
-                                        </button>
-                                        <button type="button" onclick="openQuillHtmlModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-black text-white text-xs font-bold rounded-md shadow transition">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                                            Edit Custom HTML (&lt;/&gt;)
-                                        </button>
-                                    </div>
+
                                 </div>
-                                <!-- Quill Editor -->
-                                <div id="quill-editor" style="height: 400px; background: white;">{!! old('content', $post->content) !!}</div>
-                                <input type="hidden" name="content" id="content-hidden">
+                                <textarea id="tinymce-editor" name="content">{!! old('content', $post->content) !!}</textarea>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -113,7 +102,7 @@
                             </div>
 
                             <div class="pt-4 border-t flex justify-end">
-                                <button type="submit" onclick="document.getElementById('content-hidden').value = quill.root.innerHTML" class="px-6 py-3 bg-indigo-600 text-white rounded-md font-medium text-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
+                                <button type="submit" class="px-6 py-3 bg-indigo-600 text-white rounded-md font-medium text-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
                                     Save Changes & Submit for Review
                                 </button>
                             </div>
@@ -125,163 +114,58 @@
         </div>
     </div>
 
-    <!-- Quill.js CDN Init -->
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <!-- TinyMCE CDN Init -->
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
     <script>
-      // Pre-process existing links to build the nofollow map
-      window.quillNofollowLinks = {};
-      var editorDiv = document.getElementById('quill-editor');
-      if (editorDiv) {
-          var existingLinks = editorDiv.getElementsByTagName('a');
-          for (var i = 0; i < existingLinks.length; i++) {
-              var href = existingLinks[i].getAttribute('href');
-              var rel = existingLinks[i].getAttribute('rel');
-              if (href && rel && rel.toLowerCase().indexOf('nofollow') !== -1) {
-                  window.quillNofollowLinks[href] = true;
-              } else if (href) {
-                  window.quillNofollowLinks[href] = false;
-              }
-          }
-      }
+      var hasDofollowPermission = @json(isset($userHasDofollowPermission) ? $userHasDofollowPermission : false);
+      var relList = hasDofollowPermission 
+          ? [
+              { title: 'None', value: '' },
+              { title: 'Nofollow', value: 'nofollow' },
+              { title: 'Sponsored', value: 'sponsored' },
+              { title: 'UGC', value: 'ugc' }
+            ] 
+          : [
+              { title: 'Nofollow', value: 'nofollow' }
+            ];
 
-      var quill = new Quill('#quill-editor', {
-        theme: 'snow',
-        modules: {
-          toolbar: [
-            ['bold', 'italic', 'underline', 'strike'], 
-            ['blockquote', 'code-block'],
-            [{ 'header': 1 }, { 'header': 2 }],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-            [{ 'indent': '-1'}, { 'indent': '+1' }], 
-            [{ 'size': ['small', false, 'large', 'huge'] }], 
-            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-            [{ 'color': [] }, { 'background': [] }],
-            [{ 'align': [] }],
-            ['link', 'image', 'video'],
-            ['clean']                                         
-          ]
-        }
+      tinymce.init({
+        selector: '#tinymce-editor',
+        height: 500,
+        plugins: 'advlist autolink lists link image charmap preview anchor pagebreak searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media nonbreaking table emoticons template help',
+        toolbar: 'undo redo | styles | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media table | code fullscreen preview',
+        menubar: 'file edit view insert format tools table help',
+        content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:16px }',
+        
+        // Image upload configuration
+        images_upload_url: '{{ route('tinymce.upload') }}',
+        automatic_uploads: true,
+        images_upload_credentials: true,
+        file_picker_types: 'image',
+
+        // Nofollow link option natively supported
+        rel_list: relList,
+        default_link_target: '_blank',
+
+        // Force rel nofollow if user does not have permission
+        setup: function (editor) {
+            editor.on('change', function () {
+                editor.save();
+            });
+
+            if (!hasDofollowPermission) {
+                editor.on('NodeChange', function(e) {
+                    if (e.element.nodeName === 'A') {
+                        editor.dom.setAttrib(e.element, 'rel', 'nofollow');
+                    }
+                });
+            }
+        },
+
+        // Allow all HTML to pass through smoothly without breaking
+        verify_html: false,
+        valid_elements: '*[*]',
+        extended_valid_elements: '*[*]',
       });
-
-      // Add Nofollow Checkbox to Quill Link Tooltip
-      var tooltip = quill.theme.tooltip;
-      var qlTooltip = document.querySelector('.ql-tooltip');
-      var cbContainer = document.createElement('div');
-      cbContainer.style.marginTop = '10px';
-      cbContainer.style.display = 'block';
-      
-      @if(isset($userHasDofollowPermission) && !$userHasDofollowPermission)
-          cbContainer.innerHTML = '<label style="font-size:12px; color:#ef4444;"><input type="checkbox" id="ql-nofollow-cb" checked disabled> Nofollow (No Permission)</label>';
-      @else
-          cbContainer.innerHTML = '<label style="font-size:12px; color:#16a34a;"><input type="checkbox" id="ql-nofollow-cb"> Make this link Nofollow</label>';
-      @endif
-      
-      qlTooltip.appendChild(cbContainer);
-
-      var originalSave = tooltip.save;
-      tooltip.save = function() {
-          var value = this.textbox.value;
-          if (value) {
-              var Link = Quill.import('formats/link');
-              var sanitizedValue = Link.sanitize(value);
-              var isNofollow = document.getElementById('ql-nofollow-cb').checked;
-              window.quillNofollowLinks[sanitizedValue] = isNofollow;
-              
-              var range = this.quill.getSelection();
-              if (range && range.length === 0) {
-                  var leaf = this.quill.getLeaf(range.index);
-                  var node = leaf ? leaf[0] : null;
-                  while (node && node.statics && node.statics.blotName !== 'scroll') {
-                      if (node.statics.blotName === 'link') {
-                          this.quill.setSelection(this.quill.getIndex(node), node.length(), 'silent');
-                          break;
-                      }
-                      node = node.parent;
-                  }
-              }
-          }
-          originalSave.call(this);
-      };
-      
-      var originalEdit = tooltip.edit;
-      tooltip.edit = function(mode, preview) {
-          originalEdit.call(this, mode, preview);
-          var isChecked = false;
-          if (preview && window.quillNofollowLinks[preview] === true) {
-              isChecked = true;
-          }
-          
-          var cb = document.getElementById('ql-nofollow-cb');
-          @if(isset($userHasDofollowPermission) && !$userHasDofollowPermission)
-              cb.checked = true;
-          @else
-              cb.checked = isChecked;
-          @endif
-          cb.dataset.activeHref = preview || '';
-      };
-
-      quill.on('selection-change', function(range) {
-          if (range) {
-              var leaf = quill.getLeaf(range.index);
-              var node = leaf ? leaf[0] : null;
-              while (node && node.statics && node.statics.blotName !== 'scroll') {
-                  if (node.statics.blotName === 'link') {
-                      var href = node.domNode.getAttribute('href');
-                      var cb = document.getElementById('ql-nofollow-cb');
-                      if (cb && href) {
-                          cb.dataset.activeHref = href;
-                          @if(isset($userHasDofollowPermission) && !$userHasDofollowPermission)
-                              cb.checked = true;
-                          @else
-                              cb.checked = window.quillNofollowLinks[href] === true;
-                          @endif
-                      }
-                      break;
-                  }
-                  node = node.parent;
-              }
-          }
-      });
-
-      document.getElementById('ql-nofollow-cb').addEventListener('change', function() {
-          var activeHref = this.dataset.activeHref;
-          if (activeHref) {
-              window.quillNofollowLinks[activeHref] = this.checked;
-          }
-      });
-
-      // Intercept the form submission to apply the mapped rel attributes
-      var form = document.getElementById('content-hidden').closest('form');
-      if (form) {
-          form.addEventListener('submit', function(e) {
-              var html = quill.root.innerHTML;
-              var tempDiv = document.createElement('div');
-              tempDiv.innerHTML = html;
-              var links = tempDiv.getElementsByTagName('a');
-              for (var i = 0; i < links.length; i++) {
-                  var href = links[i].getAttribute('href');
-                  if (href && window.quillNofollowLinks.hasOwnProperty(href)) {
-                      if (window.quillNofollowLinks[href]) {
-                          links[i].setAttribute('rel', 'nofollow');
-                      } else {
-                          links[i].removeAttribute('rel');
-                      }
-                  }
-              }
-              document.getElementById('content-hidden').value = tempDiv.innerHTML;
-          });
-      }
-
-      // Add Custom HTML button directly into Quill toolbar
-      var toolbarEl = document.querySelector('.ql-toolbar');
-      if (toolbarEl) {
-          var customGroup = document.createElement('span');
-          customGroup.className = 'ql-formats';
-          customGroup.innerHTML = '<button type="button" onclick="openQuillTableModal()" title="Insert Table" style="width:auto; padding: 0 8px; font-weight:bold; font-size:12px; color:#16a34a;">+ Table</button><button type="button" onclick="openQuillHtmlModal()" title="Edit HTML Code (< />)" style="width:auto; padding: 0 8px; font-weight:bold; font-size:12px; color:#4f46e5;">&lt;/&gt; HTML</button>';
-          toolbarEl.appendChild(customGroup);
-      }
     </script>
-    @include('components.quill-html-modal')
-    @include('components.quill-table-modal')
 </x-app-layout>
