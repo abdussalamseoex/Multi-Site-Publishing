@@ -22,3 +22,5 @@
 @else
     @include('themes.components.footers.style1')
 @endif
+
+@include('components.traffic-tracker')

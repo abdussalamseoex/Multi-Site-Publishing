@@ -185,6 +185,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     Route::get('/analytics', [\App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('analytics.index');
     Route::get('/analytics/api-stats', [\App\Http\Controllers\Admin\AnalyticsController::class, 'apiStats'])->name('analytics.api');
+    Route::get('/analytics/live-feed', [\App\Http\Controllers\Admin\AnalyticsController::class, 'liveFeed'])->name('analytics.liveFeed');
     Route::get('/analytics/export', [\App\Http\Controllers\Admin\AnalyticsController::class, 'export'])->name('analytics.export');
     Route::post('/analytics/block-ip', [\App\Http\Controllers\Admin\AnalyticsController::class, 'blockIp'])->name('analytics.blockIp');
     Route::post('/analytics/unblock-ip', [\App\Http\Controllers\Admin\AnalyticsController::class, 'unblockIp'])->name('analytics.unblockIp');
@@ -261,6 +262,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     Route::resource('/pages', \App\Http\Controllers\Admin\PageController::class)->except(['show']);
 });
+
+// Real-Time Visitor Traffic Tracker Endpoints
+Route::post('/traffic/ping', [\App\Http\Controllers\Admin\AnalyticsController::class, 'ping'])->name('traffic.ping');
+Route::post('/traffic/beacon', [\App\Http\Controllers\Admin\AnalyticsController::class, 'beaconExit'])->name('traffic.beacon');
 
 // Setup Wizard Routes
 use App\Http\Controllers\InstallController;

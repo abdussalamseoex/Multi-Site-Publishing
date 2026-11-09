@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'tinymce/upload',
+            'traffic/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
