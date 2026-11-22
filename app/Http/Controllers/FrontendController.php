@@ -10,17 +10,20 @@ class FrontendController extends Controller
 {
     public function index()
     {
+        // Auto-publish any due scheduled posts
+        Post::autoPublishDuePosts();
+
         // Fallback to 'minimal' if not set
         $activeTheme = Setting::get('active_theme', 'minimal');
         
-        $featuredPosts = Post::where('status', 'published')
+        $featuredPosts = Post::published()
                              ->where('is_featured', true)
                              ->latest()
                              ->orderBy('id', 'desc')
                              ->take(5)
                              ->get();
                              
-        $latestPosts = Post::where('status', 'published')
+        $latestPosts = Post::published()
                            ->latest()
                            ->orderBy('id', 'desc')
                            ->paginate(12);
@@ -74,6 +77,12 @@ class FrontendController extends Controller
             abort(404);
         }
         
+        // Check if post is scheduled and due for publication
+        if ($post->status === 'scheduled' && $post->scheduled_at && $post->scheduled_at->isPast()) {
+            $post->status = 'published';
+            $post->save();
+        }
+        
         if ($post->status !== 'published') {
             // Allow admin or the author to preview
             if (!auth()->check() || (auth()->user()->role !== 'admin' && auth()->id() !== $post->user_id)) {
@@ -97,8 +106,8 @@ class FrontendController extends Controller
         public function category($slug)
     {
         $category = \App\Models\Category::where('slug', $slug)->firstOrFail();
-        $posts = Post::where('category_id', $category->id)
-                     ->where('status', 'published')
+        $posts = Post::published()
+                     ->where('category_id', $category->id)
                      ->latest()
                      ->paginate(12);
 
@@ -124,7 +133,7 @@ class FrontendController extends Controller
         $query = trim($request->input('q', ''));
         $activeTheme = Setting::get('active_theme', 'minimal');
 
-        $posts = Post::where('status', 'published')
+        $posts = Post::published()
             ->where(function ($q) use ($query) {
                 $q->where('title', 'like', "%{$query}%")
                   ->orWhere('summary', 'like', "%{$query}%")
@@ -167,8 +176,8 @@ class FrontendController extends Controller
             abort(404);
         }
 
-        $posts = Post::where('user_id', $author->id)
-                     ->where('status', 'published')
+        $posts = Post::published()
+                     ->where('user_id', $author->id)
                      ->latest()
                      ->paginate(12);
 

@@ -46,7 +46,8 @@ class PostController extends Controller
     public function create()
     {
         $categories = \App\Models\Category::all();
-        return view('admin.posts.create', compact('categories'));
+        $users = \App\Models\User::orderBy('name')->get();
+        return view('admin.posts.create', compact('categories', 'users'));
     }
 
     public function store(Request $request)
@@ -56,7 +57,9 @@ class PostController extends Controller
             'slug' => 'nullable|string|max:255',
             'content' => 'required',
             'category_id' => 'required|exists:categories,id',
-            'status' => 'required|in:draft,pending,published,rejected',
+            'user_id' => 'nullable|exists:users,id',
+            'status' => 'required|in:draft,pending,published,scheduled,rejected',
+            'scheduled_at' => 'nullable|date',
             'featured_image' => 'nullable|image|max:10240',
             'og_image' => 'nullable|image|max:10240',
         ]);
@@ -84,8 +87,23 @@ class PostController extends Controller
             }
         }
 
+        $userId = $request->filled('user_id') ? (int) $request->user_id : auth()->id();
+        $status = $request->status;
+        $scheduledAt = null;
+
+        if ($status === 'scheduled') {
+            if ($request->filled('scheduled_at')) {
+                $scheduledAt = \Carbon\Carbon::parse($request->scheduled_at);
+                if ($scheduledAt->isPast()) {
+                    $status = 'published';
+                }
+            } else {
+                $scheduledAt = now()->addHour();
+            }
+        }
+
         Post::create([
-            'user_id' => auth()->id(),
+            'user_id' => $userId,
             'title' => $request->title,
             'slug' => $finalSlug,
             'original_slug' => $baseSlug,
@@ -93,7 +111,8 @@ class PostController extends Controller
             'category_id' => $request->category_id,
             'featured_image' => $featuredImagePath,
             'og_image' => $ogImagePath,
-            'status' => $request->status,
+            'status' => $status,
+            'scheduled_at' => $scheduledAt,
             'meta_title' => $request->meta_title ?? $request->title,
             'meta_description' => $request->meta_description ?? substr(strip_tags($request->content), 0, 150),
             'meta_keywords' => $request->meta_keywords,
@@ -106,7 +125,8 @@ class PostController extends Controller
     public function edit(Post $post)
     {
         $categories = \App\Models\Category::all();
-        return view('admin.posts.edit', compact('post', 'categories'));
+        $users = \App\Models\User::orderBy('name')->get();
+        return view('admin.posts.edit', compact('post', 'categories', 'users'));
     }
 
     public function update(Request $request, Post $post)
@@ -116,7 +136,9 @@ class PostController extends Controller
             'slug' => 'nullable|string|max:255',
             'content' => 'required',
             'category_id' => 'required|exists:categories,id',
-            'status' => 'required|in:draft,pending,published,rejected',
+            'user_id' => 'nullable|exists:users,id',
+            'status' => 'required|in:draft,pending,published,scheduled,rejected',
+            'scheduled_at' => 'nullable|date',
             'featured_image' => 'nullable|image|max:10240',
             'og_image' => 'nullable|image|max:10240',
         ]);
@@ -148,12 +170,31 @@ class PostController extends Controller
             }
         }
 
+        $userId = $request->filled('user_id') ? (int) $request->user_id : $post->user_id;
+        $status = $request->status;
+        $scheduledAt = $post->scheduled_at;
+
+        if ($status === 'scheduled') {
+            if ($request->filled('scheduled_at')) {
+                $scheduledAt = \Carbon\Carbon::parse($request->scheduled_at);
+                if ($scheduledAt->isPast()) {
+                    $status = 'published';
+                }
+            } elseif (!$scheduledAt) {
+                $scheduledAt = now()->addHour();
+            }
+        } elseif ($status === 'published') {
+            $scheduledAt = null;
+        }
+
         $post->update([
+            'user_id' => $userId,
             'title' => $request->title,
             'slug' => $finalSlug,
             'content' => \App\Services\ImageService::parseAndConvertHtmlImages($request->content, 'posts'),
             'category_id' => $request->category_id,
-            'status' => $request->status,
+            'status' => $status,
+            'scheduled_at' => $scheduledAt,
             'meta_title' => $request->meta_title ?? $request->title,
             'meta_description' => $request->meta_description ?? substr(strip_tags($request->content), 0, 150),
             'meta_keywords' => $request->meta_keywords,
@@ -168,7 +209,7 @@ class PostController extends Controller
         $post = Post::findOrFail($id);
         
         $request->validate([
-            'status' => 'required|in:draft,pending,published,rejected'
+            'status' => 'required|in:draft,pending,published,scheduled,rejected'
         ]);
 
         $post->status = $request->status;
@@ -180,7 +221,7 @@ class PostController extends Controller
     public function bulkAction(Request $request)
     {
         $request->validate([
-            'action' => 'required|in:published,pending,draft,rejected,delete',
+            'action' => 'required|in:published,pending,draft,scheduled,rejected,delete',
             'ids' => 'required|array',
             'ids.*' => 'exists:posts,id'
         ]);

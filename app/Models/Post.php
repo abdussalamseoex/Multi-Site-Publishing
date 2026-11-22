@@ -11,9 +11,53 @@ class Post extends Model
 
     protected $fillable = [
         'user_id', 'category_id', 'auto_news_source_id', 'title', 'slug', 'original_slug', 'summary', 'content', 
-        'featured_image', 'og_image', 'status', 'is_featured', 'meta_title', 
+        'featured_image', 'og_image', 'status', 'scheduled_at', 'is_featured', 'meta_title', 
         'meta_description', 'meta_keywords', 'canonical_url', 'views', 'is_dofollow'
     ];
+
+    protected $casts = [
+        'scheduled_at' => 'datetime',
+        'is_featured'  => 'boolean',
+        'is_dofollow'  => 'boolean',
+    ];
+
+    public function scopePublished($query)
+    {
+        return $query->where('status', 'published')
+            ->where(function ($q) {
+                $q->whereNull('scheduled_at')
+                  ->orWhere('scheduled_at', '<=', now());
+            });
+    }
+
+    public function isScheduled(): bool
+    {
+        return $this->status === 'scheduled' || ($this->scheduled_at && $this->scheduled_at->isFuture());
+    }
+
+    public static function autoPublishDuePosts(): int
+    {
+        $duePosts = self::where('status', 'scheduled')
+            ->whereNotNull('scheduled_at')
+            ->where('scheduled_at', '<=', now())
+            ->get();
+
+        $count = 0;
+        foreach ($duePosts as $post) {
+            $post->status = 'published';
+            $post->save();
+            $count++;
+        }
+
+        if ($count > 0) {
+            \Illuminate\Support\Facades\Cache::forget('sitemap_xml');
+            try {
+                \App\Services\SeoService::submitSitemapPing();
+            } catch (\Exception $e) {}
+        }
+
+        return $count;
+    }
 
     public function user()
     {

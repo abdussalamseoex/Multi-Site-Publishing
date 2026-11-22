@@ -11,3 +11,4 @@ use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('news:fetch-auto')->everyFiveMinutes();
 Schedule::command('ai:bulk-process')->everyMinute();
+Schedule::command('posts:publish-scheduled')->everyMinute();

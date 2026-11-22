@@ -37,6 +37,7 @@
                         <select name="status" class="w-full border-gray-300 rounded-md shadow-sm sm:text-sm focus:ring-indigo-500 focus:border-indigo-500">
                             <option value="">All Statuses</option>
                             <option value="published" {{ request('status') == 'published' ? 'selected' : '' }}>Published</option>
+                            <option value="scheduled" {{ request('status') == 'scheduled' ? 'selected' : '' }}>⏰ Scheduled</option>
                             <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                             <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Draft</option>
                             <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
@@ -70,6 +71,7 @@
                             <select name="action" required class="border-gray-300 rounded shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500 py-1.5 px-3 uppercase font-bold text-gray-600 bg-white">
                                 <option value="">-- Choose --</option>
                                 <option value="published">Publish</option>
+                                <option value="scheduled">Mark Scheduled</option>
                                 <option value="pending">Mark Pending</option>
                                 <option value="draft">Mark Draft</option>
                                 <option value="rejected">Reject</option>
@@ -107,12 +109,18 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                                         @if($post->status == 'published') bg-green-100 text-green-800
+                                        @elseif($post->status == 'scheduled') bg-purple-100 text-purple-800
                                         @elseif($post->status == 'pending') bg-yellow-100 text-yellow-800
                                         @elseif($post->status == 'rejected') bg-red-100 text-red-800
                                         @else bg-gray-100 text-gray-600 @endif
                                     ">
-                                        {{ ucfirst($post->status) }}
+                                        @if($post->status == 'scheduled') ⏰ Scheduled @else {{ ucfirst($post->status) }} @endif
                                     </span>
+                                    @if($post->status == 'scheduled' && $post->scheduled_at)
+                                        <div class="text-[10px] text-purple-700 font-mono mt-0.5" title="{{ $post->scheduled_at }}">
+                                            {{ $post->scheduled_at->format('M d, h:i A') }}
+                                        </div>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ $post->created_at->format('M d, Y') }}
@@ -123,11 +131,13 @@
                                         @csrf
                                         <select name="status" class="text-xs border-gray-300 rounded shadow-sm py-1 pl-2 pr-6 focus:ring-indigo-500 focus:border-indigo-500 font-bold bg-gray-50 cursor-pointer 
                                             @if($post->status == 'published') text-green-700 
+                                            @elseif($post->status == 'scheduled') text-purple-700 
                                             @elseif($post->status == 'pending') text-yellow-600 
                                             @elseif($post->status == 'rejected') text-red-600 
                                             @else text-gray-600 @endif
                                         ">
                                             <option value="published" class="text-green-700 font-bold" {{ $post->status == 'published' ? 'selected' : '' }}>Published</option>
+                                            <option value="scheduled" class="text-purple-700 font-bold" {{ $post->status == 'scheduled' ? 'selected' : '' }}>⏰ Scheduled</option>
                                             <option value="pending" class="text-yellow-600 font-bold" {{ $post->status == 'pending' ? 'selected' : '' }}>Pending</option>
                                             <option value="draft" class="text-gray-600 font-bold" {{ $post->status == 'draft' ? 'selected' : '' }}>Draft</option>
                                             <option value="rejected" class="text-red-600 font-bold" {{ $post->status == 'rejected' ? 'selected' : '' }}>Rejected</option>
