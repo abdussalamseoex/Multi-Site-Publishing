@@ -168,8 +168,8 @@
                                     <select name="status" x-model="status" class="mt-1 block w-full pl-3 pr-10 py-2.5 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md bg-white shadow-sm">
                                         <option value="draft">Draft</option>
                                         <option value="pending">Pending Review</option>
-                                        <option value="published">Published (সরাসরি প্রকাশ)</option>
-                                        <option value="scheduled">⏰ Scheduled (শিডিউল করে রাখুন)</option>
+                                        <option value="published">Published</option>
+                                        <option value="scheduled">⏰ Scheduled</option>
                                         <option value="rejected">Rejected</option>
                                     </select>
                                 </div>
