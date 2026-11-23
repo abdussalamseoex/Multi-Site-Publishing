@@ -251,7 +251,7 @@
         height: 500,
         plugins: 'advlist autolink lists link image charmap preview anchor pagebreak searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media nonbreaking table emoticons template help',
         toolbar: 'undo redo | styles | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media table | code fullscreen preview',
-        images_upload_url: '{{ route('admin.tinymce.upload') }}',
+        images_upload_url: '{{ route('tinymce.upload') }}',
         automatic_uploads: true,
         images_reuse_filename: false,
         relative_urls: false,

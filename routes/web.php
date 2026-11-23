@@ -228,6 +228,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/posts/bulk-action', [AdminPostController::class, 'bulkAction'])->name('posts.bulk-action');
     Route::resource('/posts', AdminPostController::class)->except(['show']);
     Route::post('/posts/{post}/status', [AdminPostController::class, 'updateStatus'])->name('posts.status');
+    Route::post('/tinymce/upload', [\App\Http\Controllers\PostController::class, 'uploadImage'])->name('tinymce.upload');
 
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::post('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.status');
