@@ -90,6 +90,7 @@
                                 <p class="mt-1 text-xs text-gray-400">This bio will appear on the author's public profile page.</p>
                                 @error('bio')
                                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-gray-100">
